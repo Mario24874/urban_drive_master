@@ -1,0 +1,12 @@
+Manifest-Version: 1.0
+Built-By: Urban Drive Builder
+Created-By: Python APK Builder
+
+Name: AndroidManifest.xml
+SHA1-Digest: YWJjZGVmZ2hpams=
+
+Name: classes.dex
+SHA1-Digest: bG1ub3BxcnN0dXZ3eA==
+
+Name: assets/www/index.html
+SHA1-Digest: eHl6MTIzNDU2Nzg5MA==

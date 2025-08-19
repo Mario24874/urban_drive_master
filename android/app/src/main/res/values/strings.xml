@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Urban Drive</string>
+    <string name="title_activity_main">Urban Drive</string>
+    <string name="package_name">com.urbandrive.app</string>
+    <string name="custom_url_scheme">com.urbandrive.app</string>
+</resources>

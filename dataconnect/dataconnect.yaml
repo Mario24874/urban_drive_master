@@ -1,0 +1,12 @@
+specVersion: "v1beta"
+serviceId: "urbandrive"
+location: "us-east1"
+schema:
+  source: "./schema"
+  datasource:
+    postgresql:
+      database: "fdcdb"
+      cloudSql:
+        instanceId: "urbandrive-fdc"
+      # schemaValidation: "COMPATIBLE"
+connectorDirs: ["./connector"]

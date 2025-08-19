@@ -1,0 +1,53 @@
+{
+  "name": "Urban Drive - Ride Sharing App",
+  "short_name": "Urban Drive",
+  "description": "Modern ride sharing application for urban mobility",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#000000",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "es",
+  "categories": ["travel", "transportation"],
+  "icons": [
+    {
+      "src": "/assets/UrbanDrive.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/UrbanDrive.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/assets/background.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Urban Drive Dashboard"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Find Driver",
+      "short_name": "Find Driver",
+      "description": "Quickly find a driver near you",
+      "url": "/map",
+      "icons": [{ "src": "/assets/marker.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Messages",
+      "short_name": "Messages", 
+      "description": "View your messages",
+      "url": "/messages",
+      "icons": [{ "src": "/assets/marker.png", "sizes": "96x96" }]
+    }
+  ],
+  "prefer_related_applications": false
+}
