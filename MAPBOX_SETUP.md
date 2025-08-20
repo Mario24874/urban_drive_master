@@ -6,27 +6,27 @@ El token en tu `.env` es un token de ejemplo que no funciona:
 VITE_MAPBOX_ACCESS_TOKEN=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw
 ```
 
-## ✅ Solución paso a paso:
+## ✅ Solución aplicada:
 
-### 1. Obtener tu token personal de Mapbox:
+### 1. ✅ Token actualizado:
 
-1. **Ir a**: https://account.mapbox.com/access-tokens/
-2. **Crear cuenta gratuita** si no tienes
-3. **Copiar** tu "Default public token" (comienza con `pk.`)
-
-### 2. Actualizar variables de entorno:
-
-**En tu archivo `.env` local:**
+Tu token real de Mapbox ya está configurado:
 ```env
-VITE_MAPBOX_ACCESS_TOKEN=tu_token_real_aqui
+VITE_MAPBOX_ACCESS_TOKEN=pk.eyJ1IjoibWFyaW9tb3Jlbm8yNDg3NCIsImEiOiJjbTFqbGxoaWUwMnIwMmpwejQ0OXM0OW4xIn0.EuaA8BT-Y1tcK7bARIOlaQ
 ```
 
-**En Netlify:**
-1. Ve a tu proyecto en Netlify
+### 2. 🚨 IMPORTANTE - Actualizar en Netlify:
+
+**Debes hacer esto manualmente:**
+
+1. **Ve a tu proyecto en Netlify**
 2. **Site settings** → **Environment variables**
-3. Edita `VITE_MAPBOX_ACCESS_TOKEN`
-4. Pega tu token real
-5. **Redeploy** el sitio
+3. **Busca** `VITE_MAPBOX_ACCESS_TOKEN`
+4. **Edita** y reemplaza con:
+   ```
+   pk.eyJ1IjoibWFyaW9tb3Jlbm8yNDg3NCIsImEiOiJjbTFqbGxoaWUwMnIwMmpwejQ0OXM0OW4xIn0.EuaA8BT-Y1tcK7bARIOlaQ
+   ```
+5. **Redeploy** el sitio (Deploy trigger)
 
 ### 3. Verificar que funciona:
 
