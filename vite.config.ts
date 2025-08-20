@@ -9,7 +9,9 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
+        globPatterns: ['**/*.{js,css,html,ico,svg,woff,woff2}'],
+        globIgnores: ['**/assets/background.png', '**/assets/background.jpg'],
+        maximumFileSizeToCacheInBytes: 10 * 1024 * 1024, // 10MB limit
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/api\.mapbox\.com\/.*/i,
@@ -35,7 +37,7 @@ export default defineConfig({
           },
         ],
       },
-      includeAssets: ['favicon.ico', 'assets/*.png', 'assets/*.jpg'],
+      includeAssets: ['favicon.ico', 'assets/UrbanDrive.png', 'assets/marker.png'],
       manifest: {
         name: 'Urban Drive - Ride Sharing App',
         short_name: 'Urban Drive',
