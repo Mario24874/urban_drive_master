@@ -47,14 +47,15 @@ const MapComponent: React.FC<MapComponentProps> = ({ userLocation, contacts, use
         return;
       }
 
-      // Token público de Mapbox (válido para desarrollo)
-      const accessToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || 'pk.eyJ1IjoidXJiYW5kcml2ZSIsImEiOiJjbTJwOGV2ZjEwMGVwMmlweDZuZzF5ZGdwIn0.example';
+      // Obtener token de Mapbox desde variables de entorno
+      const accessToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
       
       console.log('Mapbox token available:', !!accessToken);
-      console.log('Environment check:', import.meta.env.MODE);
+      console.log('Token starts with pk.:', accessToken?.startsWith('pk.'));
+      console.log('Environment mode:', import.meta.env.MODE);
       
-      if (!accessToken || accessToken.includes('example')) {
-        console.warn('Using fallback - configure VITE_MAPBOX_ACCESS_TOKEN in Netlify');
+      if (!accessToken || !accessToken.startsWith('pk.')) {
+        console.error('Invalid or missing VITE_MAPBOX_ACCESS_TOKEN');
         showFallbackMap();
         return;
       }
@@ -83,6 +84,9 @@ const MapComponent: React.FC<MapComponentProps> = ({ userLocation, contacts, use
 
         map.current.on('error', (e: any) => {
           console.error('Mapbox map error:', e);
+          if (e.error?.message?.includes('Unauthorized') || e.error?.message?.includes('401')) {
+            console.error('Mapbox token authorization failed - check your token');
+          }
           showFallbackMap();
         });
       } catch (error) {
