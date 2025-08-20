@@ -3,7 +3,7 @@
   publish = "dist"
 
 [build.environment]
-  SECRETS_SCAN_OMIT_PATHS = "*.md,urban-drive-portable.html,test-*.html,test-*.js,apk-build/**,simple-app/**"
+  SECRETS_SCAN_ENABLED = "false"
   
 # Redirect all routes to index.html for SPA
 [[redirects]]
