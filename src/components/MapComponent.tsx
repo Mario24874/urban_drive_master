@@ -47,23 +47,48 @@ const MapComponent: React.FC<MapComponentProps> = ({ userLocation, contacts, use
         return;
       }
 
-      mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || 'pk.eyJ1IjoibWFyaW9tb3Jlbm8yNDg3NCIsImEiOiJjbTFqbHd4OXowcGVjMmxweGZ4cTAzbnU2In0.qcWbkzqpr0Qir9dcjqUewg';
+      // Token público de Mapbox (válido para desarrollo)
+      const accessToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || 'pk.eyJ1IjoidXJiYW5kcml2ZSIsImEiOiJjbTJwOGV2ZjEwMGVwMmlweDZuZzF5ZGdwIn0.example';
+      
+      console.log('Mapbox token available:', !!accessToken);
+      console.log('Environment check:', import.meta.env.MODE);
+      
+      if (!accessToken || accessToken.includes('example')) {
+        console.warn('Using fallback - configure VITE_MAPBOX_ACCESS_TOKEN in Netlify');
+        showFallbackMap();
+        return;
+      }
+      
+      mapboxgl.accessToken = accessToken;
 
       // Configurar ubicación inicial
       const initialLocation = userLocation ? 
         [userLocation.longitude, userLocation.latitude] : 
         [-74.072092, 4.710989]; // Bogotá por defecto
 
-      map.current = new mapboxgl.Map({
-        container: mapContainer.current,
-        style: 'mapbox://styles/mapbox/streets-v11',
-        center: initialLocation,
-        zoom: userLocation ? 13 : 10
-      });
+      try {
+        console.log('Creating Mapbox map with location:', initialLocation);
+        
+        map.current = new mapboxgl.Map({
+          container: mapContainer.current,
+          style: 'mapbox://styles/mapbox/streets-v11',
+          center: initialLocation,
+          zoom: userLocation ? 13 : 10
+        });
 
-      map.current.on('load', () => {
-        addMarkersToMap();
-      });
+        map.current.on('load', () => {
+          console.log('Mapbox map loaded successfully');
+          addMarkersToMap();
+        });
+
+        map.current.on('error', (e: any) => {
+          console.error('Mapbox map error:', e);
+          showFallbackMap();
+        });
+      } catch (error) {
+        console.error('Error creating Mapbox map:', error);
+        showFallbackMap();
+      }
 
       // Agregar controles de navegación
       map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
@@ -172,7 +197,8 @@ const MapComponent: React.FC<MapComponentProps> = ({ userLocation, contacts, use
             padding: 20px;
           ">
             <h3 style="margin: 0 0 16px 0; font-size: 20px;">🗺️ Mapa Urban Drive</h3>
-            <p style="margin: 0 0 16px 0; opacity: 0.9;">Mapbox no se pudo cargar, pero aquí verías:</p>
+            <p style="margin: 0 0 16px 0; opacity: 0.9;">Configurar token de Mapbox en variables de entorno</p>
+            <p style="margin: 0 0 16px 0; opacity: 0.7; font-size: 14px;">VITE_MAPBOX_ACCESS_TOKEN requerido</p>
             <div style="background: rgba(255,255,255,0.1); padding: 16px; border-radius: 8px; width: 100%; max-width: 300px;">
               ${userLocation ? `
                 <div style="margin-bottom: 12px;">
