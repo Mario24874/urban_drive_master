@@ -47,7 +47,8 @@
       "Bash(./deploy-production.sh)",
       "Bash(git remote add:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(npm run preview:*)"
     ],
     "deny": []
   }

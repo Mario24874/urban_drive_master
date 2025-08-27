@@ -27,6 +27,24 @@
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
+# Ensure correct MIME types for JavaScript modules
+[[headers]]
+  for = "/assets/*.js"
+  [headers.values]
+    Content-Type = "application/javascript; charset=utf-8"
+
+# Ensure correct MIME type for CSS
+[[headers]]
+  for = "/assets/*.css"
+  [headers.values]
+    Content-Type = "text/css; charset=utf-8"
+
+# PWA manifest MIME type
+[[headers]]
+  for = "/manifest.webmanifest"
+  [headers.values]
+    Content-Type = "application/manifest+json"
+
 # Cache service worker
 [[headers]]
   for = "/sw.js"
