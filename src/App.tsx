@@ -3,6 +3,7 @@ import { auth, db } from './services/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import PortableInterface from './components/PortableInterface';
+import PWAUpdateNotification from './components/PWAUpdateNotification';
 
 function App() {
   const [user, setUser] = useState<any>(null);
@@ -72,6 +73,9 @@ function App() {
           isAuthenticated={isAuthenticated}
         />
       </div>
+      
+      {/* PWA Update Notification */}
+      <PWAUpdateNotification />
     </div>
   );
 }
