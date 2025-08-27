@@ -195,19 +195,36 @@ export const useContactTracking = (userId: string, userType: 'user' | 'driver') 
 
     const unsubscribers: (() => void)[] = [];
 
-    // Query para usuarios visibles
-    const usersQuery = query(
-      collection(db, 'users'),
-      where('isVisible', '==', true)
-    );
+    // Primero obtener la lista de contactos del usuario actual
+    const fetchUserContactsAndSubscribe = async () => {
+      try {
+        // Obtener documento del usuario actual para saber sus contactos
+        const userDocRef = doc(db, userType === 'driver' ? 'drivers' : 'users', userId);
+        const userDoc = await getDoc(userDocRef);
+        
+        if (!userDoc.exists()) {
+          console.log('Usuario actual no encontrado');
+          setState(prev => ({ ...prev, visibleContacts: [] }));
+          return;
+        }
+        
+        const userData = userDoc.data();
+        const contactIds = userData.contacts || [];
+        
+        console.log(`Usuario tiene ${contactIds.length} contactos:`, contactIds);
+        
+        if (contactIds.length === 0) {
+          setState(prev => ({ ...prev, visibleContacts: [] }));
+          return;
+        }
 
-    // Query para conductores visibles
-    const driversQuery = query(
-      collection(db, 'drivers'),
-      where('isVisible', '==', true)
-    );
+        // Dividir contactIds en chunks de 10 (límite de Firestore para 'in' queries)
+        const chunks = [];
+        for (let i = 0; i < contactIds.length; i += 10) {
+          chunks.push(contactIds.slice(i, i + 10));
+        }
 
-    const handleSnapshot = (snapshot: any, contactType: 'user' | 'driver') => {
+        const handleSnapshot = (snapshot: any, contactType: 'user' | 'driver') => {
       const contacts = snapshot.docs.map((doc: any) => ({
         id: doc.id,
         ...doc.data(),
@@ -257,25 +274,49 @@ export const useContactTracking = (userId: string, userType: 'user' | 'driver') 
       });
     };
 
-    // Suscribirse a cambios en usuarios
-    const usersUnsubscribe = onSnapshot(usersQuery, 
-      (snapshot) => handleSnapshot(snapshot, 'user'),
-      (error) => {
-        console.error('Error fetching users:', error);
-        setState(prev => ({ ...prev, error: 'Error obteniendo usuarios' }));
-      }
-    );
+        // Suscribirse a cambios en contactos por chunks
+        for (const chunk of chunks) {
+          // Query para usuarios visibles que sean contactos
+          const usersQuery = query(
+            collection(db, 'users'),
+            where('__name__', 'in', chunk),
+            where('isVisible', '==', true)
+          );
 
-    // Suscribirse a cambios en conductores
-    const driversUnsubscribe = onSnapshot(driversQuery,
-      (snapshot) => handleSnapshot(snapshot, 'driver'),
-      (error) => {
-        console.error('Error fetching drivers:', error);
-        setState(prev => ({ ...prev, error: 'Error obteniendo conductores' }));
-      }
-    );
+          // Query para conductores visibles que sean contactos
+          const driversQuery = query(
+            collection(db, 'drivers'),
+            where('__name__', 'in', chunk),
+            where('isVisible', '==', true)
+          );
 
-    unsubscribers.push(usersUnsubscribe, driversUnsubscribe);
+          // Suscribirse a cambios en usuarios
+          const usersUnsubscribe = onSnapshot(usersQuery, 
+            (snapshot) => handleSnapshot(snapshot, 'user'),
+            (error) => {
+              console.error('Error fetching users:', error);
+              setState(prev => ({ ...prev, error: 'Error obteniendo usuarios' }));
+            }
+          );
+
+          // Suscribirse a cambios en conductores
+          const driversUnsubscribe = onSnapshot(driversQuery,
+            (snapshot) => handleSnapshot(snapshot, 'driver'),
+            (error) => {
+              console.error('Error fetching drivers:', error);
+              setState(prev => ({ ...prev, error: 'Error obteniendo conductores' }));
+            }
+          );
+
+          unsubscribers.push(usersUnsubscribe, driversUnsubscribe);
+        }
+      } catch (error) {
+        console.error('Error al obtener contactos:', error);
+        setState(prev => ({ ...prev, error: 'Error obteniendo contactos' }));
+      }
+    };
+
+    fetchUserContactsAndSubscribe();
 
     return () => {
       unsubscribers.forEach(unsubscribe => unsubscribe());

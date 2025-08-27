@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Navigation } from 'lucide-react';
 import useContactTracking from '../hooks/useContactTracking';
 import NavigationInterface from './NavigationInterface';
+import VisibilityToggle from './VisibilityToggle';
 
 interface GPSMapComponentProps {
   userLocation: any;
@@ -510,6 +511,14 @@ const GPSMapComponent: React.FC<GPSMapComponentProps> = ({
               GPS {isTracking ? 'Activo' : 'Inactivo'}
             </span>
           </div>
+          
+          {/* Toggle de visibilidad */}
+          <VisibilityToggle 
+            userId={userId}
+            userType={userType}
+            className="ml-4"
+          />
+          
           <div className="text-sm text-gray-600">
             {totalContacts} contactos visibles
           </div>
