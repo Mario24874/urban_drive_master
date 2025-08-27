@@ -5,10 +5,11 @@ import { collection, query, where, onSnapshot, getDocs } from 'firebase/firestor
 import { writeData } from '../services/database-sync';
 import { 
   Home, MapPin, Users, MessageSquare, User, Share, LogOut, 
-  Eye, EyeOff, Send, X 
+  Eye, EyeOff 
 } from '../components/Icons';
-import MapComponent from './MapComponent';
-import type { UserData, Message, Location, Contact, FirebaseError } from '../types';
+import GPSMapComponent from './GPSMapComponent';
+import ChatInterface from './ChatInterface';
+import type { UserData, Location, Contact, FirebaseError } from '../types';
 
 interface PortableInterfaceProps {
   user: UserData | null;
@@ -33,8 +34,6 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({ user, isAuthentic
   const [userLocation, setUserLocation] = useState<Location | null>(null);
   const [locationError, setLocationError] = useState('');
   const [contacts, setContacts] = useState<Contact[]>([]);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [newMessage, setNewMessage] = useState('');
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   
   // Estados para contactos
@@ -150,7 +149,8 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({ user, isAuthentic
     }
   }, [user]);
 
-  // Cargar mensajes cuando se selecciona un contacto
+  // Este useEffect ya no es necesario - ahora ChatInterface maneja los mensajes
+  /*
   useEffect(() => {
     if (selectedContact && user) {
       const messagesQuery = query(
@@ -171,14 +171,13 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({ user, isAuthentic
             const timeB = typeof b.timestamp === 'string' ? new Date(b.timestamp).getTime() : (b.timestamp as Date).getTime();
             return timeA - timeB;
           });
-        setMessages(messagesList);
+        // setMessages(messagesList);
       });
 
       return () => unsubscribe();
-    } else {
-      setMessages([]);
     }
   }, [selectedContact, user]);
+  */
 
   // Funciones de autenticación
   const handleLogin = async (e: React.FormEvent) => {
@@ -249,7 +248,8 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({ user, isAuthentic
     }
   };
 
-  // Enviar mensaje
+  // Función sendMessage antigua comentada - ahora usamos messagingService en ChatInterface
+  /*
   const sendMessage = async () => {
     if (!selectedContact || !newMessage.trim() || !user) return;
 
@@ -270,6 +270,7 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({ user, isAuthentic
       console.error('Error enviando mensaje:', error);
     }
   };
+  */
 
   // Función para compartir app
   const handleAPKAction = () => {
@@ -922,12 +923,13 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({ user, isAuthentic
       case 'map':
         return (
           <div className="space-y-4">
-            <h2 className="text-2xl font-bold text-gray-900">Mapa</h2>
+            <h2 className="text-2xl font-bold text-gray-900">🗺️ Urban Drive GPS</h2>
             <div className="bg-white p-4 rounded-lg">
-              <MapComponent 
+              <GPSMapComponent 
                 userLocation={userLocation} 
-                contacts={contacts}
                 user={user}
+                userId={user?.id || ''}
+                userType={user?.userType || 'user'}
               />
             </div>
             
@@ -1109,92 +1111,13 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({ user, isAuthentic
         return (
           <div className="h-full flex flex-col">
             {selectedContact ? (
-              // Chat activo
-              <div className="flex flex-col h-full">
-                {/* Header del chat */}
-                <div className="bg-white border-b border-gray-200 p-4 flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <button
-                      onClick={() => setSelectedContact(null)}
-                      className="text-gray-600 hover:text-gray-900"
-                    >
-                      <X size={20} />
-                    </button>
-                    <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
-                      <span className="text-sm font-medium text-gray-700">
-                        {selectedContact.displayName?.charAt(0) || '?'}
-                      </span>
-                    </div>
-                    <div>
-                      <h3 className="font-medium text-gray-900">{selectedContact.displayName}</h3>
-                      <p className="text-sm text-gray-500">
-                        {selectedContact.isVisible && selectedContact.location ? '🟢 En línea' : '⚫ Desconectado'}
-                      </p>
-                    </div>
-                  </div>
-                  <button className="text-gray-600 hover:text-gray-900">
-                    <User size={20} />
-                  </button>
-                </div>
-
-                {/* Área de mensajes */}
-                <div className="flex-1 overflow-y-auto bg-gray-50 p-4">
-                  <div className="space-y-3">
-                    {messages.length > 0 ? (
-                      messages.map((msg) => (
-                        <div
-                          key={msg.id}
-                          className={`flex ${msg.senderId === user?.id ? 'justify-end' : 'justify-start'}`}
-                        >
-                          <div
-                            className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                              msg.senderId === user?.id
-                                ? 'bg-black text-white rounded-br-none'
-                                : 'bg-white text-gray-900 border rounded-bl-none'
-                            }`}
-                          >
-                            <p className="text-sm">{msg.message}</p>
-                            <p className={`text-xs mt-1 ${
-                              msg.senderId === user?.id ? 'text-gray-300' : 'text-gray-500'
-                            }`}>
-                              {new Date(msg.timestamp).toLocaleTimeString([], { 
-                                hour: '2-digit', 
-                                minute: '2-digit' 
-                              })}
-                            </p>
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="text-center py-8">
-                        <p className="text-gray-500 mb-2">No hay mensajes aún</p>
-                        <p className="text-sm text-gray-400">Inicia una conversación enviando un mensaje</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Input de mensaje */}
-                <div className="bg-white border-t border-gray-200 p-4">
-                  <div className="flex space-x-2">
-                    <input
-                      type="text"
-                      value={newMessage}
-                      onChange={(e) => setNewMessage(e.target.value)}
-                      className="flex-1 px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-black"
-                      placeholder="Escribe un mensaje..."
-                      onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-                    />
-                    <button
-                      onClick={sendMessage}
-                      disabled={!newMessage.trim()}
-                      className="px-4 py-2 bg-black text-white rounded-full hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <Send size={16} />
-                    </button>
-                  </div>
-                </div>
-              </div>
+              // Usar el nuevo ChatInterface
+              <ChatInterface
+                currentUserId={user?.id || ''}
+                currentUserName={user?.displayName || user?.email || 'Usuario'}
+                selectedContact={selectedContact}
+                onBack={() => setSelectedContact(null)}
+              />
             ) : (
               // Lista de chats
               <div className="space-y-4">

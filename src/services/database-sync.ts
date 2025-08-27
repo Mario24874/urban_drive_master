@@ -17,7 +17,7 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 // Estado de conexión
 let primaryDB: 'firebase' | 'supabase' = 'firebase';
 let isFirebaseOnline = true;
-let isSyncEnabled = true;
+let isSyncEnabled = false; // Deshabilitado temporalmente
 
 /**
  * Monitor de conexión Firebase

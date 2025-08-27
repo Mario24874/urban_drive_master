@@ -1,63 +1,10 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import { VitePWA } from 'vite-plugin-pwa';
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
-    react(),
-    VitePWA({
-      registerType: 'autoUpdate',
-      workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,svg,woff,woff2}'],
-        globIgnores: ['**/assets/background.png', '**/assets/background.jpg'],
-        maximumFileSizeToCacheInBytes: 10 * 1024 * 1024, // 10MB limit
-        runtimeCaching: [
-          {
-            urlPattern: /^https:\/\/api\.mapbox\.com\/.*/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'mapbox-cache',
-              expiration: {
-                maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 * 7, // 1 week
-              },
-            },
-          },
-          {
-            urlPattern: /^https:\/\/firestore\.googleapis\.com\/.*/i,
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'firestore-cache',
-              expiration: {
-                maxEntries: 50,
-                maxAgeSeconds: 60 * 60 * 24, // 1 day
-              },
-            },
-          },
-        ],
-      },
-      includeAssets: ['favicon.ico', 'assets/UrbanDrive.png', 'assets/marker.png'],
-      manifest: {
-        name: 'Urban Drive - Ride Sharing App',
-        short_name: 'Urban Drive',
-        description: 'Modern ride sharing application for urban mobility',
-        theme_color: '#000000',
-        background_color: '#ffffff',
-        display: 'standalone',
-        orientation: 'portrait',
-        scope: '/',
-        start_url: '/',
-        icons: [
-          {
-            src: '/assets/UrbanDrive.png',
-            sizes: '192x192',
-            type: 'image/png',
-            purpose: 'any maskable'
-          }
-        ]
-      }
-    })
+    react()
   ],
   server: {
     host: true, // Allow external connections for mobile testing
@@ -102,7 +49,7 @@ export default defineConfig({
         },
       },
     },
-    chunkSizeWarningLimit: 1500, // Increase limit to 1 MB
+    chunkSizeWarningLimit: 1500, // Increase limit to 1.5 MB
     target: 'esnext', // Modern build for better performance
     minify: 'terser', // Better compression
   },
