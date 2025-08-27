@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    
+    <!-- PWA and Mobile Optimization Meta Tags -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
+    <meta name="description" content="Urban Drive - Modern ride sharing application for urban mobility" />
+    <meta name="keywords" content="ride sharing, urban mobility, transport, driver, passenger" />
+    <meta name="author" content="Urban Drive Team" />
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json" />
+    
+    <!-- Theme Colors -->
+    <meta name="theme-color" content="#000000" />
+    <meta name="msapplication-TileColor" content="#000000" />
+    
+    <!-- Apple Touch Icon and Safari Settings -->
+    <link rel="apple-touch-icon" href="/assets/UrbanDrive.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Urban Drive" />
+    
+    <!-- Microsoft Tiles -->
+    <meta name="msapplication-TileImage" content="/assets/UrbanDrive.png" />
+    
+    <!-- Open Graph for Social Sharing -->
+    <meta property="og:title" content="Urban Drive - Ride Sharing App" />
+    <meta property="og:description" content="Modern ride sharing application for urban mobility" />
+    <meta property="og:image" content="/assets/UrbanDrive.png" />
+    <meta property="og:type" content="website" />
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Urban Drive - Ride Sharing App" />
+    <meta name="twitter:description" content="Modern ride sharing application for urban mobility" />
+    <meta name="twitter:image" content="/assets/UrbanDrive.png" />
+    
+    <title>Urban Drive - Ride Sharing App</title>
+    
+    <!-- Mapbox CSS -->
+    <link href="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.css" rel="stylesheet">
+    
+    <!-- Preload critical resources -->
+    <link rel="preload" href="/assets/background.png" as="image" />
+    <link rel="preload" href="/assets/UrbanDrive.png" as="image" />
+  </head>
+  <body>
+    <noscript>
+      <div style="text-align: center; padding: 50px;">
+        <h1>Urban Drive</h1>
+        <p>This application requires JavaScript to run. Please enable JavaScript in your browser.</p>
+      </div>
+    </noscript>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+    <!-- Mapbox JS -->
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.js"></script>
+  </body>
+</html>
