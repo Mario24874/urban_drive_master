@@ -52,9 +52,56 @@ class NavigationService {
   private watchId: number | null = null;
   private listeners: ((state: NavigationState) => void)[] = [];
   private mapboxToken: string = '';
+  private voicesLoaded: boolean = false;
+  private selectedVoice: SpeechSynthesisVoice | null = null;
 
   constructor() {
     this.mapboxToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || '';
+    this.initializeVoices();
+  }
+
+  /**
+   * Inicializar voces de síntesis de voz
+   */
+  private initializeVoices(): void {
+    if (!('speechSynthesis' in window)) {
+      console.warn('Speech Synthesis API no soportada en este navegador');
+      return;
+    }
+
+    const loadVoices = () => {
+      const voices = window.speechSynthesis.getVoices();
+
+      if (voices.length === 0) return;
+
+      // Buscar voz en español (prioridad: es-ES, es-MX, es-US, cualquier es-*)
+      this.selectedVoice =
+        voices.find(v => v.lang === 'es-ES') ||
+        voices.find(v => v.lang === 'es-MX') ||
+        voices.find(v => v.lang === 'es-US') ||
+        voices.find(v => v.lang.startsWith('es-')) ||
+        voices.find(v => v.lang.startsWith('es')) ||
+        voices[0]; // Fallback a la primera voz disponible
+
+      this.voicesLoaded = true;
+
+      console.log('Voice system initialized:', {
+        totalVoices: voices.length,
+        selectedVoice: this.selectedVoice?.name,
+        selectedLang: this.selectedVoice?.lang
+      });
+    };
+
+    // Cargar voces inmediatamente
+    loadVoices();
+
+    // Escuchar evento de cambio de voces (necesario en algunos navegadores)
+    if (window.speechSynthesis.onvoiceschanged !== undefined) {
+      window.speechSynthesis.onvoiceschanged = loadVoices;
+    }
+
+    // Intentar de nuevo después de un delay (fallback para Chrome en Android)
+    setTimeout(loadVoices, 100);
   }
 
   /**
@@ -113,6 +160,11 @@ class NavigationService {
     if (this.watchId) {
       navigator.geolocation.clearWatch(this.watchId);
       this.watchId = null;
+    }
+
+    // Cancelar cualquier síntesis de voz en progreso
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
     }
 
     this.state = {
@@ -321,22 +373,86 @@ class NavigationService {
    * Síntesis de voz para instrucciones
    */
   private async speak(text: string): Promise<void> {
-    if (!this.state.voiceEnabled || !('speechSynthesis' in window)) return;
+    if (!this.state.voiceEnabled || !('speechSynthesis' in window)) {
+      console.log('Voice disabled or not supported');
+      return;
+    }
+
+    // Si no se han cargado las voces todavía, esperar un momento
+    if (!this.voicesLoaded) {
+      console.log('Voices not loaded yet, waiting...');
+      await new Promise(resolve => setTimeout(resolve, 200));
+    }
 
     return new Promise((resolve) => {
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'es-ES';
-      utterance.rate = 0.9;
-      utterance.pitch = 1;
-      utterance.volume = 0.8;
+      try {
+        // Cancelar cualquier síntesis en progreso
+        window.speechSynthesis.cancel();
 
-      utterance.onend = () => resolve();
-      utterance.onerror = () => resolve();
+        // Pequeña pausa para asegurar que se canceló
+        setTimeout(() => {
+          const utterance = new SpeechSynthesisUtterance(text);
 
-      window.speechSynthesis.speak(utterance);
+          // Configurar voz seleccionada
+          if (this.selectedVoice) {
+            utterance.voice = this.selectedVoice;
+            utterance.lang = this.selectedVoice.lang;
+          } else {
+            utterance.lang = 'es-ES';
+          }
 
-      // Timeout por seguridad
-      setTimeout(() => resolve(), 5000);
+          // Configuración óptima para navegación
+          utterance.rate = 0.95; // Velocidad ligeramente más lenta para claridad
+          utterance.pitch = 1.0; // Tono normal
+          utterance.volume = 1.0; // Volumen máximo
+
+          let resolved = false;
+
+          utterance.onstart = () => {
+            console.log('Speech started:', text);
+          };
+
+          utterance.onend = () => {
+            console.log('Speech ended successfully');
+            if (!resolved) {
+              resolved = true;
+              resolve();
+            }
+          };
+
+          utterance.onerror = (event) => {
+            console.error('Speech error:', event.error);
+            if (!resolved) {
+              resolved = true;
+              // Intentar reiniciar speechSynthesis si falla
+              window.speechSynthesis.cancel();
+              resolve();
+            }
+          };
+
+          // Hablar
+          window.speechSynthesis.speak(utterance);
+          console.log('Speech queued:', {
+            text,
+            voice: this.selectedVoice?.name,
+            lang: utterance.lang
+          });
+
+          // Timeout de seguridad (aumentado para instrucciones largas)
+          setTimeout(() => {
+            if (!resolved) {
+              console.warn('Speech timeout');
+              window.speechSynthesis.cancel();
+              resolved = true;
+              resolve();
+            }
+          }, 8000);
+        }, 50);
+
+      } catch (error) {
+        console.error('Error in speak():', error);
+        resolve();
+      }
     });
   }
 
@@ -417,6 +533,25 @@ class NavigationService {
     if (this.state.nextInstruction) {
       this.speak(this.state.nextInstruction);
     }
+  }
+
+  /**
+   * Probar síntesis de voz (útil para debugging)
+   */
+  testVoice(): void {
+    this.speak('Sistema de navegación por voz activo. Todo funciona correctamente.');
+  }
+
+  /**
+   * Obtener información de voces disponibles
+   */
+  getVoiceInfo(): { voicesLoaded: boolean; selectedVoice: string | null; totalVoices: number } {
+    const voices = 'speechSynthesis' in window ? window.speechSynthesis.getVoices() : [];
+    return {
+      voicesLoaded: this.voicesLoaded,
+      selectedVoice: this.selectedVoice?.name || null,
+      totalVoices: voices.length
+    };
   }
 }
 

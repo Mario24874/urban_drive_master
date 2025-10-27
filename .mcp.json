@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "shadcn": {
+      "command": "wsl.exe",
+      "args": ["-e", "bash", "-c", "cd /mnt/c/Proyectos/Urban-Drive-master && npx shadcn@latest mcp"]
+    }
+  }
+}

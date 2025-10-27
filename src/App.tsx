@@ -59,10 +59,10 @@ function App() {
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col relative">
       {/* Background image matching portable version */}
-      <div 
+      <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat bg-fixed"
-        style={{ 
-          backgroundImage: `url(/assets/background.png)`
+        style={{
+          backgroundImage: `url(/assets/background.jpg)`
         }}
       />
       

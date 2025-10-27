@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
+import path from 'path';
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -11,6 +12,36 @@ export default defineConfig({
       registerType: 'autoUpdate',
       devOptions: {
         enabled: true
+      },
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,jpg,svg}'],
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/api\.mapbox\.com\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'mapbox-cache',
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 60 * 60 * 24 * 7 // 7 días
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
+          },
+          {
+            urlPattern: /^https:\/\/firebasestorage\.googleapis\.com\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'firebase-storage-cache',
+              expiration: {
+                maxEntries: 100,
+                maxAgeSeconds: 60 * 60 * 24 * 30 // 30 días
+              }
+            }
+          }
+        ]
       },
       includeAssets: ['favicon.ico', 'assets/UrbanDrive.png'],
       manifest: {
@@ -40,6 +71,11 @@ export default defineConfig({
       }
     })
   ],
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
+    },
+  },
   server: {
     host: true, // Allow external connections for mobile testing
     port: 5173,
@@ -48,6 +84,20 @@ export default defineConfig({
     chunkSizeWarningLimit: 1500, // Increase limit to 1.5 MB
     target: 'esnext', // Modern build for better performance
     minify: 'terser', // Better compression
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Separar vendors principales
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          // Firebase en su propio chunk
+          'firebase-vendor': ['firebase/app', 'firebase/auth', 'firebase/firestore', 'firebase/storage'],
+          // Mapbox en su propio chunk (es grande)
+          'mapbox-vendor': ['mapbox-gl'],
+          // UI components
+          'ui-vendor': ['lucide-react', 'clsx', 'tailwind-merge'],
+        },
+      },
+    },
   },
   optimizeDeps: {
     include: ['react', 'react-dom', 'firebase/auth', 'firebase/firestore'],
