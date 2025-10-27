@@ -3,7 +3,7 @@ import { auth, db } from './services/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import PortableInterface from './components/PortableInterface';
-import PWAUpdateNotification from './components/PWAUpdateNotification';
+// import PWAUpdateNotification from './components/PWAUpdateNotification'; // Deshabilitado mientras se arregla vite-plugin-pwa
 
 function App() {
   const [user, setUser] = useState<any>(null);
@@ -68,14 +68,14 @@ function App() {
       
       {/* Usar la misma interfaz que portable */}
       <div className="relative z-10">
-        <PortableInterface 
-          user={user} 
+        <PortableInterface
+          user={user}
           isAuthenticated={isAuthenticated}
         />
       </div>
-      
-      {/* PWA Update Notification */}
-      <PWAUpdateNotification />
+
+      {/* PWA Update Notification - Deshabilitado temporalmente */}
+      {/* <PWAUpdateNotification /> */}
     </div>
   );
 }

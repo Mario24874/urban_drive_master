@@ -1,12 +1,13 @@
-const CACHE_NAME = 'urban-drive-v1.0.0';
+const CACHE_NAME = 'urban-drive-v1.1.0';
 const urlsToCache = [
   '/',
   '/index.html',
   '/manifest.json',
   '/assets/UrbanDrive.png',
-  '/assets/background.png',
   '/assets/marker.png',
   '/favicon.ico',
+  // Note: background.jpg is NOT pre-cached due to size (2.28MB)
+  // It will be cached on first load via runtime caching
   // Static assets will be cached automatically by Vite PWA plugin
 ];
 

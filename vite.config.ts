@@ -1,6 +1,6 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import { VitePWA } from 'vite-plugin-pwa';
+// import { VitePWA } from 'vite-plugin-pwa'; // Deshabilitado temporalmente por error ESM
 import path from 'path';
 
 // https://vitejs.dev/config/
@@ -8,68 +8,47 @@ export default defineConfig({
   base: '/',
   plugins: [
     react(),
-    VitePWA({
-      registerType: 'autoUpdate',
-      devOptions: {
-        enabled: true
-      },
-      workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,jpg,svg}'],
-        runtimeCaching: [
-          {
-            urlPattern: /^https:\/\/api\.mapbox\.com\/.*/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'mapbox-cache',
-              expiration: {
-                maxEntries: 50,
-                maxAgeSeconds: 60 * 60 * 24 * 7 // 7 días
-              },
-              cacheableResponse: {
-                statuses: [0, 200]
-              }
-            }
-          },
-          {
-            urlPattern: /^https:\/\/firebasestorage\.googleapis\.com\/.*/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'firebase-storage-cache',
-              expiration: {
-                maxEntries: 100,
-                maxAgeSeconds: 60 * 60 * 24 * 30 // 30 días
-              }
-            }
-          }
-        ]
-      },
-      includeAssets: ['favicon.ico', 'assets/UrbanDrive.png'],
-      manifest: {
-        name: 'Urban Drive - GPS & Messaging',
-        short_name: 'Urban Drive',
-        description: 'GPS navigation and real-time messaging for urban mobility',
-        theme_color: '#3b82f6',
-        background_color: '#ffffff',
-        display: 'standalone',
-        orientation: 'portrait',
-        scope: '/',
-        start_url: '/',
-        icons: [
-          {
-            src: '/assets/UrbanDrive.png',
-            sizes: '192x192',
-            type: 'image/png',
-            purpose: 'any maskable'
-          },
-          {
-            src: '/assets/UrbanDrive.png',
-            sizes: '512x512',
-            type: 'image/png',
-            purpose: 'any maskable'
-          }
-        ]
-      }
-    })
+    // VitePWA deshabilitado - usando service worker manual en public/sw.js
+    // VitePWA({
+    //   strategies: 'injectManifest',
+    //   srcDir: 'public',
+    //   filename: 'sw.js',
+    //   registerType: 'autoUpdate',
+    //   devOptions: {
+    //     enabled: false
+    //   },
+    //   injectManifest: {
+    //     globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+    //     globIgnores: ['**/assets/background.jpg', '**/sw.js'],
+    //     maximumFileSizeToCacheInBytes: 3 * 1024 * 1024
+    //   },
+    //   includeAssets: ['favicon.ico', 'assets/UrbanDrive.png'],
+    //   manifest: {
+    //     name: 'Urban Drive - GPS & Messaging',
+    //     short_name: 'Urban Drive',
+    //     description: 'GPS navigation and real-time messaging for urban mobility',
+    //     theme_color: '#3b82f6',
+    //     background_color: '#ffffff',
+    //     display: 'standalone',
+    //     orientation: 'portrait',
+    //     scope: '/',
+    //     start_url: '/',
+    //     icons: [
+    //       {
+    //         src: '/assets/UrbanDrive.png',
+    //         sizes: '192x192',
+    //         type: 'image/png',
+    //         purpose: 'any maskable'
+    //       },
+    //       {
+    //         src: '/assets/UrbanDrive.png',
+    //         sizes: '512x512',
+    //         type: 'image/png',
+    //         purpose: 'any maskable'
+    //       }
+    //     ]
+    //   }
+    // })
   ],
   resolve: {
     alias: {
