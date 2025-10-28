@@ -5,17 +5,32 @@
 [![Live Demo](https://img.shields.io/badge/Demo-Live-brightgreen)](https://urban-drive.netlify.app)
 [![Build Status](https://img.shields.io/badge/Build-Passing-brightgreen)](https://github.com/Mario24874/urban_drive_master)
 [![PWA Ready](https://img.shields.io/badge/PWA-Ready-blue)](https://web.dev/progressive-web-apps/)
+[![Version](https://img.shields.io/badge/Version-1.1.0-blue)](./CHANGELOG.md)
+[![Bundle Size](https://img.shields.io/badge/Bundle-245KB-success)](./OPTIMIZATIONS.md)
 
 ## 📱 Features
 
+### Core Features
 - **🔐 Authentication** - Firebase Auth with email/password
-- **🗺️ Interactive Maps** - Mapbox GL JS integration
-- **📍 Real-time Location** - Driver and user geolocation tracking
+- **🗺️ Interactive Maps** - Mapbox GL JS integration with 3D buildings
+- **📍 Real-time Location** - Driver and user geolocation tracking with high accuracy
 - **💬 Messaging** - Real-time chat between users and drivers
 - **📱 PWA Ready** - Installable on mobile and desktop
 - **🌐 Offline Support** - Service Worker with intelligent caching
-- **📊 Responsive Design** - Works on all devices
+- **📊 Responsive Design** - Works on all devices (mobile-first)
 - **🔄 Real-time Sync** - Firebase Firestore integration
+
+### New in v1.1.0 ✨
+- **🎙️ GPS Voice Navigation** - Turn-by-turn voice instructions in Spanish
+  - Intelligent voice selection (es-ES, es-MX, es-US)
+  - Clear audio with optimized volume and rate
+  - Automatic voice cancellation prevents audio queue
+- **⚡ Optimized Performance** - 70% bundle size reduction (844KB → 245KB)
+- **📦 Code Splitting** - Smart chunking for better caching
+- **🎨 Shadcn/UI Integration** - Modern, accessible UI components
+- **🌓 Dark Mode Ready** - Theme system with CSS variables
+- **📍 Contact Tracking** - Real-time visibility of nearby drivers/users
+- **🔔 Invitation System** - Invite contacts to share location
 
 ## 🚀 Quick Start
 
@@ -52,41 +67,78 @@ npm run build
 npm run preview
 ```
 
+## ⚡ Performance Metrics
+
+| Metric | v1.0.0 | v1.1.0 | Improvement |
+|--------|--------|--------|-------------|
+| **Bundle Size (JS)** | 844 KB | 245 KB | ↓ 70% |
+| **Gzipped Bundle** | 208 KB | 59 KB | ↓ 72% |
+| **Total Size** | 13 MB | 3.3 MB | ↓ 75% |
+| **Build Time** | 1m 14s | 1m 12s | ↓ 3% |
+| **First Load** | ~4.5s | ~1.3s | ↓ 71% |
+
 ## 🏗️ Tech Stack
 
 ### Frontend
 - **React 18** - Modern React with hooks
-- **TypeScript** - Type-safe development
-- **Vite** - Fast build tool and dev server
-- **Tailwind CSS** - Utility-first CSS framework
+- **TypeScript 5.6** - Type-safe development
+- **Vite 5.4** - Lightning-fast build tool and dev server
+- **Tailwind CSS 3.4** - Utility-first CSS framework with custom theme
+- **Shadcn/UI** - Beautifully designed components built with Radix UI
 
 ### Backend & Services
-- **Firebase** - Authentication and Firestore database
-- **Mapbox GL JS** - Interactive maps and geolocation
-- **PWA** - Service Worker with Workbox
+- **Firebase 10.14** - Authentication and Firestore database
+- **Mapbox GL JS 3.7** - Interactive 3D maps and turn-by-turn navigation
+- **Service Worker** - Manual PWA implementation for optimal caching
+- **Speech Synthesis API** - Native voice navigation
 
-### Mobile
-- **Capacitor 6** - Native mobile app wrapper
-- **PWA** - Progressive Web App capabilities
+### Mobile & PWA
+- **Capacitor 6** - Native mobile app wrapper (iOS & Android)
+- **PWA** - Progressive Web App with offline support
+- **Web APIs** - Geolocation, Notifications, Audio
+
+### Development Tools
+- **ESLint** - Code linting with TypeScript support
+- **Path Aliases** - Clean imports with `@/` prefix
+- **Code Splitting** - Optimized chunks for better caching
 
 ## 📂 Project Structure
 
 ```
 src/
 ├── components/          # React components
-│   ├── Auth/           # Authentication components
-│   ├── Map/            # Map-related components
-│   └── UI/             # Reusable UI components
+│   ├── GPSMapComponent.tsx        # GPS map with contact tracking
+│   ├── NavigationInterface.tsx    # Voice navigation UI
+│   ├── VisibilityToggle.tsx       # Location sharing controls
+│   ├── InviteContact.tsx          # Contact invitation system
+│   ├── ChatInterface.tsx          # Real-time messaging
+│   ├── PortableInterface.tsx      # Main app interface
+│   └── ...                        # Other components
 ├── hooks/              # Custom React hooks
+│   ├── useContactTracking.ts     # Contact location tracking
+│   └── ...
+├── lib/                # Utilities (NEW in v1.1.0)
+│   └── utils.ts        # cn() utility for classNames
 ├── pages/              # Page components
 ├── services/           # External service integrations
+│   ├── navigation.ts   # GPS voice navigation service (ENHANCED)
+│   ├── invitations.ts  # Contact invitation service
+│   └── firebase.ts     # Firebase configuration
 ├── types/              # TypeScript type definitions
 └── utils/              # Utility functions
 
 public/
 ├── assets/             # Static assets
+│   ├── UrbanDrive.png  # App icon (60KB)
+│   ├── background.jpg  # Background image (2.2MB)
+│   └── marker.png      # Map marker (56KB)
 ├── manifest.json       # PWA manifest
-└── sw.js              # Service Worker
+└── sw.js              # Service Worker (manual implementation)
+
+Docs/
+├── CHANGELOG.md        # Version history and changes (NEW)
+├── OPTIMIZATIONS.md    # Technical optimization guide (NEW)
+└── PROJECT-CONTEXT.md  # Project context and documentation
 ```
 
 ## 🌐 Deployment
@@ -181,22 +233,74 @@ Urban Drive can be installed as a Progressive Web App:
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
+## 📚 Documentation
+
+- **[CHANGELOG.md](./CHANGELOG.md)** - Version history and detailed change log
+- **[OPTIMIZATIONS.md](./OPTIMIZATIONS.md)** - Technical guide on performance optimizations
+- **[PROJECT-CONTEXT.md](./PROJECT-CONTEXT.md)** - Project context and architecture
+
+### Key Documentation Sections
+
+#### GPS Voice Navigation
+```typescript
+// Test voice navigation
+import navigationService from './services/navigation';
+navigationService.testVoice();
+navigationService.getVoiceInfo();
+```
+
+#### Code Splitting
+```typescript
+// Automatic chunking configured in vite.config.ts
+// react-vendor: 140KB (React + Router)
+// firebase-vendor: 454KB (Firebase services)
+// mapbox-vendor: Lazy loaded
+// ui-vendor: 4KB (UI utilities)
+```
+
+#### Service Worker
+```javascript
+// Manual PWA in public/sw.js
+// Cache version: v1.1.0
+// Precache: Essential assets only
+// Runtime cache: Large images (background.jpg)
+```
+
 ## 🙏 Acknowledgments
 
 - [Firebase](https://firebase.google.com) - Backend and authentication
-- [Mapbox](https://mapbox.com) - Maps and geolocation
+- [Mapbox](https://mapbox.com) - Maps and turn-by-turn navigation
 - [React](https://reactjs.org) - Frontend framework
-- [Vite](https://vitejs.dev) - Build tool
+- [Vite](https://vitejs.dev) - Lightning-fast build tool
 - [Tailwind CSS](https://tailwindcss.com) - CSS framework
+- [Shadcn/UI](https://ui.shadcn.com) - Component library
+- [Claude Code](https://claude.com/claude-code) - AI-powered development assistant
 
 ## 📞 Support
 
 If you have any questions or need help:
 
-1. Check the [documentation](./PROJECT-CONTEXT.md)
-2. Open an [issue](https://github.com/Mario24874/urban_drive_master/issues)
-3. Contact the maintainer
+1. Check the [documentation](./PROJECT-CONTEXT.md) and [CHANGELOG](./CHANGELOG.md)
+2. Review [optimization guide](./OPTIMIZATIONS.md) for performance issues
+3. Open an [issue](https://github.com/Mario24874/urban_drive_master/issues)
+4. Contact the maintainer
+
+### Common Issues
+
+#### GPS Voice Not Working
+```javascript
+// Debug in browser console:
+const voices = window.speechSynthesis.getVoices();
+console.table(voices.filter(v => v.lang.startsWith('es')));
+```
+
+#### Build Failures
+- Ensure Node.js 18+ is installed
+- Run `npm install` to update dependencies
+- Check [OPTIMIZATIONS.md](./OPTIMIZATIONS.md) troubleshooting section
 
 ---
 
 **Made with ❤️ for modern urban mobility**
+
+**Version:** 1.1.0 | **Last Updated:** 2025-10-27
