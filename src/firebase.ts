@@ -1,21 +1,8 @@
-// src/firebase.ts
-import { initializeApp } from 'firebase/app';
-import { getAuth, Auth } from 'firebase/auth';
-import { getFirestore, Firestore } from 'firebase/firestore';
-import { getMessaging } from 'firebase/messaging';
+// src/firebase.ts - Re-exports from the canonical service file
+// This file exists for backward compatibility with components that import from '../firebase'
+// DO NOT add a second initializeApp() here - that causes "App already exists" crash
 
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID
-};
+export { auth, db, default } from './services/firebase';
 
-const app = initializeApp(firebaseConfig);
-
-// Exportar directamente las variables
-export const auth: Auth = getAuth(app);
-export const db: Firestore = getFirestore(app);
-export const messaging = getMessaging(app);
+// messaging is exported as null - use firebase/messaging directly if needed
+export const messaging = null;

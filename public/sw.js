@@ -1,4 +1,4 @@
-const CACHE_NAME = 'urban-drive-v1.1.0';
+const CACHE_NAME = 'urban-drive-v2.0.0';
 const urlsToCache = [
   '/',
   '/index.html',

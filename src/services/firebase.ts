@@ -1,9 +1,8 @@
-// Firebase Configuration
-import { initializeApp } from 'firebase/app';
+// Firebase Configuration - single source of truth
+import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
-// Configuración Firebase (PRODUCCIÓN)
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyD_zQMqs8o3evjEtjkuXybPW-sdH4c573M",
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "urbandrive-1082b.firebaseapp.com",
@@ -13,11 +12,9 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:470229432792:web:defaultappid"
 };
 
-// Inicializar Firebase
-const app = initializeApp(firebaseConfig);
+// Guard against duplicate initialization (two files importing this)
+const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
-// Exportar servicios
 export const auth = getAuth(app);
 export const db = getFirestore(app);
-
 export default app;
