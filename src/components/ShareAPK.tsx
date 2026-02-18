@@ -2,6 +2,19 @@ import React, { useState } from 'react';
 import { Share, MessageCircle, Mail, Download } from 'lucide-react';
 import { shareViaWhatsApp, shareViaEmail, shareGeneric, downloadAPK } from '../utils/shareAPK';
 
+// Shadcn UI Components
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { toast } from 'sonner';
+
 interface ShareAPKProps {
   isOpen: boolean;
   onClose: () => void;
@@ -14,162 +27,158 @@ const ShareAPK: React.FC<ShareAPKProps> = ({ isOpen, onClose, apkUrl }) => {
   const [recipientEmail, setRecipientEmail] = useState('');
   const [customMessage, setCustomMessage] = useState('');
 
-  if (!isOpen) return null;
-
   const handleShare = async (type: 'whatsapp' | 'email' | 'generic' | 'download') => {
     setLoading(type);
-    
+
     try {
       const options = {
         recipientPhone: recipientPhone || undefined,
         recipientEmail: recipientEmail || undefined,
         message: customMessage || undefined,
-        apkUrl
+        apkUrl,
       };
 
       switch (type) {
         case 'whatsapp':
           await shareViaWhatsApp(options);
+          toast.success('Shared via WhatsApp');
           break;
         case 'email':
           await shareViaEmail(options);
+          toast.success('Shared via Email');
           break;
         case 'generic':
           await shareGeneric(options);
+          toast.success('Share options opened');
           break;
         case 'download':
           await downloadAPK(apkUrl);
+          toast.success('Download started');
           break;
       }
     } catch (error) {
       console.error(`Error sharing via ${type}:`, error);
-      alert(`Error al compartir por ${type}. Inténtalo de nuevo.`);
+      toast.error(`Share failed via ${type}`, {
+        description: 'Please try again',
+      });
     } finally {
       setLoading(null);
     }
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={e => e.stopPropagation()}>
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-gray-900">Compartir Urban Drive</h2>
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-600"
-            >
-              ✕
-            </button>
-          </div>
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Share Urban Drive</DialogTitle>
+          <DialogDescription>
+            Send Urban Drive app to your contacts
+          </DialogDescription>
+        </DialogHeader>
 
-          {/* Campos opcionales */}
-          <div className="space-y-4 mb-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Teléfono (opcional)
-              </label>
-              <input
+        <div className="space-y-6">
+          {/* Optional fields */}
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="phone">Phone (optional)</Label>
+              <Input
+                id="phone"
                 type="tel"
-                placeholder="Ej: +573001234567"
+                placeholder="e.g. +573001234567"
                 value={recipientPhone}
                 onChange={(e) => setRecipientPhone(e.target.value)}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black"
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Email (opcional)
-              </label>
-              <input
+            <div className="space-y-2">
+              <Label htmlFor="email">Email (optional)</Label>
+              <Input
+                id="email"
                 type="email"
-                placeholder="ejemplo@correo.com"
+                placeholder="example@mail.com"
                 value={recipientEmail}
                 onChange={(e) => setRecipientEmail(e.target.value)}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black"
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Mensaje personalizado (opcional)
-              </label>
+            <div className="space-y-2">
+              <Label htmlFor="message">Custom message (optional)</Label>
               <textarea
-                placeholder="Escribe un mensaje personalizado..."
+                id="message"
+                placeholder="Write a custom message..."
                 value={customMessage}
                 onChange={(e) => setCustomMessage(e.target.value)}
                 rows={3}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black resize-none"
+                className="w-full p-3 border border-input rounded-md focus:ring-2 focus:ring-ring focus:outline-none resize-none text-sm"
               />
             </div>
           </div>
 
-          {/* Botones de compartir */}
+          {/* Share buttons */}
           <div className="grid grid-cols-2 gap-3">
-            <button
+            <Button
               onClick={() => handleShare('whatsapp')}
               disabled={loading === 'whatsapp'}
-              className="flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white p-3 rounded-lg font-medium transition-colors disabled:opacity-50"
+              className="bg-green-500 hover:bg-green-600"
             >
               {loading === 'whatsapp' ? (
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
               ) : (
-                <MessageCircle size={20} />
+                <MessageCircle className="mr-2" size={20} />
               )}
               WhatsApp
-            </button>
+            </Button>
 
-            <button
+            <Button
               onClick={() => handleShare('email')}
               disabled={loading === 'email'}
-              className="flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white p-3 rounded-lg font-medium transition-colors disabled:opacity-50"
+              className="bg-blue-500 hover:bg-blue-600"
             >
               {loading === 'email' ? (
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
               ) : (
-                <Mail size={20} />
+                <Mail className="mr-2" size={20} />
               )}
               Email
-            </button>
+            </Button>
 
-            <button
+            <Button
               onClick={() => handleShare('generic')}
               disabled={loading === 'generic'}
-              className="flex items-center justify-center gap-2 bg-gray-500 hover:bg-gray-600 text-white p-3 rounded-lg font-medium transition-colors disabled:opacity-50"
+              variant="secondary"
             >
               {loading === 'generic' ? (
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
               ) : (
-                <Share size={20} />
+                <Share className="mr-2" size={20} />
               )}
-              Compartir
-            </button>
+              Share
+            </Button>
 
-            <button
+            <Button
               onClick={() => handleShare('download')}
               disabled={loading === 'download'}
-              className="flex items-center justify-center gap-2 bg-purple-500 hover:bg-purple-600 text-white p-3 rounded-lg font-medium transition-colors disabled:opacity-50"
+              className="bg-purple-500 hover:bg-purple-600"
             >
               {loading === 'download' ? (
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
               ) : (
-                <Download size={20} />
+                <Download className="mr-2" size={20} />
               )}
-              Descargar
-            </button>
+              Download
+            </Button>
           </div>
 
-          {/* Información adicional */}
-          <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-            <p className="text-sm text-gray-600">
-              💡 <strong>Consejo:</strong> Los campos son opcionales. Si no los llenas, 
-              el sistema te permitirá elegir el contacto al momento de compartir.
+          {/* Tip */}
+          <div className="p-4 bg-muted rounded-lg">
+            <p className="text-sm text-muted-foreground">
+              💡 <strong>Tip:</strong> All fields are optional. If you don't fill them,
+              the system will let you choose the contact when sharing.
             </p>
           </div>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 

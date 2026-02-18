@@ -1,39 +1,62 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { auth, db } from './services/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
-import PortableInterface from './components/PortableInterface';
-// import PWAUpdateNotification from './components/PWAUpdateNotification'; // Deshabilitado mientras se arregla vite-plugin-pwa
+import { Loader2 } from 'lucide-react';
+
+// Lazy load heavy components for code splitting
+const PortableInterface = lazy(() => import('./components/PortableInterfaceNew'));
+const PWAUpdateNotification = lazy(() => import('./components/PWAUpdateNotification'));
+
+// Loading component
+const LoadingSpinner = () => (
+  <div className="min-h-screen flex items-center justify-center bg-background">
+    <div className="flex flex-col items-center space-y-4">
+      <Loader2 className="h-12 w-12 animate-spin text-primary" />
+      <p className="text-sm text-muted-foreground">Loading...</p>
+    </div>
+  </div>
+);
 
 function App() {
   const [user, setUser] = useState<any>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
 
-  // Monitorear estado de autenticación (como en portable)
+  // Monitor authentication state
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
-        // Usuario autenticado, obtener datos completos de Firestore
+        // User authenticated, get complete data from Firestore
         try {
-          const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
-          const userData = userDoc.exists() ? userDoc.data() : {};
-          
+          // Try users collection first
+          let userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+          let userData = userDoc.exists() ? userDoc.data() : null;
+
+          // If not found in users, try drivers collection
+          if (!userData) {
+            userDoc = await getDoc(doc(db, 'drivers', firebaseUser.uid));
+            userData = userDoc.exists() ? userDoc.data() : null;
+          }
+
           const completeUser = {
             id: firebaseUser.uid,
             email: firebaseUser.email,
-            displayName: firebaseUser.displayName || userData.displayName,
-            ...userData
+            displayName: firebaseUser.displayName || userData?.displayName,
+            photoURL: firebaseUser.photoURL || userData?.photoURL,
+            ...userData,
           };
-          
+
           setUser(completeUser);
           setIsAuthenticated(true);
         } catch (error) {
-          console.error('Error obteniendo datos del usuario:', error);
+          console.error('Error getting user data:', error);
+          // Fallback to basic Firebase auth data
           setUser({
             id: firebaseUser.uid,
             email: firebaseUser.email,
-            displayName: firebaseUser.displayName
+            displayName: firebaseUser.displayName,
+            photoURL: firebaseUser.photoURL,
           });
           setIsAuthenticated(true);
         }
@@ -48,34 +71,30 @@ function App() {
   }, []);
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="spinner mr-3"></div>
-        <span>Cargando...</span>
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col relative">
-      {/* Background image matching portable version */}
+    <div className="min-h-screen bg-background flex flex-col relative">
+      {/* Background image */}
       <div
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat bg-fixed"
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat bg-fixed opacity-5"
         style={{
-          backgroundImage: `url(/assets/background.jpg)`
+          backgroundImage: `url(/assets/background.jpg)`,
         }}
       />
-      
-      {/* Usar la misma interfaz que portable */}
-      <div className="relative z-10">
-        <PortableInterface
-          user={user}
-          isAuthenticated={isAuthenticated}
-        />
+
+      {/* Main content with Suspense for code splitting */}
+      <div className="relative z-10 flex-1">
+        <Suspense fallback={<LoadingSpinner />}>
+          <PortableInterface user={user} isAuthenticated={isAuthenticated} />
+        </Suspense>
       </div>
 
-      {/* PWA Update Notification - Deshabilitado temporalmente */}
-      {/* <PWAUpdateNotification /> */}
+      {/* PWA Update Notification */}
+      <Suspense fallback={null}>
+        <PWAUpdateNotification />
+      </Suspense>
     </div>
   );
 }

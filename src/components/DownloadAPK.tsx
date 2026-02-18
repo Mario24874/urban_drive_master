@@ -1,12 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { Download, Share, Smartphone, ExternalLink, X } from 'lucide-react';
+import { Download, Share, Smartphone, ExternalLink } from 'lucide-react';
 import { getDeviceInfo, getDownloadAction, getShareMessage } from '../utils/deviceDetection';
 import { shareViaWhatsApp, shareViaEmail, shareGeneric, downloadAPK } from '../utils/shareAPK';
+
+// Shadcn UI Components
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 interface DownloadAPKProps {
   isOpen: boolean;
   onClose: () => void;
-  showInline?: boolean; // Para mostrar como componente inline en lugar de modal
+  showInline?: boolean;
 }
 
 const DownloadAPK: React.FC<DownloadAPKProps> = ({ isOpen, onClose, showInline = false }) => {
@@ -21,29 +32,32 @@ const DownloadAPK: React.FC<DownloadAPKProps> = ({ isOpen, onClose, showInline =
     setDownloadAction(getDownloadAction(info));
   }, []);
 
-  if (!isOpen && !showInline) return null;
-
   const handleMainAction = async () => {
     setLoading(true);
-    
+
     try {
       switch (downloadAction.action) {
         case 'download':
-          // Descarga directa en móvil Android
           await downloadAPK();
+          toast.success('Download started', {
+            description: 'Check your downloads folder',
+          });
           break;
         case 'pwa':
-          // Instrucciones para iOS PWA
-          alert('Para instalar la app:\n1. Toca el botón de compartir (↗️)\n2. Selecciona "Añadir a pantalla de inicio"\n3. Confirma la instalación');
+          toast.info('Install instructions', {
+            description: '1. Tap the share button (↗️)\n2. Select "Add to Home Screen"\n3. Confirm installation',
+            duration: 10000,
+          });
           break;
         case 'share':
-          // Mostrar opciones de compartir en desktop
           setShowShareOptions(true);
           break;
       }
     } catch (error) {
-      console.error('Error en acción principal:', error);
-      alert('Error al procesar la acción. Inténtalo de nuevo.');
+      console.error('Error in main action:', error);
+      toast.error('Action failed', {
+        description: 'Please try again',
+      });
     } finally {
       setLoading(false);
     }
@@ -51,7 +65,7 @@ const DownloadAPK: React.FC<DownloadAPKProps> = ({ isOpen, onClose, showInline =
 
   const handleShare = async (type: 'whatsapp' | 'email' | 'generic' | 'download') => {
     setLoading(true);
-    
+
     try {
       const message = getShareMessage(deviceInfo);
       const options = { message };
@@ -59,175 +73,173 @@ const DownloadAPK: React.FC<DownloadAPKProps> = ({ isOpen, onClose, showInline =
       switch (type) {
         case 'whatsapp':
           await shareViaWhatsApp(options);
+          toast.success('Shared via WhatsApp');
           break;
         case 'email':
           await shareViaEmail(options);
+          toast.success('Shared via Email');
           break;
         case 'generic':
           await shareGeneric(options);
+          toast.success('Share options opened');
           break;
         case 'download':
           await downloadAPK();
+          toast.success('Download started');
           break;
       }
     } catch (error) {
       console.error(`Error sharing via ${type}:`, error);
-      alert(`Error al compartir por ${type}. Inténtalo de nuevo.`);
+      toast.error(`Share failed via ${type}`);
     } finally {
       setLoading(false);
     }
   };
 
   const renderContent = () => (
-    <div className={showInline ? 'p-6' : 'p-6'}>
-      {!showInline && (
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-gray-900">Urban Drive</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
-          >
-            <X size={24} />
-          </button>
-        </div>
-      )}
-
-      {/* Información del dispositivo (solo para debug, ocultar en producción) */}
+    <div className="space-y-6">
+      {/* Debug info (development only) */}
       {process.env.NODE_ENV === 'development' && (
-        <div className="mb-4 p-3 bg-gray-100 rounded-lg text-xs">
-          <strong>Debug:</strong> {deviceInfo.isMobile ? 'Móvil' : 'Desktop'} - 
-          {deviceInfo.isAndroid && ' Android'}{deviceInfo.isIOS && ' iOS'}{deviceInfo.isWindows && ' Windows'}{deviceInfo.isMac && ' Mac'}{deviceInfo.isLinux && ' Linux'}
+        <div className="p-3 bg-muted rounded-lg text-xs text-muted-foreground">
+          <strong>Debug:</strong> {deviceInfo.isMobile ? 'Mobile' : 'Desktop'} -
+          {deviceInfo.isAndroid && ' Android'}
+          {deviceInfo.isIOS && ' iOS'}
+          {deviceInfo.isWindows && ' Windows'}
+          {deviceInfo.isMac && ' Mac'}
+          {deviceInfo.isLinux && ' Linux'}
         </div>
       )}
 
       {!showShareOptions ? (
         <>
-          {/* Icono principal */}
-          <div className="text-center mb-6">
-            <div className="w-16 h-16 bg-black rounded-2xl flex items-center justify-center text-2xl mx-auto mb-4">
+          {/* Main icon */}
+          <div className="text-center">
+            <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center text-2xl mx-auto mb-4">
               {downloadAction.icon}
             </div>
-            <h3 className="text-lg font-bold text-gray-900 mb-2">
-              {downloadAction.title}
-            </h3>
-            <p className="text-gray-600 text-sm">
-              {downloadAction.subtitle}
-            </p>
+            <h3 className="text-lg font-bold mb-2">{downloadAction.title}</h3>
+            <p className="text-sm text-muted-foreground">{downloadAction.subtitle}</p>
           </div>
 
-          {/* Descripción */}
-          <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-            <p className="text-sm text-gray-700 text-center">
+          {/* Description */}
+          <div className="p-4 bg-muted rounded-lg">
+            <p className="text-sm text-center text-muted-foreground">
               {downloadAction.description}
             </p>
           </div>
 
-          {/* Botón principal */}
-          <button
+          {/* Main action button */}
+          <Button
             onClick={handleMainAction}
             disabled={loading}
-            className="w-full bg-black hover:bg-gray-800 text-white font-medium py-4 px-6 rounded-lg flex items-center justify-center gap-3 transition-colors disabled:opacity-50"
+            className="w-full"
+            size="lg"
           >
             {loading ? (
-              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
             ) : (
               <>
-                {downloadAction.action === 'download' && <Download size={20} />}
-                {downloadAction.action === 'pwa' && <Smartphone size={20} />}
-                {downloadAction.action === 'share' && <Share size={20} />}
+                {downloadAction.action === 'download' && <Download className="mr-2" size={20} />}
+                {downloadAction.action === 'pwa' && <Smartphone className="mr-2" size={20} />}
+                {downloadAction.action === 'share' && <Share className="mr-2" size={20} />}
                 {downloadAction.buttonText}
               </>
             )}
-          </button>
+          </Button>
 
-          {/* Opciones adicionales */}
-          <div className="mt-4 space-y-2">
+          {/* Additional options */}
+          <div className="space-y-2">
             {deviceInfo.isDesktop && (
-              <button
+              <Button
                 onClick={() => handleShare('download')}
-                className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors"
+                variant="outline"
+                className="w-full"
               >
-                <Download size={18} />
-                Descargar APK
-              </button>
+                <Download className="mr-2" size={18} />
+                Download APK
+              </Button>
             )}
-            
+
             {deviceInfo.isMobile && deviceInfo.isAndroid && (
-              <a
-                href="http://localhost:8080/urban-drive-portable.html"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors"
+              <Button
+                variant="outline"
+                className="w-full"
+                asChild
               >
-                <ExternalLink size={18} />
-                Abrir en navegador
-              </a>
+                <a
+                  href="http://localhost:8080/urban-drive-portable.html"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <ExternalLink className="mr-2" size={18} />
+                  Open in browser
+                </a>
+              </Button>
             )}
           </div>
         </>
       ) : (
         <>
-          {/* Opciones de compartir */}
-          <div className="text-center mb-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-2">
-              ¿Cómo quieres compartir?
-            </h3>
-            <p className="text-gray-600 text-sm">
-              Elige la forma de enviar Urban Drive a tus contactos
+          {/* Share options */}
+          <div className="text-center">
+            <h3 className="text-lg font-bold mb-2">How do you want to share?</h3>
+            <p className="text-sm text-muted-foreground">
+              Choose how to send Urban Drive to your contacts
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 mb-4">
-            <button
+          <div className="grid grid-cols-2 gap-3">
+            <Button
               onClick={() => handleShare('whatsapp')}
               disabled={loading}
-              className="bg-green-500 hover:bg-green-600 text-white font-medium py-3 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+              className="bg-green-500 hover:bg-green-600"
             >
-              <span>💬</span>
+              <span className="mr-2">💬</span>
               WhatsApp
-            </button>
+            </Button>
 
-            <button
+            <Button
               onClick={() => handleShare('email')}
               disabled={loading}
-              className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+              className="bg-blue-500 hover:bg-blue-600"
             >
-              <span>📧</span>
+              <span className="mr-2">📧</span>
               Email
-            </button>
+            </Button>
 
-            <button
+            <Button
               onClick={() => handleShare('generic')}
               disabled={loading}
-              className="bg-gray-500 hover:bg-gray-600 text-white font-medium py-3 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+              variant="secondary"
             >
-              <Share size={18} />
-              Más opciones
-            </button>
+              <Share className="mr-2" size={18} />
+              More options
+            </Button>
 
-            <button
+            <Button
               onClick={() => handleShare('download')}
               disabled={loading}
-              className="bg-purple-500 hover:bg-purple-600 text-white font-medium py-3 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+              className="bg-purple-500 hover:bg-purple-600"
             >
-              <Download size={18} />
-              Descargar
-            </button>
+              <Download className="mr-2" size={18} />
+              Download
+            </Button>
           </div>
 
-          <button
+          <Button
             onClick={() => setShowShareOptions(false)}
-            className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-lg transition-colors"
+            variant="outline"
+            className="w-full"
           >
-            ← Volver
-          </button>
+            ← Back
+          </Button>
         </>
       )}
 
-      {/* Información adicional */}
-      <div className="mt-6 text-center">
-        <p className="text-xs text-gray-500">
-          Urban Drive • Transporte urbano seguro y confiable
+      {/* Footer info */}
+      <div className="text-center">
+        <p className="text-xs text-muted-foreground">
+          Urban Drive • Safe and reliable urban transport
         </p>
       </div>
     </div>
@@ -235,18 +247,24 @@ const DownloadAPK: React.FC<DownloadAPKProps> = ({ isOpen, onClose, showInline =
 
   if (showInline) {
     return (
-      <div className="bg-white rounded-lg shadow-lg border">
+      <div className="bg-card rounded-lg shadow-lg border p-6">
         {renderContent()}
       </div>
     );
   }
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content max-w-sm" onClick={e => e.stopPropagation()}>
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Urban Drive</DialogTitle>
+          <DialogDescription>
+            Get the Urban Drive app on your device
+          </DialogDescription>
+        </DialogHeader>
         {renderContent()}
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 

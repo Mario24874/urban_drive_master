@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, memo } from 'react';
 import { Navigation } from 'lucide-react';
 import useContactTracking from '../hooks/useContactTracking';
 import NavigationInterface from './NavigationInterface';
@@ -581,4 +581,4 @@ const GPSMapComponent: React.FC<GPSMapComponentProps> = ({
   );
 };
 
-export default GPSMapComponent;
+export default memo(GPSMapComponent);

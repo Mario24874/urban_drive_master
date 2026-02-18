@@ -13,6 +13,7 @@ export interface UserData {
   createdAt?: Date;
   updatedAt?: Date;
   bio?: string;
+  photoURL?: string;
 }
 
 export interface Message {
@@ -49,6 +50,8 @@ export interface Contact {
   location?: Location;
   isVisible?: boolean;
   contacts?: string[];
+  bio?: string;
+  photoURL?: string;
 }
 
 export interface FirebaseError {

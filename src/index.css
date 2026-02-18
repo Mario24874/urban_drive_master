@@ -275,3 +275,72 @@
   }
 }
 
+/* Enhanced responsive utilities */
+@layer utilities {
+  /* Touch target utilities - WCAG compliant minimum size */
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px];
+  }
+
+  .touch-target-lg {
+    @apply min-h-[48px] min-w-[48px];
+  }
+
+  /* Safe area utilities with fallback */
+  .safe-area-top {
+    padding-top: max(env(safe-area-inset-top), 0.5rem);
+  }
+
+  .safe-area-bottom {
+    padding-bottom: max(env(safe-area-inset-bottom), 0.5rem);
+  }
+
+  /* High contrast mode support */
+  @media (prefers-contrast: high) {
+    .btn-primary, .btn-secondary {
+      border-width: 2px;
+    }
+  }
+
+  /* Dark mode specific adjustments */
+  @media (prefers-color-scheme: dark) {
+    :root:not(.light) {
+      color-scheme: dark;
+    }
+  }
+
+  /* Focus visible for keyboard navigation */
+  .focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
+  }
+
+  /* Smooth scroll with safe area consideration */
+  .scroll-smooth-safe {
+    scroll-behavior: smooth;
+    scroll-padding-top: env(safe-area-inset-top, 1rem);
+    scroll-padding-bottom: env(safe-area-inset-bottom, 1rem);
+  }
+}
+
+/* Performance optimizations */
+@layer utilities {
+  /* GPU acceleration for animations */
+  .gpu-accelerated {
+    transform: translateZ(0);
+    will-change: transform;
+  }
+
+  /* Prevent layout shift during loading */
+  .aspect-ratio-16-9 {
+    aspect-ratio: 16 / 9;
+  }
+
+  .aspect-ratio-4-3 {
+    aspect-ratio: 4 / 3;
+  }
+
+  .aspect-ratio-1-1 {
+    aspect-ratio: 1 / 1;
+  }
+}
+

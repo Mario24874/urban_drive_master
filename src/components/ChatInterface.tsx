@@ -1,7 +1,14 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, memo } from 'react';
 import { Send, ArrowLeft, Check, CheckCheck, Search, X } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import messagingService, { Message } from '../services/messaging';
 import { Contact } from '../types';
+
+// Shadcn UI Components
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 interface ChatInterfaceProps {
   currentUserId: string;
@@ -14,7 +21,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   currentUserId,
   currentUserName,
   selectedContact,
-  onBack
+  onBack,
 }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
@@ -22,10 +29,11 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const [loading, setLoading] = useState(false);
   const [searchMode, setSearchMode] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Scroll al final cuando hay mensajes nuevos
+  // Scroll to bottom when new messages arrive
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -34,7 +42,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     scrollToBottom();
   }, [messages]);
 
-  // Cargar mensajes cuando se selecciona un contacto
+  // Load messages when contact is selected
   useEffect(() => {
     if (!selectedContact) return;
 
@@ -42,10 +50,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     let unsubscribe: (() => void) | null = null;
 
     const loadMessages = async () => {
-      // Marcar mensajes como leídos
       await messagingService.markMessagesAsRead(currentUserId, selectedContact.id);
 
-      // Suscribirse a mensajes en tiempo real
       unsubscribe = messagingService.subscribeToConversation(
         currentUserId,
         selectedContact.id,
@@ -58,7 +64,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
     loadMessages();
 
-    // Cleanup
     return () => {
       if (unsubscribe) {
         unsubscribe();
@@ -66,13 +71,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     };
   }, [selectedContact, currentUserId]);
 
-  // Enviar mensaje
+  // Send message
   const handleSendMessage = async () => {
     if (!selectedContact || !newMessage.trim() || sending) return;
 
     setSending(true);
     const messageContent = newMessage.trim();
-    setNewMessage(''); // Limpiar input inmediatamente
+    setNewMessage('');
 
     const success = await messagingService.sendMessage(
       currentUserId,
@@ -83,16 +88,15 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     );
 
     if (!success) {
-      // Si falla, restaurar el mensaje
       setNewMessage(messageContent);
-      alert('Error al enviar el mensaje. Por favor intenta nuevamente.');
+      alert('Error sending message. Please try again.');
     }
 
     setSending(false);
     inputRef.current?.focus();
   };
 
-  // Manejar Enter para enviar
+  // Handle Enter key
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -100,7 +104,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     }
   };
 
-  // Buscar mensajes
+  // Search messages
   const handleSearch = async () => {
     if (!searchTerm.trim()) return;
 
@@ -110,26 +114,27 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     setLoading(false);
   };
 
-  // Formatear timestamp
+  // Format timestamp
   const formatTime = (timestamp: any): string => {
     if (!timestamp) return '';
-    
+
     try {
       const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
       const now = new Date();
-      
-      // Si es hoy, mostrar solo hora
+
       if (date.toDateString() === now.toDateString()) {
         return date.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' });
       }
-      
-      // Si es esta semana, mostrar día y hora
+
       const daysDiff = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
       if (daysDiff < 7) {
-        return date.toLocaleDateString('es', { weekday: 'short', hour: '2-digit', minute: '2-digit' });
+        return date.toLocaleDateString('es', {
+          weekday: 'short',
+          hour: '2-digit',
+          minute: '2-digit',
+        });
       }
-      
-      // Si es más antiguo, mostrar fecha completa
+
       return date.toLocaleDateString('es', { day: '2-digit', month: 'short' });
     } catch (error) {
       return '';
@@ -138,192 +143,224 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
   if (!selectedContact) {
     return (
-      <div className="flex items-center justify-center h-full text-gray-500">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="flex items-center justify-center h-full text-muted-foreground"
+      >
         <div className="text-center">
-          <MessageSquareIcon className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-          <p className="text-lg">Selecciona un contacto para chatear</p>
+          <MessageSquareIcon className="w-16 h-16 mx-auto mb-4 text-muted" />
+          <p className="text-lg">Select a contact to start chatting</p>
         </div>
-      </div>
+      </motion.div>
     );
   }
 
   return (
-    <div className="flex flex-col h-full bg-gray-50">
+    <div className="flex flex-col h-full bg-background">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
+      <div className="bg-card shadow-sm border-b">
         <div className="flex items-center justify-between p-4">
           <div className="flex items-center space-x-3">
             {onBack && (
-              <button
-                onClick={onBack}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
+              <Button variant="ghost" size="icon" onClick={onBack}>
                 <ArrowLeft size={20} />
-              </button>
+              </Button>
             )}
-            
+
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold">
-                {selectedContact.displayName.charAt(0).toUpperCase()}
-              </div>
-              
+              <Avatar>
+                <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+                  {selectedContact.displayName.charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+
               <div>
-                <h3 className="font-semibold text-gray-900">
-                  {selectedContact.displayName}
-                </h3>
-                <p className="text-sm text-gray-500">
-                  {selectedContact.userType === 'driver' ? '🚗 Conductor' : '👤 Usuario'}
-                  {selectedContact.isVisible && ' • 🟢 En línea'}
+                <h3 className="font-semibold">{selectedContact.displayName}</h3>
+                <p className="text-sm text-muted-foreground">
+                  {selectedContact.userType === 'driver' ? '🚗 Driver' : '👤 User'}
+                  {selectedContact.isVisible && ' • 🟢 Online'}
                 </p>
               </div>
             </div>
           </div>
 
-          <button
-            onClick={() => setSearchMode(!searchMode)}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          >
+          <Button variant="ghost" size="icon" onClick={() => setSearchMode(!searchMode)}>
             {searchMode ? <X size={20} /> : <Search size={20} />}
-          </button>
+          </Button>
         </div>
 
         {/* Search bar */}
-        {searchMode && (
-          <div className="px-4 pb-3">
-            <div className="flex space-x-2">
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                placeholder="Buscar en la conversación..."
-                className="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <button
-                onClick={handleSearch}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                Buscar
-              </button>
-            </div>
-          </div>
-        )}
+        <AnimatePresence>
+          {searchMode && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="px-4 pb-3 overflow-hidden"
+            >
+              <div className="flex space-x-2">
+                <Input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                  placeholder="Search in conversation..."
+                  className="flex-1"
+                />
+                <Button onClick={handleSearch}>Search</Button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-3">
+      <ScrollArea className="flex-1 p-4">
         {loading ? (
           <div className="flex justify-center items-center h-full">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+              className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full"
+            />
           </div>
         ) : messages.length === 0 ? (
-          <div className="flex items-center justify-center h-full text-gray-500">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex items-center justify-center h-full text-muted-foreground"
+          >
             <div className="text-center">
-              <p className="text-lg mb-2">Sin mensajes aún</p>
-              <p className="text-sm">Envía el primer mensaje para iniciar la conversación</p>
+              <p className="text-lg mb-2">No messages yet</p>
+              <p className="text-sm">Send the first message to start the conversation</p>
             </div>
-          </div>
+          </motion.div>
         ) : (
-          messages.map((message) => {
-            const isOwn = message.senderId === currentUserId;
-            
-            return (
-              <div
-                key={message.id}
-                className={`flex ${isOwn ? 'justify-end' : 'justify-start'} animate-fadeIn`}
-              >
-                <div
-                  className={`max-w-[70%] md:max-w-[50%] ${
-                    isOwn 
-                      ? 'bg-blue-600 text-white' 
-                      : 'bg-white border border-gray-200'
-                  } rounded-2xl px-4 py-2 shadow-sm`}
+          <div className="space-y-3">
+            <AnimatePresence mode="popLayout">
+              {messages.map((message) => {
+                const isOwn = message.senderId === currentUserId;
+
+                return (
+                  <motion.div
+                    key={message.id}
+                    initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    transition={{
+                      type: 'spring',
+                      stiffness: 300,
+                      damping: 30,
+                    }}
+                    className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}
+                  >
+                    <div
+                      className={`max-w-[70%] md:max-w-[50%] ${
+                        isOwn
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-card border border-border'
+                      } rounded-2xl px-4 py-2 shadow-sm`}
+                    >
+                      {!isOwn && (
+                        <p className="text-xs font-semibold mb-1 text-blue-600">
+                          {message.senderName}
+                        </p>
+                      )}
+
+                      <p className="text-sm break-words">{message.content}</p>
+
+                      <div
+                        className={`flex items-center justify-end space-x-1 mt-1 text-xs ${
+                          isOwn ? 'text-primary-foreground/70' : 'text-muted-foreground'
+                        }`}
+                      >
+                        <span>{formatTime(message.timestamp)}</span>
+                        {isOwn &&
+                          (message.read ? <CheckCheck size={14} /> : <Check size={14} />)}
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
+
+            {/* Typing indicator */}
+            <AnimatePresence>
+              {isTyping && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="flex justify-start"
                 >
-                  {!isOwn && (
-                    <p className="text-xs font-semibold mb-1 text-blue-600">
-                      {message.senderName}
-                    </p>
-                  )}
-                  
-                  <p className={`text-sm ${isOwn ? 'text-white' : 'text-gray-800'} break-words`}>
-                    {message.content}
-                  </p>
-                  
-                  <div className={`flex items-center justify-end space-x-1 mt-1 ${
-                    isOwn ? 'text-blue-100' : 'text-gray-500'
-                  }`}>
-                    <span className="text-xs">
-                      {formatTime(message.timestamp)}
-                    </span>
-                    {isOwn && (
-                      message.read ? 
-                        <CheckCheck size={14} /> : 
-                        <Check size={14} />
-                    )}
+                  <div className="bg-card border border-border rounded-2xl px-4 py-3 shadow-sm">
+                    <div className="flex space-x-1">
+                      {[0, 1, 2].map((i) => (
+                        <motion.div
+                          key={i}
+                          animate={{ y: [0, -8, 0] }}
+                          transition={{
+                            duration: 0.6,
+                            repeat: Infinity,
+                            delay: i * 0.2,
+                          }}
+                          className="w-2 h-2 bg-muted-foreground rounded-full"
+                        />
+                      ))}
+                    </div>
                   </div>
-                </div>
-              </div>
-            );
-          })
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <div ref={messagesEndRef} />
+          </div>
         )}
-        <div ref={messagesEndRef} />
-      </div>
+      </ScrollArea>
 
       {/* Input */}
-      <div className="bg-white border-t p-4">
+      <div className="bg-card border-t p-4">
         <div className="flex space-x-2">
-          <input
+          <Input
             ref={inputRef}
             type="text"
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder="Escribe un mensaje..."
+            placeholder="Type a message..."
             disabled={sending}
-            className="flex-1 px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+            className="flex-1 rounded-full"
           />
-          
-          <button
-            onClick={handleSendMessage}
-            disabled={!newMessage.trim() || sending}
-            className={`p-2 rounded-full transition-all ${
-              newMessage.trim() && !sending
-                ? 'bg-blue-600 hover:bg-blue-700 text-white scale-100' 
-                : 'bg-gray-200 text-gray-400 scale-95'
-            } disabled:cursor-not-allowed`}
+
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
           >
-            {sending ? (
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-            ) : (
-              <Send size={20} />
-            )}
-          </button>
+            <Button
+              onClick={handleSendMessage}
+              disabled={!newMessage.trim() || sending}
+              size="icon"
+              className="rounded-full"
+            >
+              {sending ? (
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                  className="w-5 h-5 border-2 border-current border-t-transparent rounded-full"
+                />
+              ) : (
+                <Send size={20} />
+              )}
+            </Button>
+          </motion.div>
         </div>
       </div>
-
-      <style dangerouslySetInnerHTML={{
-        __html: `
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-            transform: translateY(10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        
-        .animate-fadeIn {
-          animation: fadeIn 0.3s ease-out;
-        }
-        `
-      }} />
     </div>
   );
 };
 
-// Ícono de mensaje para cuando no hay chat seleccionado
+// Message icon for empty state
 const MessageSquareIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg
     className={className}
@@ -341,4 +378,4 @@ const MessageSquareIcon: React.FC<{ className?: string }> = ({ className }) => (
   </svg>
 );
 
-export default ChatInterface;
+export default memo(ChatInterface);

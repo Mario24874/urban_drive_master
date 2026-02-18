@@ -2,6 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App'
 import './index.css'
+import { Toaster } from 'sonner'
 
 // Register Service Worker for PWA functionality
 if ('serviceWorker' in navigator && import.meta.env.PROD) {
@@ -76,5 +77,6 @@ window.addEventListener('appinstalled', () => {
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
     <App />
+    <Toaster position="top-right" richColors closeButton />
   </React.StrictMode>
 )
