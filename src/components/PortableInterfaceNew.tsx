@@ -86,11 +86,11 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="h-screen flex flex-col bg-background"
+      className="h-screen flex flex-col"
     >
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
         {/* Desktop Tabs List */}
-        <div className="hidden sm:block border-b">
+        <div className="hidden sm:block border-b bg-black/50 backdrop-blur-md">
           <div className="container-responsive py-4">
             <TabsList className="grid w-full max-w-2xl grid-cols-5 mx-auto">
               <TabsTrigger value="home" className="flex items-center space-x-2">
@@ -270,7 +270,7 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
         </div>
 
         {/* Mobile Bottom Navigation */}
-        <div className="sm:hidden border-t bg-card">
+        <div className="sm:hidden border-t bg-black/70 backdrop-blur-md">
           <TabsList className="grid w-full grid-cols-5 h-16">
             <TabsTrigger value="home" className="flex-col space-y-1">
               <Home size={20} />
