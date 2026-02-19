@@ -10,10 +10,11 @@ const PWAUpdateNotification = lazy(() => import('./components/PWAUpdateNotificat
 
 // Loading component
 const LoadingSpinner = () => (
-  <div className="min-h-screen flex items-center justify-center bg-background">
+  <div className="min-h-screen flex items-center justify-center">
     <div className="flex flex-col items-center space-y-4">
-      <Loader2 className="h-12 w-12 animate-spin text-primary" />
-      <p className="text-sm text-muted-foreground">Loading...</p>
+      <img src="/assets/UrbanDrive.png" alt="Urban Drive" className="h-16 w-16 rounded-2xl shadow-xl mb-2" />
+      <Loader2 className="h-10 w-10 animate-spin text-white" />
+      <p className="text-sm text-white/80">Loading...</p>
     </div>
   </div>
 );
@@ -75,14 +76,16 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col relative">
+    <div className="min-h-screen flex flex-col relative">
       {/* Background image */}
       <div
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat bg-fixed opacity-5"
+        className="fixed inset-0 -z-20 bg-cover bg-center bg-no-repeat"
         style={{
           backgroundImage: `url(/assets/background.jpg)`,
         }}
       />
+      {/* Dark overlay for readability */}
+      <div className="fixed inset-0 -z-10 bg-black/60" />
 
       {/* Main content with Suspense for code splitting */}
       <div className="relative z-10 flex-1">

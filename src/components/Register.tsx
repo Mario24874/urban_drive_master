@@ -186,6 +186,16 @@ const Register: React.FC<RegisterProps> = ({ handleRegister }) => {
         transition={{ duration: 0.4, ease: 'easeOut' }}
         className="w-full max-w-sm mx-auto sm:max-w-md"
       >
+        {/* Logo */}
+        <div className="text-center mb-6">
+          <img
+            src="/assets/UrbanDrive.png"
+            alt="Urban Drive"
+            className="h-20 w-20 mx-auto rounded-2xl shadow-xl mb-3"
+          />
+          <h1 className="text-2xl font-bold text-white">Urban Drive</h1>
+        </div>
+
         <Card className="shadow-lg">
           <CardHeader className="space-y-1 text-center">
             <CardTitle className="text-2xl sm:text-3xl font-bold">

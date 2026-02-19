@@ -50,7 +50,7 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
   // Show login/register if not authenticated
   if (!isAuthenticated || !user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <div className="min-h-screen flex items-center justify-center p-4">
         {showRegister ? (
           <div className="w-full">
             <Register handleRegister={handleRegister || (() => {})} />
@@ -234,6 +234,7 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
               user={user}
               userId={user.id}
               userType={user.userType}
+              isActive={activeTab === 'map'}
             />
           </TabsContent>
 

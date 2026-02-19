@@ -9,13 +9,15 @@ interface GPSMapComponentProps {
   user: any;
   userId: string;
   userType: 'user' | 'driver';
+  isActive?: boolean;
 }
 
-const GPSMapComponent: React.FC<GPSMapComponentProps> = ({ 
-  userLocation, 
-  user, 
-  userId, 
-  userType 
+const GPSMapComponent: React.FC<GPSMapComponentProps> = ({
+  userLocation,
+  user,
+  userId,
+  userType,
+  isActive = true
 }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<any>(null);
@@ -110,7 +112,7 @@ const GPSMapComponent: React.FC<GPSMapComponentProps> = ({
         
         map.current = new mapboxgl.Map({
           container: mapContainer.current,
-          style: 'mapbox://styles/mariomoreno24874/cm2e3oshc002n01pbdfmv1qtj',
+          style: 'mapbox://styles/mapbox/streets-v12',
           center: currentLocation,
           zoom: trackedUserLocation ? 15 : 12, // Mayor zoom si tenemos ubicación precisa
           pitch: 45,
@@ -395,6 +397,15 @@ const GPSMapComponent: React.FC<GPSMapComponentProps> = ({
       }
     };
   }, []); // Solo ejecutar una vez al montar
+
+  // Resize map when tab becomes active (fixes blank map on mobile)
+  useEffect(() => {
+    if (isActive && map.current) {
+      setTimeout(() => {
+        map.current.resize();
+      }, 100);
+    }
+  }, [isActive]);
 
   // Actualizar centro del mapa cuando cambie la ubicación
   useEffect(() => {
