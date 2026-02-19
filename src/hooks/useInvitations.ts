@@ -49,6 +49,7 @@ export function useInvitations(
         byId = snap.docs.map(toInvitation);
         notify();
       },
+      (err) => console.error('[useInvitations] byId query error:', err),
     );
 
     // Query 2: invitations sent to my email (toId may be null if I wasn't found at send time)
@@ -68,6 +69,7 @@ export function useInvitations(
             }
           }
         },
+        (err) => console.error('[useInvitations] byEmail query error:', err),
       );
     }
 
@@ -75,6 +77,7 @@ export function useInvitations(
     const unsubSent = onSnapshot(
       query(invRef, where('fromId', '==', userId)),
       (snap) => setSent(snap.docs.map(toInvitation)),
+      (err) => console.error('[useInvitations] sent query error:', err),
     );
 
     return () => { unsubById(); unsubByEmail(); unsubSent(); };

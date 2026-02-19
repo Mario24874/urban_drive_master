@@ -1,13 +1,38 @@
-import { defineConfig } from 'vite';
+import { defineConfig, Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 // import { VitePWA } from 'vite-plugin-pwa'; // Deshabilitado temporalmente por error ESM
 import path from 'path';
+import fs from 'fs';
+
+/**
+ * Plugin that rewrites CACHE_NAME in dist/sw.js with a build timestamp.
+ * This guarantees the browser always detects a new SW on every deploy,
+ * triggering the update flow (updatefound → skipWaiting → controllerchange → reload).
+ */
+function injectSwVersion(): Plugin {
+  return {
+    name: 'inject-sw-version',
+    apply: 'build',
+    writeBundle() {
+      const swPath = path.resolve(__dirname, 'dist/sw.js');
+      if (!fs.existsSync(swPath)) return;
+      let content = fs.readFileSync(swPath, 'utf-8');
+      content = content.replace(
+        /const CACHE_NAME = '[^']*';/,
+        `const CACHE_NAME = 'urban-drive-${Date.now()}';`,
+      );
+      fs.writeFileSync(swPath, content);
+      console.log('[inject-sw-version] Injected build timestamp into dist/sw.js');
+    },
+  };
+}
 
 // https://vitejs.dev/config/
 export default defineConfig({
   base: '/',
   plugins: [
     react(),
+    injectSwVersion(),
     // VitePWA deshabilitado - usando service worker manual en public/sw.js
     // VitePWA({
     //   strategies: 'injectManifest',

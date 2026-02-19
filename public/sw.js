@@ -26,45 +26,58 @@ self.addEventListener('install', (event) => {
   );
 });
 
-// Fetch event - serve from cache when offline
+// Fetch event
 self.addEventListener('fetch', (event) => {
   // Skip cross-origin requests and non-GET requests
-  if (!event.request.url.startsWith(self.location.origin) || 
+  if (!event.request.url.startsWith(self.location.origin) ||
       event.request.method !== 'GET') {
     return;
   }
 
+  // ── Navigation requests (index.html): network-first ──────────────────────
+  // Always try the network so the browser gets the latest HTML, which in turn
+  // loads the latest hashed JS/CSS chunks. Falls back to cache only offline.
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          const responseToCache = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseToCache));
+          return response;
+        })
+        .catch(() => caches.match('/index.html'))
+    );
+    return;
+  }
+
+  // ── All other requests: cache-first ──────────────────────────────────────
   event.respondWith(
     caches.match(event.request)
       .then((response) => {
-        // Return cached version or fetch from network
         if (response) {
           return response;
         }
-        
-        // Clone the request because it's a stream
+
         const fetchRequest = event.request.clone();
-        
+
         return fetch(fetchRequest).then((response) => {
-          // Check if we received a valid response
           if (!response || response.status !== 200 || response.type !== 'basic') {
             return response;
           }
 
-          // Clone the response because it's a stream
           const responseToCache = response.clone();
 
           caches.open(CACHE_NAME)
             .then((cache) => {
               const url = event.request.url;
-              // Never cache: API calls, maps, Firebase, or Vite JS/CSS chunks
-              // Vite chunks already use content-addressable hashes for HTTP cache;
+              // Never cache: API calls, maps, Firebase, or Vite JS/CSS chunks.
+              // Vite chunks use content-addressable hashes for HTTP cache;
               // SW-caching them causes stale-file crashes on every new deploy.
               if (url.includes('/api/') ||
                   url.includes('mapbox') ||
                   url.includes('firebase') ||
                   url.includes('googleapis') ||
-                  (url.includes('/assets/') && (url.match(/\.(js|css)(\?|$)/)))
+                  (url.includes('/assets/') && url.match(/\.(js|css)(\?|$)/))
               ) {
                 return;
               }
@@ -72,19 +85,13 @@ self.addEventListener('fetch', (event) => {
             });
 
           return response;
-        }).catch(() => {
-          // Return offline page for navigation requests when network fails
-          if (event.request.mode === 'navigate') {
-            return caches.match('/index.html');
-          }
-          
-          // Return cached resource or a default response
-          return caches.match(event.request) || 
-                 new Response('Offline - Resource not available', {
-                   status: 503,
-                   statusText: 'Service Unavailable'
-                 });
-        });
+        }).catch(() =>
+          caches.match(event.request) ||
+          new Response('Offline - Resource not available', {
+            status: 503,
+            statusText: 'Service Unavailable',
+          })
+        );
       })
   );
 });
