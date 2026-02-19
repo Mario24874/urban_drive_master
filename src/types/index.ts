@@ -54,6 +54,19 @@ export interface Contact {
   photoURL?: string;
 }
 
+export interface Invitation {
+  id: string;
+  fromId: string;
+  fromName: string;
+  fromEmail: string;
+  fromPhone: string;
+  fromType: 'user' | 'driver';
+  toIdentifier: string;   // email or phone used to search
+  toId: string | null;    // resolved uid when target found
+  status: 'pending' | 'accepted' | 'rejected';
+  createdAt: Date;
+}
+
 export interface FirebaseError {
   code: string;
   message: string;

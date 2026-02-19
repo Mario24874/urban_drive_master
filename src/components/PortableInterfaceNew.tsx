@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useLocation } from '../hooks/useLocation';
-import { useContacts } from '../hooks/useContacts';
 import type { UserData, Contact } from '../types';
 
 // Components
@@ -40,12 +39,8 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [showRegister, setShowRegister] = useState(false);
 
-  // Custom hooks for location and contacts
+  // Custom hooks
   const { location, loading: locationLoading, refreshLocation } = useLocation(user);
-  const { contacts, loading: contactsLoading } = useContacts(
-    user?.id || null,
-    user?.userType
-  );
 
   // Show login/register if not authenticated
   if (!isAuthenticated || !user) {
@@ -143,7 +138,7 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-muted-foreground">Contacts</p>
-                      <p className="text-2xl font-bold">{contacts.length}</p>
+                      <p className="text-2xl font-bold">{user.contacts?.length ?? 0}</p>
                     </div>
                     <Users className="text-muted-foreground" size={32} />
                   </div>
@@ -239,16 +234,17 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
           </TabsContent>
 
           {/* Contacts Tab */}
-          <TabsContent value="contacts" className="h-full m-0 p-4">
-            <div className="h-full max-w-4xl mx-auto">
+          <TabsContent value="contacts" className="h-full m-0 p-4 overflow-y-auto">
+            <div className="h-full max-w-2xl mx-auto">
               <ContactList
-                contacts={contacts}
+                userId={user.id}
+                userType={user.userType}
+                currentUser={user}
                 selectedContact={selectedContact}
                 onSelectContact={(contact) => {
                   setSelectedContact(contact);
                   setActiveTab('messages');
                 }}
-                loading={contactsLoading}
               />
             </div>
           </TabsContent>
