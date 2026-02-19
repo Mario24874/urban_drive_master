@@ -2,7 +2,7 @@ import React, { useState, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search, UserPlus, Check, X, Trash2,
-  Eye, EyeOff, MessageSquare, MapPin, Clock,
+  Eye, EyeOff, MessageSquare, MapPin, Clock, MoreVertical,
 } from 'lucide-react';
 import type { Contact, Invitation } from '../../types';
 import { useContacts } from '../../hooks/useContacts';
@@ -15,6 +15,13 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
   Dialog,
   DialogContent,
@@ -82,7 +89,6 @@ const ContactItem: React.FC<{
     <div className="flex-1 min-w-0" onClick={onSelect}>
       <div className="flex items-center gap-2">
         <p className="font-medium text-sm truncate">{contact.displayName}</p>
-        {contact.isVisible && <span className="w-2 h-2 bg-green-400 rounded-full flex-shrink-0" />}
       </div>
       <div className="flex items-center gap-2 mt-0.5">
         <Badge variant="outline" className="text-xs py-0">
@@ -100,41 +106,45 @@ const ContactItem: React.FC<{
       </div>
     </div>
 
-    {/* Actions */}
-    <div className="flex items-center gap-1 flex-shrink-0">
-      {/* Message */}
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-7 w-7"
-        title="Open chat"
-        onClick={onSelect}
-      >
-        <MessageSquare size={14} />
-      </Button>
+    {/* Visibility indicator dot */}
+    {isVisible && (
+      <span className="w-2 h-2 bg-green-400 rounded-full flex-shrink-0" title="This contact can see your location" />
+    )}
 
-      {/* Visibility toggle: can this contact see my location? */}
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-7 w-7"
-        title={isVisible ? 'Hide your location from this contact' : 'Show your location to this contact'}
-        onClick={onToggleVisibility}
-      >
-        {isVisible ? <Eye size={14} className="text-green-400" /> : <EyeOff size={14} className="text-muted-foreground" />}
-      </Button>
-
-      {/* Remove */}
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-7 w-7 text-destructive hover:text-destructive"
-        title="Remove contact"
-        onClick={onRemove}
-      >
-        <Trash2 size={14} />
-      </Button>
-    </div>
+    {/* Actions — DropdownMenu works on both desktop and mobile */}
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 flex-shrink-0"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <MoreVertical size={16} />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-48">
+        <DropdownMenuItem onClick={onSelect} className="gap-2">
+          <MessageSquare size={14} />
+          Send message
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={onToggleVisibility} className="gap-2">
+          {isVisible
+            ? <><EyeOff size={14} /><span>Hide my location</span></>
+            : <><Eye size={14} className="text-green-400" /><span>Show my location</span></>
+          }
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          onClick={onRemove}
+          className="gap-2 text-destructive focus:text-destructive"
+        >
+          <Trash2 size={14} />
+          Remove contact
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   </motion.div>
 );
 

@@ -126,7 +126,7 @@ export function useContacts(
       await updateDoc(doc(db, collName, userId), {
         [`contactVisibility.${contactId}`]: visible,
       });
-      toast.success(visible ? 'Contact can now see your location' : 'Contact hidden from your location');
+      toast.success(visible ? 'This contact can now see your location' : 'Your location is now hidden from this contact');
     } catch (err: any) {
       toast.error('Failed to update visibility', { description: err.message });
     }

@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState, memo } from 'react';
 import { Navigation } from 'lucide-react';
 import useContactTracking from '../hooks/useContactTracking';
 import NavigationInterface from './NavigationInterface';
-import VisibilityToggle from './VisibilityToggle';
 
 interface GPSMapComponentProps {
   userLocation: any;
@@ -515,44 +514,31 @@ const GPSMapComponent: React.FC<GPSMapComponentProps> = ({
     <div className="w-full relative">
       {/* Información de estado GPS */}
       <div className="mb-4 p-3 bg-gray-50 rounded-lg border">
-        <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <div className={`w-3 h-3 rounded-full ${isTracking ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></div>
+            <div className={`w-3 h-3 rounded-full ${isTracking ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
             <span className="text-sm font-medium">
               GPS {isTracking ? 'Activo' : 'Inactivo'}
             </span>
           </div>
-          
-          {/* Toggle de visibilidad */}
-          <VisibilityToggle 
-            userId={userId}
-            userType={userType}
-            className="ml-4"
-          />
-          
-          <div className="text-sm text-gray-600">
-            {totalContacts} contactos visibles
+          <div className="grid grid-cols-3 gap-3 text-center text-xs">
+            <div>
+              <div className="font-semibold text-blue-600">{totalContacts}</div>
+              <div className="text-gray-500">En mapa</div>
+            </div>
+            <div>
+              <div className="font-semibold text-emerald-600">{drivers}</div>
+              <div className="text-gray-500">Conductores</div>
+            </div>
+            <div>
+              <div className="font-semibold text-gray-600">{users}</div>
+              <div className="text-gray-500">Usuarios</div>
+            </div>
           </div>
         </div>
-        
-        <div className="grid grid-cols-4 gap-2 text-center text-xs">
-          <div className="bg-white p-2 rounded">
-            <div className="font-semibold text-blue-600">{totalContacts}</div>
-            <div className="text-gray-600">Total</div>
-          </div>
-          <div className="bg-white p-2 rounded">
-            <div className="font-semibold text-green-600">{nearbyContacts}</div>
-            <div className="text-gray-600">Cercanos</div>
-          </div>
-          <div className="bg-white p-2 rounded">
-            <div className="font-semibold text-emerald-600">{drivers}</div>
-            <div className="text-gray-600">Conductores</div>
-          </div>
-          <div className="bg-white p-2 rounded">
-            <div className="font-semibold text-gray-600">{users}</div>
-            <div className="text-gray-600">Usuarios</div>
-          </div>
-        </div>
+        {error && (
+          <p className="mt-2 text-xs text-red-600">⚠️ {error}</p>
+        )}
       </div>
 
       {/* Mapa */}
