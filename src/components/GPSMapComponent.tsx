@@ -587,6 +587,8 @@ const GPSMapComponent: React.FC<GPSMapComponentProps> = ({
         onClose={handleCloseNavigation}
         destination={navigationDestination}
         contactName={selectedContactName}
+        contactsForNav={visibleContacts.filter(c => c.location) as any}
+        onSelectContact={handleNavigateToContact}
       />
 
       {/* CSS para animaciones */}

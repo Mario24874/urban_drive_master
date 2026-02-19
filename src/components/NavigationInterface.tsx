@@ -2,18 +2,31 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Navigation, Volume2, VolumeX, RotateCcw, X, MapPin, Clock } from 'lucide-react';
 import navigationService, { NavigationState } from '../services/navigation';
 
+interface ContactForNav {
+  id: string;
+  displayName: string;
+  userType: 'user' | 'driver';
+  location: { longitude: number; latitude: number } | null;
+  phone?: string;
+}
+
 interface NavigationInterfaceProps {
   isVisible: boolean;
   onClose: () => void;
   destination?: [number, number];
   contactName?: string;
+  /** Contacts that have a known location — shown as destination picker */
+  contactsForNav?: ContactForNav[];
+  onSelectContact?: (contact: ContactForNav) => void;
 }
 
 const NavigationInterface: React.FC<NavigationInterfaceProps> = ({
   isVisible,
   onClose,
   destination,
-  contactName
+  contactName,
+  contactsForNav = [],
+  onSelectContact,
 }) => {
   const [navState, setNavState] = useState<NavigationState>(navigationService.getState());
   const [isStarting, setIsStarting] = useState(false);
@@ -264,35 +277,28 @@ const NavigationInterface: React.FC<NavigationInterfaceProps> = ({
       {/* Main Content */}
       <div className="flex-1 relative">
         {!navState.isNavigating ? (
-          <div className="h-full flex flex-col items-center justify-center p-6 bg-gradient-to-br from-blue-50 to-indigo-100">
-            <div className="max-w-md w-full text-center space-y-6">
-              <div className="w-24 h-24 bg-blue-600 rounded-full flex items-center justify-center mx-auto">
-                <MapPin size={40} className="text-white" />
-              </div>
-              
-              <div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                  Navegación GPS
-                </h3>
-                <p className="text-gray-600">
-                  {contactName ? 
-                    `Inicia la navegación hacia ${contactName}` : 
-                    'Selecciona un destino para comenzar'
-                  }
-                </p>
-              </div>
+          <div className="h-full flex flex-col bg-gradient-to-br from-blue-50 to-indigo-100 overflow-y-auto">
+            <div className="max-w-md w-full mx-auto p-6 space-y-4">
 
-              {destination && (
-                <div className="space-y-4">
+              {/* ── Destination already set (coming from "Navigate here") ── */}
+              {destination ? (
+                <>
+                  <div className="text-center">
+                    <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <MapPin size={32} className="text-white" />
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900">
+                      {contactName ? `Navegar hacia ${contactName}` : 'Destino seleccionado'}
+                    </h3>
+                  </div>
+
                   <div className="bg-white p-4 rounded-lg shadow-sm border">
                     <div className="flex items-center space-x-3">
-                      <MapPin size={20} className="text-blue-600" />
-                      <div className="text-left">
-                        <p className="font-medium text-gray-900">
-                          {contactName || 'Destino seleccionado'}
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          {destination[1].toFixed(6)}, {destination[0].toFixed(6)}
+                      <MapPin size={20} className="text-blue-600 flex-shrink-0" />
+                      <div>
+                        <p className="font-medium text-gray-900">{contactName || 'Destino'}</p>
+                        <p className="text-sm text-gray-500">
+                          {destination[1].toFixed(5)}, {destination[0].toFixed(5)}
                         </p>
                       </div>
                     </div>
@@ -301,32 +307,62 @@ const NavigationInterface: React.FC<NavigationInterfaceProps> = ({
                   <button
                     onClick={handleStartNavigation}
                     disabled={isStarting}
-                    className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white py-4 px-6 rounded-lg font-semibold text-lg transition-colors flex items-center justify-center space-x-2"
+                    className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white py-4 px-6 rounded-xl font-semibold text-lg transition-colors flex items-center justify-center gap-2"
                   >
                     {isStarting ? (
-                      <>
-                        <Clock size={24} className="animate-spin" />
-                        <span>Iniciando...</span>
-                      </>
+                      <><Clock size={22} className="animate-spin" /><span>Calculando ruta...</span></>
                     ) : (
-                      <>
-                        <Navigation size={24} />
-                        <span>Iniciar Navegación</span>
-                      </>
+                      <><Navigation size={22} /><span>Iniciar Navegación</span></>
                     )}
                   </button>
-                </div>
-              )}
+                </>
+              ) : (
+                <>
+                  {/* ── No destination: show contact picker ── */}
+                  <div className="text-center pt-2">
+                    <div className="w-14 h-14 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <Navigation size={28} className="text-white" />
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900">¿A dónde vas?</h3>
+                    <p className="text-sm text-gray-500 mt-1">
+                      Selecciona un contacto para navegar hacia él
+                    </p>
+                  </div>
 
-              <div className="bg-white p-4 rounded-lg shadow-sm border">
-                <h4 className="font-semibold text-gray-900 mb-2">Características:</h4>
-                <ul className="text-sm text-gray-600 space-y-1 text-left">
-                  <li>• Instrucciones de voz en tiempo real</li>
-                  <li>• Navegación turn-by-turn</li>
-                  <li>• Recalculo automático de ruta</li>
-                  <li>• Optimizado para móviles</li>
-                </ul>
-              </div>
+                  {contactsForNav.length > 0 ? (
+                    <div className="space-y-2">
+                      {contactsForNav.map((c) => (
+                        <button
+                          key={c.id}
+                          onClick={() => onSelectContact?.(c)}
+                          className="w-full flex items-center gap-3 bg-white hover:bg-blue-50 active:bg-blue-100 p-4 rounded-xl shadow-sm border transition-colors text-left"
+                        >
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white text-lg flex-shrink-0 ${c.userType === 'driver' ? 'bg-emerald-500' : 'bg-blue-500'}`}>
+                            {c.userType === 'driver' ? '🚗' : '👤'}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-gray-900 truncate">{c.displayName}</p>
+                            <p className="text-xs text-gray-500">
+                              {c.userType === 'driver' ? 'Conductor' : 'Usuario'}
+                              {c.phone ? ` · ${c.phone}` : ''}
+                            </p>
+                          </div>
+                          <Navigation size={18} className="text-blue-500 flex-shrink-0" />
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="bg-white p-5 rounded-xl shadow-sm border text-center">
+                      <p className="text-gray-500 text-sm mb-2">
+                        Ningún contacto tiene ubicación activa ahora mismo.
+                      </p>
+                      <p className="text-gray-400 text-xs">
+                        Cuando un contacto comparta su GPS, aparecerá aquí.
+                      </p>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           </div>
         ) : (
