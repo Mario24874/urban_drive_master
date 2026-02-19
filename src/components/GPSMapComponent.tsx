@@ -9,6 +9,8 @@ interface GPSMapComponentProps {
   userId: string;
   userType: 'user' | 'driver';
   isActive?: boolean;
+  /** When set, immediately opens navigation toward this contact */
+  navTarget?: any;
 }
 
 const GPSMapComponent: React.FC<GPSMapComponentProps> = ({
@@ -16,7 +18,8 @@ const GPSMapComponent: React.FC<GPSMapComponentProps> = ({
   user,
   userId,
   userType,
-  isActive = true
+  isActive = true,
+  navTarget,
 }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<any>(null);
@@ -320,8 +323,8 @@ const GPSMapComponent: React.FC<GPSMapComponentProps> = ({
       if (mapContainer.current) {
         mapContainer.current.innerHTML = `
           <div style="
-            width: 100%; 
-            height: 500px; 
+            width: 100%;
+            height: 100%;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border-radius: 12px;
             display: flex;
@@ -405,6 +408,28 @@ const GPSMapComponent: React.FC<GPSMapComponentProps> = ({
       }, 100);
     }
   }, [isActive]);
+
+  // Resize map on orientation/window change (landscape ↔ portrait)
+  useEffect(() => {
+    const handleResize = () => {
+      if (map.current) {
+        setTimeout(() => map.current.resize(), 150);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('orientationchange', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleResize);
+    };
+  }, []);
+
+  // Trigger navigation when a contact is passed from ContactList
+  useEffect(() => {
+    if (navTarget?.location) {
+      handleNavigateToContact(navTarget);
+    }
+  }, [navTarget]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Actualizar centro del mapa cuando cambie la ubicación
   useEffect(() => {
@@ -511,9 +536,9 @@ const GPSMapComponent: React.FC<GPSMapComponentProps> = ({
   };
 
   return (
-    <div className="w-full relative">
+    <div className="w-full h-full flex flex-col relative">
       {/* Información de estado GPS */}
-      <div className="mb-4 p-3 bg-gray-50 rounded-lg border">
+      <div className="flex-shrink-0 p-3 bg-gray-50 border-b">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <div className={`w-3 h-3 rounded-full ${isTracking ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
@@ -541,11 +566,10 @@ const GPSMapComponent: React.FC<GPSMapComponentProps> = ({
         )}
       </div>
 
-      {/* Mapa */}
-      <div 
-        ref={mapContainer} 
-        className="w-full rounded-lg overflow-hidden border shadow-lg"
-        style={{ height: '500px', minHeight: '400px' }}
+      {/* Mapa — flex-1 fills remaining height */}
+      <div
+        ref={mapContainer}
+        className="flex-1 w-full min-h-0 overflow-hidden"
       />
 
       {/* Botón flotante de navegación */}

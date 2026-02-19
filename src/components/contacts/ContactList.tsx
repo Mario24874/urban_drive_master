@@ -2,7 +2,8 @@ import React, { useState, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search, UserPlus, Check, X, Trash2,
-  Eye, EyeOff, MessageSquare, MapPin, Clock, MoreVertical,
+  Eye, EyeOff, MessageSquare, MapPin, Clock,
+  MoreVertical, Navigation,
 } from 'lucide-react';
 import type { Contact, Invitation } from '../../types';
 import { useContacts } from '../../hooks/useContacts';
@@ -13,15 +14,16 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
 import {
   Dialog,
   DialogContent,
@@ -48,6 +50,7 @@ interface ContactListProps {
   currentUser: any;
   selectedContact: Contact | null;
   onSelectContact: (contact: Contact) => void;
+  onNavigateToContact?: (contact: Contact) => void;
   invitationsData: InvitationsData;
 }
 
@@ -67,86 +70,135 @@ const ContactItem: React.FC<{
   onSelect: () => void;
   onToggleVisibility: () => void;
   onRemove: () => void;
-}> = ({ contact, isSelected, isVisible, onSelect, onToggleVisibility, onRemove }) => (
-  <motion.div
-    initial={{ opacity: 0, x: -16 }}
-    animate={{ opacity: 1, x: 0 }}
-    exit={{ opacity: 0, x: 16 }}
-    transition={{ duration: 0.18 }}
-    className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors cursor-pointer ${
-      isSelected ? 'bg-primary/10 border border-primary/30' : 'hover:bg-white/5'
-    }`}
-  >
-    {/* Avatar — clicking opens chat */}
-    <div onClick={onSelect} className="flex-shrink-0">
-      <Avatar>
-        <AvatarImage src={contact.photoURL} alt={contact.displayName} />
-        <AvatarFallback>{getInitials(contact.displayName, contact.email)}</AvatarFallback>
-      </Avatar>
-    </div>
+  onNavigate?: () => void;
+}> = ({ contact, isSelected, isVisible, onSelect, onToggleVisibility, onRemove, onNavigate }) => {
+  const [actionSheetOpen, setActionSheetOpen] = useState(false);
 
-    {/* Info */}
-    <div className="flex-1 min-w-0" onClick={onSelect}>
-      <div className="flex items-center gap-2">
-        <p className="font-medium text-sm truncate">{contact.displayName}</p>
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: -16 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: 16 }}
+      transition={{ duration: 0.18 }}
+      className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+        isSelected ? 'bg-primary/10 border border-primary/30' : 'hover:bg-white/5'
+      }`}
+    >
+      {/* Avatar — clicking opens chat */}
+      <div onClick={onSelect} className="flex-shrink-0 cursor-pointer">
+        <Avatar>
+          <AvatarImage src={contact.photoURL} alt={contact.displayName} />
+          <AvatarFallback>{getInitials(contact.displayName, contact.email)}</AvatarFallback>
+        </Avatar>
       </div>
-      <div className="flex items-center gap-2 mt-0.5">
-        <Badge variant="outline" className="text-xs py-0">
-          {contact.userType === 'driver' ? '🚗 Driver' : '👤 User'}
-        </Badge>
-        {contact.phone && (
-          <span className="text-xs text-muted-foreground truncate">{contact.phone}</span>
-        )}
-        {contact.location && (
-          <span className="text-xs text-muted-foreground flex items-center gap-0.5">
-            <MapPin size={10} />
-            {contact.location.accuracy ? `${Math.round(contact.location.accuracy)}m` : 'Located'}
-          </span>
-        )}
+
+      {/* Info */}
+      <div className="flex-1 min-w-0 cursor-pointer" onClick={onSelect}>
+        <div className="flex items-center gap-2">
+          <p className="font-medium text-sm truncate">{contact.displayName}</p>
+          {isVisible && (
+            <span className="w-2 h-2 bg-green-400 rounded-full flex-shrink-0" />
+          )}
+        </div>
+        <div className="flex items-center gap-2 mt-0.5">
+          <Badge variant="outline" className="text-xs py-0">
+            {contact.userType === 'driver' ? '🚗 Driver' : '👤 User'}
+          </Badge>
+          {contact.phone && (
+            <span className="text-xs text-muted-foreground truncate">{contact.phone}</span>
+          )}
+          {contact.location && (
+            <span className="text-xs text-muted-foreground flex items-center gap-0.5">
+              <MapPin size={10} />
+              {contact.location.accuracy ? `${Math.round(contact.location.accuracy)}m` : 'Located'}
+            </span>
+          )}
+        </div>
       </div>
-    </div>
 
-    {/* Visibility indicator dot */}
-    {isVisible && (
-      <span className="w-2 h-2 bg-green-400 rounded-full flex-shrink-0" title="This contact can see your location" />
-    )}
+      {/* Actions — Sheet (bottom sheet) is the most reliable on mobile */}
+      <Sheet open={actionSheetOpen} onOpenChange={setActionSheetOpen}>
+        <SheetTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-9 w-9 flex-shrink-0"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <MoreVertical size={18} />
+          </Button>
+        </SheetTrigger>
+        <SheetContent side="bottom" className="rounded-t-2xl pb-8">
+          <SheetHeader className="pb-4">
+            <div className="flex items-center gap-3">
+              <Avatar className="h-10 w-10">
+                <AvatarImage src={contact.photoURL} />
+                <AvatarFallback>{getInitials(contact.displayName, contact.email)}</AvatarFallback>
+              </Avatar>
+              <div>
+                <SheetTitle className="text-left">{contact.displayName}</SheetTitle>
+                <SheetDescription className="text-left text-xs">
+                  {contact.userType === 'driver' ? '🚗 Driver' : '👤 User'}
+                  {contact.phone ? ` · ${contact.phone}` : ''}
+                </SheetDescription>
+              </div>
+            </div>
+          </SheetHeader>
 
-    {/* Actions — DropdownMenu works on both desktop and mobile */}
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8 flex-shrink-0"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <MoreVertical size={16} />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-48">
-        <DropdownMenuItem onClick={onSelect} className="gap-2">
-          <MessageSquare size={14} />
-          Send message
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={onToggleVisibility} className="gap-2">
-          {isVisible
-            ? <><EyeOff size={14} /><span>Hide my location</span></>
-            : <><Eye size={14} className="text-green-400" /><span>Show my location</span></>
-          }
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          onClick={onRemove}
-          className="gap-2 text-destructive focus:text-destructive"
-        >
-          <Trash2 size={14} />
-          Remove contact
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  </motion.div>
-);
+          <div className="space-y-1">
+            {/* Message */}
+            <Button
+              variant="ghost"
+              className="w-full justify-start gap-3 h-12 text-base"
+              onClick={() => { onSelect(); setActionSheetOpen(false); }}
+            >
+              <MessageSquare size={20} />
+              Send message
+            </Button>
+
+            {/* Navigate — only if contact has a location */}
+            {onNavigate && contact.location && (
+              <Button
+                variant="ghost"
+                className="w-full justify-start gap-3 h-12 text-base"
+                onClick={() => { onNavigate(); setActionSheetOpen(false); }}
+              >
+                <Navigation size={20} className="text-blue-400" />
+                Navigate here
+              </Button>
+            )}
+
+            <Separator className="my-2" />
+
+            {/* Visibility */}
+            <Button
+              variant="ghost"
+              className="w-full justify-start gap-3 h-12 text-base"
+              onClick={() => { onToggleVisibility(); setActionSheetOpen(false); }}
+            >
+              {isVisible
+                ? <><EyeOff size={20} /><span>Hide my location</span></>
+                : <><Eye size={20} className="text-green-400" /><span>Show my location</span></>
+              }
+            </Button>
+
+            <Separator className="my-2" />
+
+            {/* Remove */}
+            <Button
+              variant="ghost"
+              className="w-full justify-start gap-3 h-12 text-base text-destructive hover:text-destructive"
+              onClick={() => { onRemove(); setActionSheetOpen(false); }}
+            >
+              <Trash2 size={20} />
+              Remove contact
+            </Button>
+          </div>
+        </SheetContent>
+      </Sheet>
+    </motion.div>
+  );
+};
 
 // ─── Invitation Item ──────────────────────────────────────────────────────────
 const InvitationItem: React.FC<{
@@ -234,11 +286,12 @@ const ContactList: React.FC<ContactListProps> = ({
   currentUser,
   selectedContact,
   onSelectContact,
+  onNavigateToContact,
   invitationsData,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [inviteInput, setInviteInput] = useState('');
-  const [sheetOpen, setSheetOpen] = useState(false);
+  const [addSheetOpen, setAddSheetOpen] = useState(false);
   const [removeTarget, setRemoveTarget] = useState<Contact | null>(null);
 
   const {
@@ -273,7 +326,7 @@ const ContactList: React.FC<ContactListProps> = ({
     if (!inviteInput.trim()) return;
     await sendInvitation(currentUser, inviteInput);
     setInviteInput('');
-    setSheetOpen(false);
+    setAddSheetOpen(false);
   };
 
   const handleRemoveConfirm = async () => {
@@ -304,7 +357,7 @@ const ContactList: React.FC<ContactListProps> = ({
         </div>
 
         {/* Add Contact Sheet */}
-        <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+        <Sheet open={addSheetOpen} onOpenChange={setAddSheetOpen}>
           <SheetTrigger asChild>
             <Button size="sm" variant="secondary" className="gap-2">
               <UserPlus size={16} />
@@ -359,7 +412,6 @@ const ContactList: React.FC<ContactListProps> = ({
 
         {/* ── Contacts Tab ── */}
         <TabsContent value="contacts" className="flex-1 min-h-0 mt-2 flex flex-col">
-          {/* Search within contacts */}
           <div className="relative mb-2">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
             <Input
@@ -384,7 +436,7 @@ const ContactList: React.FC<ContactListProps> = ({
                   <Button
                     variant="link"
                     className="mt-2 text-xs"
-                    onClick={() => setSheetOpen(true)}
+                    onClick={() => setAddSheetOpen(true)}
                   >
                     + Add your first contact
                   </Button>
@@ -403,6 +455,11 @@ const ContactList: React.FC<ContactListProps> = ({
                       toggleContactVisibility(contact.id, contactVisibility[contact.id] === false)
                     }
                     onRemove={() => setRemoveTarget(contact)}
+                    onNavigate={
+                      onNavigateToContact && contact.location
+                        ? () => onNavigateToContact(contact)
+                        : undefined
+                    }
                   />
                 ))}
               </AnimatePresence>
@@ -413,7 +470,6 @@ const ContactList: React.FC<ContactListProps> = ({
         {/* ── Invitations Tab ── */}
         <TabsContent value="invitations" className="flex-1 min-h-0 mt-2">
           <ScrollArea className="h-full">
-            {/* Received */}
             {received.length > 0 && (
               <div className="mb-4">
                 <p className="text-xs font-semibold text-white/60 uppercase tracking-wider px-1 mb-2">
@@ -433,7 +489,6 @@ const ContactList: React.FC<ContactListProps> = ({
               </div>
             )}
 
-            {/* Sent */}
             {sent.length > 0 && (
               <div>
                 <p className="text-xs font-semibold text-white/60 uppercase tracking-wider px-1 mb-2">

@@ -7,6 +7,10 @@ export default {
   ],
   theme: {
   	extend: {
+  		screens: {
+  			// Custom variant for landscape mobile (portrait → landscape transition)
+  			'landscape': { 'raw': '(orientation: landscape) and (max-height: 600px)' },
+  		},
   		borderRadius: {
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',

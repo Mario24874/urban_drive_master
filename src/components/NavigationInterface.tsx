@@ -9,15 +9,17 @@ interface NavigationInterfaceProps {
   contactName?: string;
 }
 
-const NavigationInterface: React.FC<NavigationInterfaceProps> = ({ 
-  isVisible, 
-  onClose, 
-  destination, 
-  contactName 
+const NavigationInterface: React.FC<NavigationInterfaceProps> = ({
+  isVisible,
+  onClose,
+  destination,
+  contactName
 }) => {
   const [navState, setNavState] = useState<NavigationState>(navigationService.getState());
   const [isStarting, setIsStarting] = useState(false);
   const mapRef = useRef<HTMLDivElement>(null);
+  const navMapInstance = useRef<any>(null);
+  const userMarkerRef = useRef<any>(null);
 
   useEffect(() => {
     const handleStateChange = (newState: NavigationState) => {
@@ -30,6 +32,98 @@ const NavigationInterface: React.FC<NavigationInterfaceProps> = ({
       navigationService.removeListener(handleStateChange);
     };
   }, []);
+
+  // Initialize Mapbox map when navigation becomes active
+  useEffect(() => {
+    if (!navState.isNavigating) {
+      // Clean up map when navigation stops
+      if (navMapInstance.current) {
+        navMapInstance.current.remove();
+        navMapInstance.current = null;
+        userMarkerRef.current = null;
+      }
+      return;
+    }
+
+    // Wait a tick for mapRef.current to be set after render
+    const initTimer = setTimeout(() => {
+      if (!mapRef.current) return;
+      const mapboxgl = (window as any).mapboxgl;
+      if (!mapboxgl) return;
+      if (navMapInstance.current) return;
+
+      const accessToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
+      if (!accessToken?.startsWith('pk.')) return;
+
+      mapboxgl.accessToken = accessToken;
+      const center = navState.userLocation ?? navState.destination ?? [-74.072092, 4.710989];
+
+      navMapInstance.current = new mapboxgl.Map({
+        container: mapRef.current,
+        style: 'mapbox://styles/mapbox/navigation-night-v1',
+        center,
+        zoom: 15,
+        pitch: 45,
+      });
+
+      navMapInstance.current.on('load', () => {
+        const route = navigationService.getState().currentRoute;
+
+        // Draw route polyline
+        if (route?.geometry?.length) {
+          navMapInstance.current.addSource('nav-route', {
+            type: 'geojson',
+            data: {
+              type: 'Feature',
+              properties: {},
+              geometry: { type: 'LineString', coordinates: route.geometry },
+            },
+          });
+          navMapInstance.current.addLayer({
+            id: 'nav-route',
+            type: 'line',
+            source: 'nav-route',
+            layout: { 'line-join': 'round', 'line-cap': 'round' },
+            paint: { 'line-color': '#3b82f6', 'line-width': 7, 'line-opacity': 0.9 },
+          });
+        }
+
+        // Destination marker
+        const dest = navigationService.getState().destination;
+        if (dest) {
+          new mapboxgl.Marker({ color: '#ef4444' })
+            .setLngLat(dest)
+            .addTo(navMapInstance.current);
+        }
+
+        // User marker
+        const userEl = document.createElement('div');
+        userEl.innerHTML = `<div style="width:36px;height:36px;border-radius:50%;background:#3b82f6;border:4px solid white;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 3px 10px rgba(0,0,0,0.4)">🚗</div>`;
+        const userLoc = navigationService.getState().userLocation;
+        if (userEl.firstChild && userLoc) {
+          userMarkerRef.current = new mapboxgl.Marker({ element: userEl.firstChild as HTMLElement })
+            .setLngLat(userLoc)
+            .addTo(navMapInstance.current);
+        }
+      });
+    }, 50);
+
+    return () => {
+      clearTimeout(initTimer);
+      if (navMapInstance.current) {
+        navMapInstance.current.remove();
+        navMapInstance.current = null;
+        userMarkerRef.current = null;
+      }
+    };
+  }, [navState.isNavigating]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Keep user marker in sync with GPS position
+  useEffect(() => {
+    if (!navMapInstance.current || !navState.userLocation) return;
+    userMarkerRef.current?.setLngLat(navState.userLocation);
+    navMapInstance.current.easeTo({ center: navState.userLocation, duration: 800 });
+  }, [navState.userLocation]);
 
   const handleStartNavigation = async () => {
     if (!destination) return;
@@ -236,32 +330,18 @@ const NavigationInterface: React.FC<NavigationInterfaceProps> = ({
             </div>
           </div>
         ) : (
-          // Map placeholder during navigation
-          <div className="h-full bg-gray-200 relative">
-            <div 
-              ref={mapRef}
-              className="absolute inset-0"
-              style={{
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: 'white',
-                textAlign: 'center',
-                padding: '20px'
-              }}
-            >
-              <div>
-                <Navigation size={48} className="mx-auto mb-4" />
-                <h3 className="text-xl font-semibold mb-2">Navegación Activa</h3>
-                <p className="opacity-90">
-                  {navState.userLocation ? 
-                    `GPS: ${navState.userLocation[1].toFixed(6)}, ${navState.userLocation[0].toFixed(6)}` :
-                    'Esperando señal GPS...'
-                  }
-                </p>
+          // Live Mapbox map during navigation
+          <div className="h-full relative">
+            <div ref={mapRef} className="absolute inset-0" />
+            {/* GPS waiting overlay — shown before map loads */}
+            {!navState.userLocation && (
+              <div className="absolute inset-0 flex items-center justify-center bg-gray-900/80 text-white">
+                <div className="text-center">
+                  <Navigation size={40} className="mx-auto mb-3 animate-pulse" />
+                  <p className="text-sm">Esperando señal GPS...</p>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         )}
       </div>

@@ -44,6 +44,7 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
   const [activeTab, setActiveTab] = useState('home');
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [showRegister, setShowRegister] = useState(false);
+  const [navTarget, setNavTarget] = useState<Contact | null>(null);
 
   const { t } = useApp();
 
@@ -63,6 +64,13 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
     } catch {
       // silently ignore
     }
+  };
+
+  /** Called from ContactList "Navigate here" — switches to map tab and starts navigation */
+  const handleNavigateToContact = (contact: Contact) => {
+    // Spread to create a new object ref so GPSMapComponent's useEffect always fires
+    setNavTarget({ ...contact });
+    setActiveTab('map');
   };
 
   // Show login/register if not authenticated
@@ -107,7 +115,7 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
       className="h-screen flex flex-col"
     >
       {/* ── App Header ── */}
-      <header className="sticky top-0 z-50 flex items-center justify-between px-4 h-14 bg-black/50 backdrop-blur-md border-b border-white/10 flex-shrink-0">
+      <header className="sticky top-0 z-50 flex items-center justify-between px-4 h-14 landscape:h-10 bg-black/50 backdrop-blur-md border-b border-white/10 flex-shrink-0">
         <div className="flex items-center gap-2">
           <img src="/assets/UrbanDrive.png" alt="Urban Drive" className="h-8 w-8 rounded-xl" />
           <span className="font-bold text-white text-base hidden sm:inline">Urban Drive</span>
@@ -267,6 +275,7 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
               userId={user.id}
               userType={user.userType}
               isActive={activeTab === 'map'}
+              navTarget={navTarget}
             />
           </TabsContent>
 
@@ -282,6 +291,7 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
                   setSelectedContact(contact);
                   setActiveTab('messages');
                 }}
+                onNavigateToContact={handleNavigateToContact}
                 invitationsData={invitationsData}
               />
             </div>
@@ -304,32 +314,32 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
         </div>
 
         {/* Mobile Bottom Navigation */}
-        <div className="sm:hidden border-t bg-black/70 backdrop-blur-md pb-safe">
-          <TabsList className="grid w-full grid-cols-5 h-16">
-            <TabsTrigger value="home" className="flex-col space-y-1">
-              <Home size={20} />
-              <span className="text-xs">{t('home')}</span>
+        <div className="sm:hidden border-t bg-black/70 backdrop-blur-md pb-safe flex-shrink-0">
+          <TabsList className="grid w-full grid-cols-5 h-16 landscape:h-10">
+            <TabsTrigger value="home" className="flex-col space-y-0.5">
+              <Home size={18} />
+              <span className="text-xs landscape:hidden">{t('home')}</span>
             </TabsTrigger>
-            <TabsTrigger value="map" className="flex-col space-y-1">
-              <MapPin size={20} />
-              <span className="text-xs">{t('map')}</span>
+            <TabsTrigger value="map" className="flex-col space-y-0.5">
+              <MapPin size={18} />
+              <span className="text-xs landscape:hidden">{t('map')}</span>
             </TabsTrigger>
-            <TabsTrigger value="contacts" className="flex-col space-y-1 relative">
-              <Users size={20} />
-              <span className="text-xs">{t('contacts')}</span>
+            <TabsTrigger value="contacts" className="flex-col space-y-0.5 relative">
+              <Users size={18} />
+              <span className="text-xs landscape:hidden">{t('contacts')}</span>
               {invitationsData.pendingCount > 0 && (
                 <span className="absolute top-1 right-3 h-4 w-4 rounded-full bg-destructive text-[10px] text-destructive-foreground flex items-center justify-center font-bold">
                   {invitationsData.pendingCount}
                 </span>
               )}
             </TabsTrigger>
-            <TabsTrigger value="messages" className="flex-col space-y-1">
-              <MessageSquare size={20} />
-              <span className="text-xs">{t('chat')}</span>
+            <TabsTrigger value="messages" className="flex-col space-y-0.5">
+              <MessageSquare size={18} />
+              <span className="text-xs landscape:hidden">{t('chat')}</span>
             </TabsTrigger>
-            <TabsTrigger value="profile" className="flex-col space-y-1">
-              <UserIcon size={20} />
-              <span className="text-xs">{t('profile')}</span>
+            <TabsTrigger value="profile" className="flex-col space-y-0.5">
+              <UserIcon size={18} />
+              <span className="text-xs landscape:hidden">{t('profile')}</span>
             </TabsTrigger>
           </TabsList>
         </div>
