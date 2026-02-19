@@ -51,14 +51,12 @@ export function useInvitations(userId: string | null, userType?: 'user' | 'drive
     try {
       // Search for the target user in both collections
       let foundUser: any = null;
-      let foundType: 'user' | 'driver' = 'user';
 
       for (const coll of ['users', 'drivers'] as const) {
         const field = isEmail ? 'email' : 'phone';
         const snap = await getDocs(query(collection(db, coll), where(field, '==', id)));
         if (!snap.empty) {
           foundUser = { id: snap.docs[0].id, ...snap.docs[0].data() };
-          foundType = coll === 'drivers' ? 'driver' : 'user';
           break;
         }
       }
