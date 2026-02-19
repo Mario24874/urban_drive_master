@@ -6,7 +6,6 @@ import {
 } from 'lucide-react';
 import type { Contact, Invitation } from '../../types';
 import { useContacts } from '../../hooks/useContacts';
-import { useInvitations } from '../../hooks/useInvitations';
 
 // Shadcn UI
 import { Input } from '@/components/ui/input';
@@ -25,12 +24,24 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 
+export interface InvitationsData {
+  received: Invitation[];
+  sent: Invitation[];
+  isSending: boolean;
+  pendingCount: number;
+  sendInvitation: (currentUser: any, identifier: string) => Promise<void>;
+  acceptInvitation: (invitation: Invitation, userType: 'user' | 'driver') => Promise<void>;
+  rejectInvitation: (invitationId: string) => Promise<void>;
+  cancelInvitation: (invitationId: string) => Promise<void>;
+}
+
 interface ContactListProps {
   userId: string;
   userType: 'user' | 'driver';
   currentUser: any;
   selectedContact: Contact | null;
   onSelectContact: (contact: Contact) => void;
+  invitationsData: InvitationsData;
 }
 
 const getInitials = (name: string, email?: string) =>
@@ -133,7 +144,8 @@ const InvitationItem: React.FC<{
   type: 'received' | 'sent';
   onAccept?: () => void;
   onReject?: () => void;
-}> = ({ invitation, type, onAccept, onReject }) => (
+  onCancel?: () => void;
+}> = ({ invitation, type, onAccept, onReject, onCancel }) => (
   <motion.div
     initial={{ opacity: 0, y: 8 }}
     animate={{ opacity: 1, y: 0 }}
@@ -190,6 +202,18 @@ const InvitationItem: React.FC<{
         </Button>
       </div>
     )}
+
+    {type === 'sent' && invitation.status === 'pending' && onCancel && (
+      <Button
+        size="icon"
+        variant="ghost"
+        className="h-7 w-7 text-muted-foreground hover:text-destructive flex-shrink-0"
+        title="Cancel invitation"
+        onClick={onCancel}
+      >
+        <X size={14} />
+      </Button>
+    )}
   </motion.div>
 );
 
@@ -200,6 +224,7 @@ const ContactList: React.FC<ContactListProps> = ({
   currentUser,
   selectedContact,
   onSelectContact,
+  invitationsData,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [inviteInput, setInviteInput] = useState('');
@@ -222,7 +247,8 @@ const ContactList: React.FC<ContactListProps> = ({
     sendInvitation,
     acceptInvitation,
     rejectInvitation,
-  } = useInvitations(userId, userType, currentUser?.email);
+    cancelInvitation,
+  } = invitationsData;
 
   const filtered = contacts.filter((c) => {
     const q = searchTerm.toLowerCase();
@@ -405,7 +431,12 @@ const ContactList: React.FC<ContactListProps> = ({
                 </p>
                 <AnimatePresence>
                   {sent.map((inv) => (
-                    <InvitationItem key={inv.id} invitation={inv} type="sent" />
+                    <InvitationItem
+                      key={inv.id}
+                      invitation={inv}
+                      type="sent"
+                      onCancel={() => cancelInvitation(inv.id)}
+                    />
                   ))}
                 </AnimatePresence>
               </div>

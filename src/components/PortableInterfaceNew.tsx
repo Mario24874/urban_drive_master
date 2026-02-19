@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { signOut } from 'firebase/auth';
+import { auth } from '../services/firebase';
 import { useLocation } from '../hooks/useLocation';
+import { useInvitations } from '../hooks/useInvitations';
+import { useApp } from '../contexts/AppContext';
 import type { UserData, Contact } from '../types';
 
 // Components
@@ -8,6 +12,7 @@ import GPSMapComponent from './GPSMapComponent';
 import ChatInterface from './ChatInterface';
 import ProfileEditor from './profile/ProfileEditor';
 import ContactList from './contacts/ContactList';
+import SettingsSheet from './SettingsSheet';
 import Login from './Login';
 import Register from './Register';
 
@@ -19,6 +24,7 @@ import {
   TabsTrigger,
 } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { RefreshCw } from 'lucide-react';
 import { Home, MapPin, Users, MessageSquare, User as UserIcon } from './Icons';
 
@@ -39,8 +45,25 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [showRegister, setShowRegister] = useState(false);
 
+  const { t } = useApp();
+
   // Custom hooks
   const { location, loading: locationLoading, refreshLocation } = useLocation(user);
+
+  // Invitations — hoisted here so they stay mounted regardless of active tab
+  const invitationsData = useInvitations(
+    user?.id ?? null,
+    user?.userType,
+    user?.email ?? undefined,
+  );
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+    } catch {
+      // silently ignore
+    }
+  };
 
   // Show login/register if not authenticated
   if (!isAuthenticated || !user) {
@@ -83,30 +106,44 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
       animate={{ opacity: 1 }}
       className="h-screen flex flex-col"
     >
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
+      {/* ── App Header ── */}
+      <header className="sticky top-0 z-50 flex items-center justify-between px-4 h-14 bg-black/50 backdrop-blur-md border-b border-white/10 flex-shrink-0">
+        <div className="flex items-center gap-2">
+          <img src="/assets/UrbanDrive.png" alt="Urban Drive" className="h-8 w-8 rounded-xl" />
+          <span className="font-bold text-white text-base hidden sm:inline">Urban Drive</span>
+        </div>
+        <SettingsSheet user={user} onLogout={handleLogout} />
+      </header>
+
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
         {/* Desktop Tabs List */}
         <div className="hidden sm:block border-b bg-black/50 backdrop-blur-md">
-          <div className="container-responsive py-4">
+          <div className="container-responsive py-3">
             <TabsList className="grid w-full max-w-2xl grid-cols-5 mx-auto">
               <TabsTrigger value="home" className="flex items-center space-x-2">
                 <Home size={18} />
-                <span className="hidden md:inline">Home</span>
+                <span className="hidden md:inline">{t('home')}</span>
               </TabsTrigger>
               <TabsTrigger value="map" className="flex items-center space-x-2">
                 <MapPin size={18} />
-                <span className="hidden md:inline">Map</span>
+                <span className="hidden md:inline">{t('map')}</span>
               </TabsTrigger>
-              <TabsTrigger value="contacts" className="flex items-center space-x-2">
+              <TabsTrigger value="contacts" className="flex items-center space-x-2 relative">
                 <Users size={18} />
-                <span className="hidden md:inline">Contacts</span>
+                <span className="hidden md:inline">{t('contacts')}</span>
+                {invitationsData.pendingCount > 0 && (
+                  <Badge variant="destructive" className="absolute -top-1 -right-1 h-4 w-4 p-0 text-[10px] flex items-center justify-center">
+                    {invitationsData.pendingCount}
+                  </Badge>
+                )}
               </TabsTrigger>
               <TabsTrigger value="messages" className="flex items-center space-x-2">
                 <MessageSquare size={18} />
-                <span className="hidden md:inline">Messages</span>
+                <span className="hidden md:inline">{t('messages')}</span>
               </TabsTrigger>
               <TabsTrigger value="profile" className="flex items-center space-x-2">
                 <UserIcon size={18} />
-                <span className="hidden md:inline">Profile</span>
+                <span className="hidden md:inline">{t('profile')}</span>
               </TabsTrigger>
             </TabsList>
           </div>
@@ -245,6 +282,7 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
                   setSelectedContact(contact);
                   setActiveTab('messages');
                 }}
+                invitationsData={invitationsData}
               />
             </div>
           </TabsContent>
@@ -266,27 +304,32 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
         </div>
 
         {/* Mobile Bottom Navigation */}
-        <div className="sm:hidden border-t bg-black/70 backdrop-blur-md">
+        <div className="sm:hidden border-t bg-black/70 backdrop-blur-md pb-safe">
           <TabsList className="grid w-full grid-cols-5 h-16">
             <TabsTrigger value="home" className="flex-col space-y-1">
               <Home size={20} />
-              <span className="text-xs">Home</span>
+              <span className="text-xs">{t('home')}</span>
             </TabsTrigger>
             <TabsTrigger value="map" className="flex-col space-y-1">
               <MapPin size={20} />
-              <span className="text-xs">Map</span>
+              <span className="text-xs">{t('map')}</span>
             </TabsTrigger>
-            <TabsTrigger value="contacts" className="flex-col space-y-1">
+            <TabsTrigger value="contacts" className="flex-col space-y-1 relative">
               <Users size={20} />
-              <span className="text-xs">Contacts</span>
+              <span className="text-xs">{t('contacts')}</span>
+              {invitationsData.pendingCount > 0 && (
+                <span className="absolute top-1 right-3 h-4 w-4 rounded-full bg-destructive text-[10px] text-destructive-foreground flex items-center justify-center font-bold">
+                  {invitationsData.pendingCount}
+                </span>
+              )}
             </TabsTrigger>
             <TabsTrigger value="messages" className="flex-col space-y-1">
               <MessageSquare size={20} />
-              <span className="text-xs">Chat</span>
+              <span className="text-xs">{t('chat')}</span>
             </TabsTrigger>
             <TabsTrigger value="profile" className="flex-col space-y-1">
               <UserIcon size={20} />
-              <span className="text-xs">Profile</span>
+              <span className="text-xs">{t('profile')}</span>
             </TabsTrigger>
           </TabsList>
         </div>

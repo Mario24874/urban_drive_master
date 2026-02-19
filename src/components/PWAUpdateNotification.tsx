@@ -25,9 +25,30 @@ const PWAUpdateNotification: React.FC = () => {
       }
     });
 
-    const registration = navigator.serviceWorker.ready.then((reg) => {
+    let reg: ServiceWorkerRegistration | null = null;
+
+    const triggerUpdate = () => {
+      reg?.update().catch(() => {});
+    };
+
+    // Force-check for updates when the tab becomes visible or window regains focus
+    const handleVisibilityChange = () => {
+      if (!document.hidden) triggerUpdate();
+    };
+    const handleFocus = () => triggerUpdate();
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+
+    // Custom event dispatched by SettingsSheet "Check for updates" button
+    const handleCustomCheck = () => triggerUpdate();
+    window.addEventListener('pwa-check-update', handleCustomCheck);
+
+    navigator.serviceWorker.ready.then((registration) => {
+      reg = registration;
+
       reg.addEventListener('updatefound', () => {
-        const newWorker = reg.installing;
+        const newWorker = reg!.installing;
         if (!newWorker) return;
 
         newWorker.addEventListener('statechange', () => {
@@ -49,7 +70,9 @@ const PWAUpdateNotification: React.FC = () => {
     });
 
     return () => {
-      registration.then(() => {}).catch(() => {});
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('pwa-check-update', handleCustomCheck);
     };
   }, []);
 

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import {
   collection, query, where, onSnapshot,
-  addDoc, updateDoc, doc, getDoc, getDocs,
+  addDoc, updateDoc, deleteDoc, doc, getDoc, getDocs,
   arrayUnion, serverTimestamp, Timestamp,
 } from 'firebase/firestore';
 import { db } from '../services/firebase';
@@ -115,16 +115,11 @@ export function useInvitations(
         return;
       }
 
-      // Prevent duplicate pending invitations
-      const dupSnap = await getDocs(
-        query(
-          collection(db, 'invitations'),
-          where('fromId', '==', userId),
-          where('toIdentifier', '==', id),
-          where('status', '==', 'pending'),
-        ),
+      // Prevent duplicate pending invitations (in-memory check — no composite index required)
+      const alreadyPending = sent.some(
+        (inv) => inv.toIdentifier === id && inv.status === 'pending',
       );
-      if (!dupSnap.empty) {
+      if (alreadyPending) {
         toast.error('Invitation already pending', { description: 'Wait for the recipient to respond.' });
         return;
       }
@@ -182,6 +177,15 @@ export function useInvitations(
     }
   };
 
+  const cancelInvitation = async (invitationId: string) => {
+    try {
+      await deleteDoc(doc(db, 'invitations', invitationId));
+      toast.info('Invitation cancelled');
+    } catch (err: any) {
+      toast.error('Failed to cancel invitation', { description: err.message });
+    }
+  };
+
   return {
     received,
     sent,
@@ -190,5 +194,6 @@ export function useInvitations(
     sendInvitation,
     acceptInvitation,
     rejectInvitation,
+    cancelInvitation,
   };
 }

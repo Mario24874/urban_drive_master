@@ -4,6 +4,7 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { Loader2 } from 'lucide-react';
 import SplashScreen from './components/SplashScreen';
+import { AppProvider } from './contexts/AppContext';
 
 // Lazy load heavy components for code splitting
 const PortableInterface = lazy(() => import('./components/PortableInterfaceNew'));
@@ -74,33 +75,35 @@ function App() {
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col relative">
-      {/* Persistent background image — always rendered */}
-      <div
-        className="fixed inset-0 -z-20 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: `url(/assets/background.jpg)` }}
-      />
-      {/* Dark overlay */}
-      <div className="fixed inset-0 -z-10 bg-black/60" />
+    <AppProvider>
+      <div className="min-h-screen flex flex-col relative">
+        {/* Persistent background image — always rendered */}
+        <div
+          className="fixed inset-0 -z-20 bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: `url(/assets/background.jpg)` }}
+        />
+        {/* Dark overlay */}
+        <div className="fixed inset-0 -z-10 bg-black/60" />
 
-      {/* Splash screen on first load */}
-      {showSplash && <SplashScreen onDone={() => setShowSplash(false)} />}
+        {/* Splash screen on first load */}
+        {showSplash && <SplashScreen onDone={() => setShowSplash(false)} />}
 
-      {loading ? (
-        <LoadingSpinner />
-      ) : (
-        <div className="relative z-10 flex-1">
-          <Suspense fallback={<LoadingSpinner />}>
-            <PortableInterface user={user} isAuthenticated={isAuthenticated} />
-          </Suspense>
-        </div>
-      )}
+        {loading ? (
+          <LoadingSpinner />
+        ) : (
+          <div className="relative z-10 flex-1">
+            <Suspense fallback={<LoadingSpinner />}>
+              <PortableInterface user={user} isAuthenticated={isAuthenticated} />
+            </Suspense>
+          </div>
+        )}
 
-      {/* PWA Update Notification */}
-      <Suspense fallback={null}>
-        <PWAUpdateNotification />
-      </Suspense>
-    </div>
+        {/* PWA Update Notification */}
+        <Suspense fallback={null}>
+          <PWAUpdateNotification />
+        </Suspense>
+      </div>
+    </AppProvider>
   );
 }
 
