@@ -1,4 +1,4 @@
-const CACHE_NAME = 'urban-drive-v2.0.0';
+const CACHE_NAME = 'urban-drive-v2.1.0';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -56,11 +56,16 @@ self.addEventListener('fetch', (event) => {
 
           caches.open(CACHE_NAME)
             .then((cache) => {
-              // Only cache successful responses
-              if (event.request.url.includes('/api/') || 
-                  event.request.url.includes('mapbox') ||
-                  event.request.url.includes('firebase')) {
-                // Don't cache API calls, maps, or Firebase requests
+              const url = event.request.url;
+              // Never cache: API calls, maps, Firebase, or Vite JS/CSS chunks
+              // Vite chunks already use content-addressable hashes for HTTP cache;
+              // SW-caching them causes stale-file crashes on every new deploy.
+              if (url.includes('/api/') ||
+                  url.includes('mapbox') ||
+                  url.includes('firebase') ||
+                  url.includes('googleapis') ||
+                  (url.includes('/assets/') && (url.match(/\.(js|css)(\?|$)/)))
+              ) {
                 return;
               }
               cache.put(event.request, responseToCache);
@@ -103,6 +108,13 @@ self.addEventListener('activate', (event) => {
       return self.clients.claim();
     })
   );
+});
+
+// Handle SKIP_WAITING message from PWAUpdateNotification
+self.addEventListener('message', (event) => {
+  if (event.data?.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
 // Handle background sync for offline actions
