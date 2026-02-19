@@ -9,16 +9,30 @@ import { db as firestore } from './firebase';
 /**
  * Write data to Firestore
  */
+/** Remove undefined values recursively — Firestore rejects them */
+function stripUndefined(obj: any): any {
+  if (obj === null || obj === undefined) return null;
+  if (Array.isArray(obj)) return obj.map(stripUndefined);
+  if (typeof obj === 'object' && !(obj instanceof Date)) {
+    return Object.fromEntries(
+      Object.entries(obj)
+        .filter(([, v]) => v !== undefined)
+        .map(([k, v]) => [k, stripUndefined(v)]),
+    );
+  }
+  return obj;
+}
+
 export const writeData = async (
   collection: string,
   docId: string,
   data: any
 ): Promise<boolean> => {
   try {
-    await setDoc(doc(firestore, collection, docId), {
+    await setDoc(doc(firestore, collection, docId), stripUndefined({
       ...data,
       _lastSync: new Date().toISOString(),
-    });
+    }));
     return true;
   } catch (error) {
     console.error('❌ Error writing data:', error);

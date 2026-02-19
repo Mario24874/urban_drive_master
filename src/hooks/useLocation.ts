@@ -50,7 +50,8 @@ export function useLocation(user: UserData | null): UseLocationReturn {
 
       // Save to database if user is authenticated
       if (user) {
-        await writeData('users', user.id, {
+        const coll = user.userType === 'driver' ? 'drivers' : 'users';
+        await writeData(coll, user.id, {
           ...user,
           location: newLocation,
           lastLocationUpdate: new Date().toISOString(),
@@ -82,7 +83,8 @@ export function useLocation(user: UserData | null): UseLocationReturn {
           setLocation(fallbackLocation);
 
           if (user) {
-            await writeData('users', user.id, {
+            const coll = user.userType === 'driver' ? 'drivers' : 'users';
+            await writeData(coll, user.id, {
               ...user,
               location: fallbackLocation,
               lastLocationUpdate: new Date().toISOString(),

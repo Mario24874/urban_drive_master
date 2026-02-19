@@ -222,7 +222,7 @@ const ContactList: React.FC<ContactListProps> = ({
     sendInvitation,
     acceptInvitation,
     rejectInvitation,
-  } = useInvitations(userId, userType);
+  } = useInvitations(userId, userType, currentUser?.email);
 
   const filtered = contacts.filter((c) => {
     const q = searchTerm.toLowerCase();

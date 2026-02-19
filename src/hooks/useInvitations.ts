@@ -16,7 +16,11 @@ function toInvitation(d: any): Invitation {
   } as Invitation;
 }
 
-export function useInvitations(userId: string | null, userType?: 'user' | 'driver') {
+export function useInvitations(
+  userId: string | null,
+  userType?: 'user' | 'driver',
+  userEmail?: string,
+) {
   const [received, setReceived] = useState<Invitation[]>([]);
   const [sent, setSent] = useState<Invitation[]>([]);
   const [isSending, setIsSending] = useState(false);
@@ -26,11 +30,46 @@ export function useInvitations(userId: string | null, userType?: 'user' | 'drive
 
     const invRef = collection(db, 'invitations');
 
-    // Pending invitations received by me
-    const unsubReceived = onSnapshot(
+    // Merge helper: combine two invitation lists deduplicating by id
+    const merge = (a: Invitation[], b: Invitation[]) => {
+      const map = new Map<string, Invitation>();
+      [...a, ...b].forEach((inv) => map.set(inv.id, inv));
+      return Array.from(map.values());
+    };
+
+    let byId: Invitation[] = [];
+    let byEmail: Invitation[] = [];
+
+    const notify = () => setReceived(merge(byId, byEmail));
+
+    // Query 1: invitations where toId matches my userId
+    const unsubById = onSnapshot(
       query(invRef, where('toId', '==', userId), where('status', '==', 'pending')),
-      (snap) => setReceived(snap.docs.map(toInvitation)),
+      (snap) => {
+        byId = snap.docs.map(toInvitation);
+        notify();
+      },
     );
+
+    // Query 2: invitations sent to my email (toId may be null if I wasn't found at send time)
+    const emailLower = userEmail?.trim().toLowerCase() ?? '';
+    let unsubByEmail = () => {};
+    if (emailLower) {
+      unsubByEmail = onSnapshot(
+        query(invRef, where('toIdentifier', '==', emailLower), where('status', '==', 'pending')),
+        async (snap) => {
+          byEmail = snap.docs.map(toInvitation);
+          notify();
+
+          // Auto-resolve: set toId on any invitation that was sent before we were found
+          for (const d of snap.docs) {
+            if (!d.data().toId) {
+              await updateDoc(doc(db, 'invitations', d.id), { toId: userId }).catch(() => {});
+            }
+          }
+        },
+      );
+    }
 
     // All invitations sent by me
     const unsubSent = onSnapshot(
@@ -38,8 +77,8 @@ export function useInvitations(userId: string | null, userType?: 'user' | 'drive
       (snap) => setSent(snap.docs.map(toInvitation)),
     );
 
-    return () => { unsubReceived(); unsubSent(); };
-  }, [userId]);
+    return () => { unsubById(); unsubByEmail(); unsubSent(); };
+  }, [userId, userEmail]);
 
   const sendInvitation = async (currentUser: any, identifier: string) => {
     if (!userId || !identifier.trim()) return;
