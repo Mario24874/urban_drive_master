@@ -1,8 +1,174 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // ────────────────────────────────────────────────────────────────
+    // Helper functions
+    // ────────────────────────────────────────────────────────────────
+
+    function isAuthed() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return isAuthed() && request.auth.uid == uid;
+    }
+
+    function isCompanyMember(companyId) {
+      // Owner OR admin OR linked driver
+      let company = get(/databases/$(database)/documents/companies/$(companyId)).data;
+      return isAuthed() && (
+        request.auth.uid == company.ownerUid ||
+        request.auth.uid in company.adminUids ||
+        request.auth.uid in company.driverUids
+      );
+    }
+
+    function isCompanyAdmin(companyId) {
+      let company = get(/databases/$(database)/documents/companies/$(companyId)).data;
+      return isAuthed() && (
+        request.auth.uid == company.ownerUid ||
+        request.auth.uid in company.adminUids
+      );
+    }
+
+    function isCompanyOwner(companyId) {
+      let company = get(/databases/$(database)/documents/companies/$(companyId)).data;
+      return isAuthed() && request.auth.uid == company.ownerUid;
+    }
+
+    // ────────────────────────────────────────────────────────────────
+    // Existing collections
+    // ────────────────────────────────────────────────────────────────
+
+    // users/{userId}
+    // Any authenticated user can read profiles (needed for contact search).
+    // Only the owner can write their own profile.
+    match /users/{userId} {
+      allow read: if isAuthed();
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId);
+      allow delete: if false; // soft-delete only
+    }
+
+    // drivers/{userId}
+    // Drivers are also users — same rules, plus drivers can read each other
+    // so dispatch features work.
+    match /drivers/{userId} {
+      allow read: if isAuthed();
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId);
+      allow delete: if false;
+    }
+
+    // driver_locations/{driverId}
+    // Real-time GPS positions. Only the driver writes; any authenticated
+    // user can read (needed for map view of contacts).
+    match /driver_locations/{driverId} {
+      allow read: if isAuthed();
+      allow write: if isOwner(driverId);
+    }
+
+    // messages/{messageId}
+    // Sender or receiver can read. Only the sender can create.
+    // No updates or deletes (immutable message log).
+    match /messages/{messageId} {
+      allow read: if isAuthed() && (
+        resource.data.senderId == request.auth.uid ||
+        resource.data.receiverId == request.auth.uid
+      );
+      allow create: if isAuthed() && request.resource.data.senderId == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    // conversations/{conversationId}
+    // Read/write by any of the participants.
+    match /conversations/{conversationId} {
+      allow read, write: if isAuthed() && (
+        request.auth.uid in resource.data.participants
+      );
+      // Allow create (no resource yet — use the incoming data)
+      allow create: if isAuthed() && (
+        request.auth.uid in request.resource.data.participants
+      );
+    }
+
+    // invitations/{invitationId}
+    // Read: sender OR target user.
+    // Create: any authenticated user (they become the sender).
+    // Update: receiver can change status to accepted/rejected; sender can cancel (delete).
+    // Delete: sender can delete pending invitations (cancel).
+    match /invitations/{invitationId} {
+      allow read: if isAuthed() && (
+        resource.data.fromId == request.auth.uid ||
+        resource.data.toId == request.auth.uid
+      );
+      allow create: if isAuthed() &&
+        request.resource.data.fromId == request.auth.uid;
+      allow update: if isAuthed() && (
+        // Receiver accepts/rejects
+        (resource.data.toId == request.auth.uid &&
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])) ||
+        // Sender cancels (sets status to 'cancelled')
+        (resource.data.fromId == request.auth.uid &&
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']))
+      );
+      allow delete: if isAuthed() && resource.data.fromId == request.auth.uid;
+    }
+
+    // ────────────────────────────────────────────────────────────────
+    // Enterprise collections (Phase 1 — locked down)
+    // ────────────────────────────────────────────────────────────────
+
+    // companies/{companyId}
+    // Read: any member (owner, admin, driver).
+    // Create: any authenticated user (they become the owner).
+    // Update: owner and admins only.
+    // Delete: owner only (soft-delete via isActive = false preferred).
+    match /companies/{companyId} {
+      allow read: if isCompanyMember(companyId);
+      allow create: if isAuthed() &&
+        request.resource.data.ownerUid == request.auth.uid;
+      allow update: if isCompanyAdmin(companyId);
+      allow delete: if isCompanyOwner(companyId);
+    }
+
+    // subscriptions/{subscriptionId}
+    // Read: company owner and admins.
+    // Write: company owner only (or ideally Cloud Functions with Admin SDK).
+    // In production, writes should come exclusively from backend Cloud Functions.
+    match /subscriptions/{subscriptionId} {
+      allow read: if isAuthed() && isCompanyAdmin(resource.data.companyId);
+      allow create, update: if isAuthed() && isCompanyOwner(resource.data.companyId);
+      allow delete: if false; // subscriptions are never hard-deleted
+    }
+
+    // vehicles/{vehicleId}
+    // Read: any company member (drivers need vehicle info during trips).
+    // Write: company admins only.
+    match /vehicles/{vehicleId} {
+      allow read: if isCompanyMember(resource.data.companyId);
+      allow create: if isAuthed() && isCompanyAdmin(request.resource.data.companyId);
+      allow update: if isCompanyAdmin(resource.data.companyId);
+      allow delete: if isCompanyAdmin(resource.data.companyId);
+    }
+
+    // billingHistory/{invoiceId}
+    // Read: company owner and admins.
+    // Write: Cloud Functions (Admin SDK) only in production.
+    //        During development, company owner can write for testing.
+    match /billingHistory/{invoiceId} {
+      allow read: if isAuthed() && isCompanyAdmin(resource.data.companyId);
+      // TODO: restrict to Cloud Functions Admin SDK in production
+      allow create, update: if isAuthed() && isCompanyOwner(resource.data.companyId);
+      allow delete: if false;
+    }
+
+    // ────────────────────────────────────────────────────────────────
+    // Deny everything else
+    // ────────────────────────────────────────────────────────────────
     match /{document=**} {
-      allow read, write: if true;
+      allow read, write: if false;
     }
   }
 }
