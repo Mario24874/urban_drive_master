@@ -1,13 +1,33 @@
-import { useEffect } from 'react';
-import { toast } from 'sonner';
+import React, { useState, useEffect, useRef } from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 
+/**
+ * Listens for Service Worker updates and shows a persistent dialog.
+ * The dialog requires an explicit user decision (Update now / Later).
+ *
+ * Global side-effects used for cross-component state:
+ *   window.__pwaUpdateAvailable  – true when a new SW is installed but waiting
+ *   window.__pwaNewWorker        – the waiting ServiceWorker instance
+ *   CustomEvent 'pwa-update-available' – dispatched so SettingsSheet can react
+ */
 const PWAUpdateNotification: React.FC = () => {
+  const [showDialog, setShowDialog] = useState(false);
+  const newWorkerRef = useRef<ServiceWorker | null>(null);
+
   useEffect(() => {
     if (!('serviceWorker' in navigator)) return;
 
     let refreshing = false;
 
-    // When a new SW takes control, reload the page
+    // When the new SW takes control, reload to apply update
     navigator.serviceWorker.addEventListener('controllerchange', () => {
       if (!refreshing) {
         refreshing = true;
@@ -15,33 +35,16 @@ const PWAUpdateNotification: React.FC = () => {
       }
     });
 
-    // Listen for messages from the SW
-    navigator.serviceWorker.addEventListener('message', (event) => {
-      if (event.data?.type === 'OFFLINE_READY') {
-        toast.success('App ready to work offline', {
-          description: 'The app now works without internet connection',
-          duration: 5000,
-        });
-      }
-    });
-
     let reg: ServiceWorkerRegistration | null = null;
 
-    const triggerUpdate = () => {
-      reg?.update().catch(() => {});
-    };
+    const triggerUpdate = () => reg?.update().catch(() => {});
 
-    // Force-check for updates when the tab becomes visible or window regains focus
-    const handleVisibilityChange = () => {
-      if (!document.hidden) triggerUpdate();
-    };
+    const handleVisibilityChange = () => { if (!document.hidden) triggerUpdate(); };
     const handleFocus = () => triggerUpdate();
+    const handleCustomCheck = () => triggerUpdate();
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('focus', handleFocus);
-
-    // Custom event dispatched by SettingsSheet "Check for updates" button
-    const handleCustomCheck = () => triggerUpdate();
     window.addEventListener('pwa-check-update', handleCustomCheck);
 
     navigator.serviceWorker.ready.then((registration) => {
@@ -53,17 +56,12 @@ const PWAUpdateNotification: React.FC = () => {
 
         newWorker.addEventListener('statechange', () => {
           if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-            // New SW installed and an old one is already controlling the page
-            toast.info('New version available', {
-              description: 'Update to get the latest features',
-              duration: Infinity,
-              action: {
-                label: 'Update',
-                onClick: () => {
-                  newWorker.postMessage({ type: 'SKIP_WAITING' });
-                },
-              },
-            });
+            // New SW is ready but waiting — show the dialog
+            newWorkerRef.current = newWorker;
+            (window as any).__pwaNewWorker = newWorker;
+            (window as any).__pwaUpdateAvailable = true;
+            setShowDialog(true);
+            window.dispatchEvent(new CustomEvent('pwa-update-available'));
           }
         });
       });
@@ -76,7 +74,46 @@ const PWAUpdateNotification: React.FC = () => {
     };
   }, []);
 
-  return null;
+  const handleUpdate = () => {
+    newWorkerRef.current?.postMessage({ type: 'SKIP_WAITING' });
+    (window as any).__pwaUpdateAvailable = false;
+    setShowDialog(false);
+  };
+
+  const handleLater = () => {
+    // Keep __pwaUpdateAvailable = true so SettingsSheet keeps showing the badge
+    setShowDialog(false);
+  };
+
+  return (
+    <Dialog open={showDialog}>
+      <DialogContent
+        // Prevent closing by clicking the overlay — user must choose
+        onInteractOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
+        className="max-w-sm"
+      >
+        <DialogHeader>
+          <DialogTitle>🆕 Nueva versión disponible</DialogTitle>
+          <DialogDescription className="pt-1">
+            Hay una actualización de <strong>Urban Drive</strong> lista para instalarse.
+            ¿Quieres aplicarla ahora?
+            <br /><br />
+            Si eliges <em>Más tarde</em>, la actualización quedará pendiente y podrás
+            aplicarla desde <strong>Ajustes → Buscar actualizaciones</strong>.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter className="gap-2 sm:gap-0">
+          <Button variant="outline" onClick={handleLater}>
+            Más tarde
+          </Button>
+          <Button onClick={handleUpdate}>
+            Actualizar ahora
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
 };
 
 export default PWAUpdateNotification;

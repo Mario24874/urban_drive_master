@@ -1,5 +1,5 @@
-import React from 'react';
-import { Moon, Sun, LogOut, RefreshCw, Settings } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Moon, Sun, LogOut, RefreshCw, Settings, Download } from 'lucide-react';
 import { useApp } from '../contexts/AppContext';
 import type { UserData } from '../types';
 
@@ -14,24 +14,70 @@ interface SettingsSheetProps {
   onLogout: () => void;
 }
 
-const APP_VERSION = '0.0.0';
-
 const SettingsSheet: React.FC<SettingsSheetProps> = ({ user, onLogout }) => {
   const { theme, setTheme, lang, setLang, t } = useApp();
+
+  // Update state — reads initial value from window flag set by PWAUpdateNotification
+  const [updateAvailable, setUpdateAvailable] = useState<boolean>(
+    () => !!(window as any).__pwaUpdateAvailable,
+  );
+  const [isChecking, setIsChecking] = useState(false);
+  const [checkResult, setCheckResult] = useState<'up-to-date' | null>(null);
+  const checkTimerRef = useRef<ReturnType<typeof setTimeout>>();
+
+  // Listen for update events from PWAUpdateNotification
+  useEffect(() => {
+    const handleUpdateAvailable = () => {
+      if (checkTimerRef.current) clearTimeout(checkTimerRef.current);
+      setIsChecking(false);
+      setCheckResult(null);
+      setUpdateAvailable(true);
+    };
+    window.addEventListener('pwa-update-available', handleUpdateAvailable);
+    return () => window.removeEventListener('pwa-update-available', handleUpdateAvailable);
+  }, []);
 
   const initials = user.displayName
     ? user.displayName.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
     : (user.email?.[0]?.toUpperCase() ?? '?');
 
   const handleCheckUpdates = () => {
+    if (isChecking) return;
+    setIsChecking(true);
+    setCheckResult(null);
     window.dispatchEvent(new CustomEvent('pwa-check-update'));
+
+    // Timeout: if no 'pwa-update-available' event arrives within 8 s → already up to date
+    checkTimerRef.current = setTimeout(() => {
+      setIsChecking(false);
+      if (!(window as any).__pwaUpdateAvailable) {
+        setCheckResult('up-to-date');
+      }
+    }, 8000);
+  };
+
+  /** Apply the pending update (worker stored in window by PWAUpdateNotification) */
+  const handleApplyUpdate = () => {
+    const worker = (window as any).__pwaNewWorker as ServiceWorker | undefined;
+    if (worker) {
+      worker.postMessage({ type: 'SKIP_WAITING' });
+    } else {
+      // Fallback: force reload will re-register the new SW
+      window.location.reload();
+    }
+    (window as any).__pwaUpdateAvailable = false;
+    setUpdateAvailable(false);
   };
 
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-9 w-9 text-white/80 hover:text-white hover:bg-white/10">
+        <Button variant="ghost" size="icon" className="h-9 w-9 text-white/80 hover:text-white hover:bg-white/10 relative">
           <Settings size={20} />
+          {/* Dot badge when update is pending */}
+          {updateAvailable && (
+            <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-orange-400" />
+          )}
         </Button>
       </SheetTrigger>
       <SheetContent side="right" className="w-full sm:max-w-sm flex flex-col gap-0 p-0">
@@ -123,14 +169,50 @@ const SettingsSheet: React.FC<SettingsSheetProps> = ({ user, onLogout }) => {
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
               {t('app')}
             </p>
+
+            {/* Version row */}
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">{t('appVersion')}</span>
-              <span className="text-sm font-mono">{APP_VERSION}</span>
+              <span className="text-sm font-mono">{__APP_VERSION__}</span>
             </div>
-            <Button variant="outline" size="sm" className="w-full gap-2" onClick={handleCheckUpdates}>
-              <RefreshCw size={15} />
-              {t('checkUpdates')}
+
+            {/* Update available banner */}
+            {updateAvailable && (
+              <div className="flex items-center justify-between gap-3 p-3 rounded-lg bg-orange-500/10 border border-orange-500/30">
+                <div className="flex items-center gap-2 min-w-0">
+                  <Download size={16} className="text-orange-400 flex-shrink-0" />
+                  <span className="text-sm text-orange-400 font-medium">
+                    Nueva versión disponible
+                  </span>
+                </div>
+                <Button
+                  size="sm"
+                  className="bg-orange-500 hover:bg-orange-600 text-white flex-shrink-0"
+                  onClick={handleApplyUpdate}
+                >
+                  Actualizar
+                </Button>
+              </div>
+            )}
+
+            {/* Check for updates button */}
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full gap-2"
+              onClick={handleCheckUpdates}
+              disabled={isChecking || updateAvailable}
+            >
+              <RefreshCw size={15} className={isChecking ? 'animate-spin' : ''} />
+              {isChecking ? 'Buscando actualizaciones…' : t('checkUpdates')}
             </Button>
+
+            {/* Result of last check */}
+            {checkResult === 'up-to-date' && (
+              <p className="text-xs text-center text-muted-foreground">
+                ✓ Ya tienes la última versión
+              </p>
+            )}
           </div>
 
           <Separator className="mx-6 w-auto" />

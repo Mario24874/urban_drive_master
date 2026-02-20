@@ -27,9 +27,15 @@ function injectSwVersion(): Plugin {
   };
 }
 
+// Inject package version so components can display it
+const pkgVersion: string = JSON.parse(fs.readFileSync('./package.json', 'utf-8')).version;
+
 // https://vitejs.dev/config/
 export default defineConfig({
   base: '/',
+  define: {
+    __APP_VERSION__: JSON.stringify(pkgVersion),
+  },
   plugins: [
     react(),
     injectSwVersion(),
