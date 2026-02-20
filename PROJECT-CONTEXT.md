@@ -1,8 +1,8 @@
 # Urban Drive - Contexto Completo del Proyecto
 
 **Fecha de creación:** 2025-07-24  
-**Última actualización:** 2026-02-17
-**Estado:** v2.0.0 - Optimización UI/UX completa, lista para testing y producción
+**Última actualización:** 2026-02-20
+**Estado:** v1.0.0 PWA - Funcional en producción. Contactos, GPS, navegación, ajustes y PWA update completos.
 
 ---
 
@@ -385,6 +385,7 @@ python create_icons.py    # Claude Code trabajando en esto
 3. **Analytics e métricas** - Google Analytics + Web Vitals
 4. **E2E tests** - Playwright/Cypress
 5. **Escalabilidad** - Múltiples ciudades, idiomas
+6. **Capa empresarial de suscripciones** - Ver sección 💼 más abajo (diseño completo documentado)
 
 ---
 
@@ -692,7 +693,488 @@ npx eas build:list --limit 5
 
 ---
 
+### **📅 2026-02-20 - Mejoras UX, GPS navegación, actualizaciones PWA y diseño capa empresarial (Claude Sonnet 4.6)**
+
+**Contexto recibido:**
+- App PWA funcional en producción (v1.0.0)
+- Menú de contactos no abría en móvil; mapa con altura fija; PWA sin actualizar bien
+
+**Cambios realizados:**
+
+1. **ContactList — Sheet-based actions (reemplazo de DropdownMenu)**
+   - Reemplazado DropdownMenu por Sheet (bottom sheet) para acciones de contacto
+   - Botón "Navigate here" para navegar directamente desde la lista de contactos
+   - Botón "Cancel" para invitaciones pendientes enviadas
+
+2. **GPS y Navegación**
+   - `GPSMapComponent`: altura fija `500px` → `flex-1` (responsive)
+   - Prop `navTarget` para recibir contacto desde ContactList y abrir navegación automáticamente
+   - `NavigationInterface`: mapa Mapbox real durante navegación activa (reemplaza gradiente)
+   - Contact picker en navigation panel cuando no hay destino preseleccionado
+   - Listener `orientationchange` para redimensionar mapa al rotar pantalla
+
+3. **PortableInterfaceNew — Landscape + flujo navTarget**
+   - Variante `landscape:` de Tailwind para reducir header/nav en landscape
+   - Labels del nav ocultos en landscape (solo íconos)
+   - Handler `handleNavigateToContact` que cambia a tab Map y pasa el contacto
+
+4. **PWA Updates — Dialog persistente**
+   - Toast (swipeable) → Dialog modal persistente con "Actualizar ahora" / "Más tarde"
+   - Dialog no cierra al tocar fondo ni presionar Escape
+   - "Más tarde" marca `window.__pwaUpdateAvailable = true`
+   - Settings escucha evento `pwa-update-available` y muestra banner naranja
+   - Ícono de ajustes muestra dot naranja cuando hay actualización pendiente
+   - "Buscar actualizaciones" con spinner + feedback "✓ Ya tienes la última versión"
+   - Versión leída de `package.json` vía Vite `define` (`__APP_VERSION__`)
+
+5. **package.json** — Versión bumped a `1.0.0`
+
+6. **Análisis y diseño de capa de suscripciones empresariales**
+   - Documentado en sección 💼 de este archivo
+   - Tres modalidades: Cargo (químicos, animales, mudanzas, materia prima, productos)
+   - Courier/encomiendas (express, paquetería, documentos)
+   - Pasajeros (terrestre, aéreo, acuático)
+   - Cuatro planes: Free (actual), Básico, Profesional, Enterprise
+   - Esquema Firestore completo: companies, subscriptions, vehicles, billingHistory
+   - Tipos TypeScript diseñados (listos para implementar)
+   - Orden de implementación por fases documentado
+
+**Estado al finalizar:**
+- ✅ Menú de contactos funciona en móvil (Sheet)
+- ✅ GPS navegación activa con mapa real y contact picker
+- ✅ App adapta a landscape rotation
+- ✅ PWA updates con dialog persistente
+- ✅ Settings muestra versión real y estado de actualización
+- ✅ Capa empresarial de suscripciones completamente diseñada y documentada
+
+**Próximos pasos:**
+1. Testing completo en móvil de todas las funciones implementadas
+2. Implementar capa empresarial — Fase 1 (tipos y esquema Firestore)
+3. Implementar capa empresarial — Fase 2 (onboarding empresarial)
+
+**Archivos modificados:**
+- `src/components/contacts/ContactList.tsx`
+- `src/components/GPSMapComponent.tsx`
+- `src/components/NavigationInterface.tsx`
+- `src/components/PortableInterfaceNew.tsx`
+- `src/components/PWAUpdateNotification.tsx`
+- `src/components/SettingsSheet.tsx`
+- `src/vite-env.d.ts`
+- `vite.config.ts`
+- `tailwind.config.js`
+- `package.json`
+- `PROJECT-CONTEXT.md`
+
+---
+
 **⚠️ IMPORTANTE:** Siempre actualiza esta bitácora antes de terminar tu sesión de trabajo.
+
+---
+
+---
+
+## 💼 CAPA DE SUSCRIPCIONES EMPRESARIALES (ROADMAP)
+
+> **Estado:** Diseñada y documentada. **No implementada aún.**
+> El único artefacto existente en código es un botón "Empresarial / Próximamente" deshabilitado en `PortableInterface.tsx`.
+> Implementar modularmente, un área a la vez. Ver estructura propuesta abajo.
+
+---
+
+### 🔍 ESTADO ACTUAL DEL CÓDIGO (análisis 2026-02-20)
+
+| Artefacto | Archivo | Estado |
+|---|---|---|
+| Botón "Empresarial" deshabilitado | `src/components/PortableInterface.tsx` | Placeholder UI, sin lógica |
+| `price?: number` en SupabaseRide | `src/services/supabase.ts` | Inactivo (Supabase no se usa) |
+| TRIP_CONFIG con tarifas base | `INSTRUCCIONES-CLAUDE-CODE-APK.md` | Solo documentación |
+| `savePaymentMethod` / `getPaymentMethods` | `INSTRUCCIONES-CLAUDE-CODE-APK.md` | Stubs no portados a `src/` |
+| `trips.price` en SQL | `supabase-setup.sql` | Schema nunca activado |
+| Colecciones Firestore (`subscriptions`, `companies`, `vehicles`) | — | **No existen** |
+
+---
+
+### 🎯 MODALIDADES DE TRANSPORTE A CUBRIR
+
+La plataforma debe soportar tres grandes categorías, cada una con subcategorías específicas:
+
+#### 1. Transporte de Carga (`cargo`)
+| Subcategoría | Clave | Requisitos especiales |
+|---|---|---|
+| Químicos y materiales peligrosos | `chemical` | Certificación HAZMAT, rutas permitidas, documentación ADR/GHS |
+| Animales | `livestock` | Bienestar animal, temperatura, veterinario, guías sanitarias |
+| Trasteos / Mudanzas | `moving` | Cálculo por volumen/peso, seguro de contenido, embalaje |
+| Materias primas | `rawMaterial` | Cargas pesadas, permisos especiales de tránsito, tolvas |
+| Productos terminados | `finishedGoods` | Cadena de frío opcional, gestión de inventario, tracking en tiempo real |
+
+#### 2. Encomiendas y Mensajería (`courier`)
+| Subcategoría | Clave | Requisitos especiales |
+|---|---|---|
+| Mensajería express | `express` | Múltiples puntos de entrega, firma digital, prueba fotográfica |
+| Paquetería estándar | `parcel` | Rastreo por código, notificaciones SMS/email al destinatario |
+| Documentos y valores | `documents` | Cadena de custodia, seguro obligatorio, recibo firmado |
+
+#### 3. Transporte de Pasajeros (`passenger`)
+| Subcategoría | Clave | Requisitos especiales |
+|---|---|---|
+| Terrestre | `land` | Licencias de conducción, SOAT, revisión técnico-mecánica |
+| Aéreo (coordinación) | `air` | Integración con aeropuertos, charters, traslados ejecutivos |
+| Acuático / Fluvial | `water` | Licencias marítimas, chalecos, capacidad por embarcación |
+
+---
+
+### 💰 PLANES DE SUSCRIPCIÓN PROPUESTOS
+
+#### Plan Personal (Gratis — actual)
+- Usuarios y conductores individuales
+- Contactos, GPS, chat, navegación básica
+- Sin gestión empresarial
+
+#### Plan Empresarial Básico (~USD 29/mes o USD 290/año)
+- Hasta **5 vehículos/conductores**
+- Perfil de empresa con logo y datos fiscales
+- Rastreo de flota en tiempo real (vista mapa)
+- Reportes básicos (viajes completados, distancias)
+- 1 modalidad de transporte habilitada
+- Soporte por email
+
+#### Plan Empresarial Profesional (~USD 79/mes o USD 790/año)
+- Hasta **25 vehículos/conductores**
+- Todo lo del plan Básico +
+- Portal de clientes (tracking público por guía)
+- Gestión de documentos (pólizas, permisos, VTV)
+- Planificación de rutas optimizadas
+- Facturación automática básica
+- Hasta 3 modalidades de transporte
+- Múltiples administradores
+- Soporte prioritario
+
+#### Plan Empresarial Enterprise (Precio personalizado)
+- **Conductores/vehículos ilimitados**
+- Todo lo del plan Profesional +
+- API REST propia para integraciones (ERP, WMS, SAP)
+- White-label (dominio propio, colores, logo)
+- Módulos específicos por modalidad (HAZMAT, cadena de frío, etc.)
+- Analytics avanzados y BI
+- SLA garantizado (99.9% uptime)
+- Soporte 24/7 con gestor de cuenta dedicado
+- Onboarding personalizado
+
+#### Add-ons (todos los planes pagos)
+| Add-on | Precio sugerido | Descripción |
+|---|---|---|
+| Módulo HAZMAT | +$15/mes | Declaración, rutas HAZMAT, documentación ADR |
+| Módulo Cadena de Frío | +$10/mes | Alertas de temperatura, sensores IoT |
+| Módulo Firma Digital | +$8/mes | Firma en pantalla + foto de entrega |
+| Módulo Bienestar Animal | +$12/mes | Formularios sanitarios, alertas de condiciones |
+| Asientos adicionales | +$5/conductor/mes | Más allá del límite del plan |
+
+---
+
+### 🏗️ ARQUITECTURA TÉCNICA PROPUESTA
+
+#### Estructura de Carpetas (modular)
+
+```
+src/
+  features/                         ← Nueva capa de features modulares
+    enterprise/                     ← Todo lo empresarial aquí
+      types/
+        company.ts                  ← CompanyData, CompanyType, TransportModality
+        subscription.ts             ← SubscriptionPlan, SubscriptionStatus, BillingCycle
+        vehicle.ts                  ← VehicleData, VehicleType, Specialization
+        invoice.ts                  ← InvoiceData, BillingHistory
+      hooks/
+        useCompany.ts               ← CRUD empresa, onSnapshot
+        useSubscription.ts          ← Estado del plan, límites, verificación de features
+        useFleet.ts                 ← Vehículos y conductores de la empresa
+        useBillingHistory.ts        ← Historial de facturas
+        useFeatureGate.ts           ← Hook para verificar si un feature está disponible
+      components/
+        CompanyDashboard.tsx        ← Dashboard principal empresa
+        FleetMap.tsx                ← Mapa de flota en tiempo real
+        DriverList.tsx              ← Gestión de conductores de la empresa
+        VehicleCard.tsx             ← Tarjeta de vehículo con estado
+        TripTable.tsx               ← Tabla de viajes / historial
+        BillingPanel.tsx            ← Panel de facturación
+        SubscriptionCard.tsx        ← Estado del plan, upgrade CTA
+        FeatureGate.tsx             ← Wrapper que bloquea UI si feature no disponible
+        OnboardingWizard.tsx        ← Alta de empresa (paso a paso)
+      pages/
+        EnterprisePage.tsx          ← Página principal con sub-routing
+        FleetPage.tsx
+        DriversPage.tsx
+        TripsPage.tsx
+        BillingPage.tsx
+        SettingsPage.tsx
+      context/
+        CompanyContext.tsx           ← Proveedor del contexto empresarial
+```
+
+#### Colecciones Firestore Nuevas
+
+```
+companies/{companyId}
+  Fields:
+    id: string
+    name: string
+    taxId: string                   ← NIT/RFC/RUC
+    type: 'cargo' | 'courier' | 'passenger'
+    modalities: TransportModality[] ← e.g. ['chemical', 'moving']
+    ownerUserId: string
+    adminUserIds: string[]
+    driverIds: string[]
+    vehicleIds: string[]
+    logoURL?: string
+    address?: string
+    country: string
+    currency: 'COP' | 'USD' | 'MXN' | ...
+    subscriptionTier: 'basic' | 'professional' | 'enterprise' | 'trial'
+    subscriptionStatus: 'active' | 'trialing' | 'past_due' | 'cancelled'
+    subscriptionId: string          ← ref a subscriptions/{id}
+    createdAt: Timestamp
+    updatedAt: Timestamp
+
+subscriptions/{subscriptionId}
+  Fields:
+    companyId: string
+    plan: 'basic' | 'professional' | 'enterprise'
+    status: 'active' | 'trialing' | 'past_due' | 'cancelled' | 'paused'
+    billingCycle: 'monthly' | 'annual'
+    currentPeriodStart: Timestamp
+    currentPeriodEnd: Timestamp
+    trialEnd?: Timestamp
+    cancelAtPeriodEnd: boolean
+    paymentProvider: 'stripe' | 'mercadopago' | 'payu'
+    externalSubscriptionId: string  ← ID en pasarela de pago
+    seats: number                   ← Conductores/vehículos incluidos
+    addons: string[]                ← ['hazmat', 'cold_chain', ...]
+    priceUSD: number
+    createdAt: Timestamp
+    updatedAt: Timestamp
+
+vehicles/{vehicleId}
+  Fields:
+    companyId: string
+    driverId?: string               ← Conductor asignado actualmente
+    type: 'truck' | 'van' | 'bus' | 'motorcycle' | 'boat' | 'plane'
+    licensePlate: string
+    brand: string
+    model: string
+    year: number
+    capacity: { weight?: number, volume?: number, passengers?: number }
+    specializations: Specialization[] ← ['chemical', 'refrigerated', 'livestock', ...]
+    documents: {
+      insurance: { url, expiresAt }
+      inspection: { url, expiresAt }
+      permits?: { url, type, expiresAt }[]
+    }
+    isActive: boolean
+    location?: Location             ← GPS en tiempo real
+    lastSeen?: Timestamp
+    createdAt: Timestamp
+
+billingHistory/{invoiceId}
+  Fields:
+    companyId: string
+    subscriptionId: string
+    amount: number
+    currency: string
+    period: { start: Timestamp, end: Timestamp }
+    status: 'paid' | 'pending' | 'failed' | 'refunded'
+    invoiceUrl?: string             ← PDF generado por pasarela
+    paymentMethod: string
+    createdAt: Timestamp
+```
+
+#### Reglas de Firestore para empresas
+
+```javascript
+// Acceso a companies: owner y admins pueden leer/escribir
+match /companies/{companyId} {
+  allow read: if request.auth.uid in resource.data.adminUserIds
+               || request.auth.uid == resource.data.ownerUserId;
+  allow write: if request.auth.uid == resource.data.ownerUserId;
+}
+
+// subscriptions: solo lectura para admins, escritura solo via Functions
+match /subscriptions/{subId} {
+  allow read: if isCompanyAdmin(resource.data.companyId);
+  allow write: if false; // Solo Firebase Functions (webhooks de pasarela)
+}
+
+// vehicles: admins pueden gestionar
+match /vehicles/{vehicleId} {
+  allow read, write: if isCompanyAdmin(resource.data.companyId);
+}
+```
+
+---
+
+### 🔧 BACKEND — FIREBASE FUNCTIONS (Roadmap)
+
+```
+functions/src/
+  webhooks/
+    stripeWebhook.ts         ← Recibe eventos de Stripe (invoice.paid, etc.)
+    mercadopagoWebhook.ts    ← Recibe eventos de MercadoPago
+  subscriptions/
+    createSubscription.ts    ← Callable: crear suscripción nueva
+    cancelSubscription.ts    ← Callable: cancelar
+    checkLimits.ts           ← HTTP: verificar si empresa excedió límites
+  billing/
+    generateInvoice.ts       ← Scheduled: generar facturas mensuales
+    sendReminder.ts          ← Scheduled: recordatorio 3 días antes del vencimiento
+  notifications/
+    sendUpdateEmail.ts       ← Enviar email de actualización de plan
+```
+
+**Pasarelas de pago recomendadas:**
+- **MercadoPago** — Primera opción para Colombia, México, Argentina (mejor cobertura LATAM)
+- **Stripe** — Para clientes con tarjetas internacionales
+- **PayU** — Alternativa regional con PSE/transferencia bancaria en Colombia
+
+---
+
+### 📊 MODELO DE DATOS — TIPOS TYPESCRIPT (diseño previo a implementación)
+
+```typescript
+// src/features/enterprise/types/company.ts
+
+export type TransportModality =
+  | 'chemical' | 'livestock' | 'moving' | 'rawMaterial' | 'finishedGoods' // cargo
+  | 'express' | 'parcel' | 'documents'                                      // courier
+  | 'land' | 'air' | 'water';                                               // passenger
+
+export type CompanyType = 'cargo' | 'courier' | 'passenger';
+
+export interface CompanyData {
+  id: string;
+  name: string;
+  taxId: string;
+  type: CompanyType;
+  modalities: TransportModality[];
+  ownerUserId: string;
+  adminUserIds: string[];
+  driverIds: string[];
+  vehicleIds: string[];
+  logoURL?: string;
+  address?: string;
+  country: string;
+  currency: string;
+  subscriptionTier: SubscriptionTier;
+  subscriptionStatus: SubscriptionStatus;
+  subscriptionId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// src/features/enterprise/types/subscription.ts
+
+export type SubscriptionTier = 'free' | 'basic' | 'professional' | 'enterprise' | 'trial';
+export type SubscriptionStatus = 'active' | 'trialing' | 'past_due' | 'cancelled' | 'paused';
+export type BillingCycle = 'monthly' | 'annual';
+export type PaymentProvider = 'stripe' | 'mercadopago' | 'payu';
+
+export interface SubscriptionPlan {
+  id: SubscriptionTier;
+  name: string;
+  priceMonthly: number;
+  priceAnnual: number;
+  currency: string;
+  maxDrivers: number;           // -1 = unlimited
+  maxVehicles: number;
+  maxModalities: number;
+  features: string[];
+  addonsAvailable: string[];
+}
+
+export const SUBSCRIPTION_PLANS: Record<SubscriptionTier, SubscriptionPlan> = {
+  free:         { id: 'free',         maxDrivers: 1,  maxVehicles: 1,  maxModalities: 0, priceMonthly: 0,  priceAnnual: 0,   ... },
+  basic:        { id: 'basic',        maxDrivers: 5,  maxVehicles: 5,  maxModalities: 1, priceMonthly: 29, priceAnnual: 290, ... },
+  professional: { id: 'professional', maxDrivers: 25, maxVehicles: 25, maxModalities: 3, priceMonthly: 79, priceAnnual: 790, ... },
+  enterprise:   { id: 'enterprise',   maxDrivers: -1, maxVehicles: -1, maxModalities: -1,priceMonthly: 0,  priceAnnual: 0,   ... },
+  trial:        { id: 'trial',        maxDrivers: 5,  maxVehicles: 5,  maxModalities: 1, priceMonthly: 0,  priceAnnual: 0,   ... },
+};
+
+// src/features/enterprise/types/vehicle.ts
+
+export type VehicleType = 'truck' | 'van' | 'bus' | 'motorcycle' | 'boat' | 'plane' | 'train';
+export type VehicleSpecialization = 'chemical' | 'refrigerated' | 'livestock' | 'heavy' | 'passenger' | 'fragile';
+
+export interface VehicleData {
+  id: string;
+  companyId: string;
+  driverId?: string;
+  type: VehicleType;
+  licensePlate: string;
+  brand: string;
+  model: string;
+  year: number;
+  capacity: { weight?: number; volume?: number; passengers?: number };
+  specializations: VehicleSpecialization[];
+  documents: {
+    insurance?: { url: string; expiresAt: string };
+    inspection?: { url: string; expiresAt: string };
+    permits?: Array<{ url: string; type: string; expiresAt: string }>;
+  };
+  isActive: boolean;
+  location?: import('../../../types').Location;
+  lastSeen?: string;
+  createdAt: string;
+}
+```
+
+---
+
+### 🛡️ FEATURE GATING — LÓGICA DE ACCESO
+
+El hook `useFeatureGate` verificará el plan de la empresa antes de mostrar o activar cualquier funcionalidad empresarial:
+
+```typescript
+// src/features/enterprise/hooks/useFeatureGate.ts
+
+export function useFeatureGate(feature: EnterpriseFeature): {
+  allowed: boolean;
+  reason?: string;
+  upgradeTo?: SubscriptionTier;
+}
+
+// Uso en componentes:
+const { allowed, upgradeTo } = useFeatureGate('hazmat_module');
+if (!allowed) return <UpgradePrompt tier={upgradeTo} />;
+```
+
+---
+
+### 📋 ORDEN RECOMENDADO DE IMPLEMENTACIÓN (paso a paso)
+
+1. **Fase 1 — Tipos y esquema** (sin UI ni backend)
+   - `src/features/enterprise/types/` — Todos los tipos TypeScript
+   - `firestore.rules` — Reglas de acceso para companies, subscriptions, vehicles
+   - `firestore.indexes.json` — Índices necesarios
+
+2. **Fase 2 — Onboarding empresarial**
+   - `OnboardingWizard.tsx` — Alta de empresa con selección de tipo y modalidad
+   - `useCompany.ts` — Hook básico de creación/lectura de empresa
+   - Firestore collections: `companies`, `vehicles`
+
+3. **Fase 3 — Dashboard y flota**
+   - `CompanyDashboard.tsx` — Vista principal
+   - `FleetMap.tsx` — Mapa con todos los vehículos de la empresa
+   - `DriverList.tsx` — Gestión de conductores
+
+4. **Fase 4 — Suscripciones y pagos**
+   - Integración MercadoPago o Stripe
+   - `BillingPanel.tsx` — Panel de facturación
+   - Firebase Functions para webhooks
+   - `useFeatureGate.ts` — Control de acceso por plan
+
+5. **Fase 5 — Módulos por modalidad**
+   - Módulo HAZMAT para químicos
+   - Módulo Cadena de Frío
+   - Módulo Firma Digital para couriers
+   - Módulo Bienestar Animal
 
 ---
 
