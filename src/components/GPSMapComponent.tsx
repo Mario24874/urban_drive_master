@@ -456,17 +456,6 @@ const GPSMapComponent: React.FC<GPSMapComponentProps> = ({
     }
   }, [navTarget]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Actualizar centro del mapa cuando cambie la ubicación
-  useEffect(() => {
-    if (map.current && trackedUserLocation) {
-      map.current.easeTo({
-        center: trackedUserLocation,
-        zoom: 15,
-        duration: 1000
-      });
-    }
-  }, [trackedUserLocation]);
-
   // Actualizar marcadores cuando cambien los contactos o ubicación
   useEffect(() => {
     if (!map.current || !map.current.loaded()) return;

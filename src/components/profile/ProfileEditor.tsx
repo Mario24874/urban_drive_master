@@ -59,11 +59,11 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({ user, onUpdate }) => {
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      toast.error('Please select an image file');
+      toast.error('Selecciona un archivo de imagen');
       return;
     }
     if (file.size > 2 * 1024 * 1024) {
-      toast.error('Image must be smaller than 2 MB');
+      toast.error('La imagen debe ser menor a 2 MB');
       return;
     }
 
@@ -112,10 +112,10 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({ user, onUpdate }) => {
       const collName = user.userType === 'driver' ? 'drivers' : 'users';
       await writeData(collName, user.id, { ...user, photoURL: url });
       onUpdate?.({ ...user, photoURL: url });
-      toast.success('Photo updated successfully');
+      toast.success('Foto actualizada correctamente');
     } catch (error: any) {
       console.error('Error uploading photo:', error);
-      toast.error('Failed to upload photo', { description: error.message || 'Please try again' });
+      toast.error('Error al subir la foto', { description: error.message || 'Intenta de nuevo' });
     } finally {
       setUploadingPhoto(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -223,6 +223,7 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({ user, onUpdate }) => {
             </div>
             <div>
               <CardTitle>Edit Profile</CardTitle>
+              <p className="text-xs text-muted-foreground mt-1">Toca el avatar para cambiar foto<br/>Máx 2 MB · se comprime a 400×400</p>
               <CardDescription>{user.email}</CardDescription>
             </div>
           </div>

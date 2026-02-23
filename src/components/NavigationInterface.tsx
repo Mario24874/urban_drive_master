@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Navigation, Volume2, VolumeX, RotateCcw, X, MapPin, Clock } from 'lucide-react';
+import { Navigation, Volume2, VolumeX, RotateCcw, X, MapPin, Clock, Search, RefreshCw } from 'lucide-react';
 import navigationService, { NavigationState } from '../services/navigation';
 
 interface ContactForNav {
@@ -10,12 +10,17 @@ interface ContactForNav {
   phone?: string;
 }
 
+interface GeocodeResult {
+  id: string;
+  name: string;
+  coords: [number, number];
+}
+
 interface NavigationInterfaceProps {
   isVisible: boolean;
   onClose: () => void;
   destination?: [number, number];
   contactName?: string;
-  /** Contacts that have a known location — shown as destination picker */
   contactsForNav?: ContactForNav[];
   onSelectContact?: (contact: ContactForNav) => void;
 }
@@ -34,22 +39,80 @@ const NavigationInterface: React.FC<NavigationInterfaceProps> = ({
   const navMapInstance = useRef<any>(null);
   const userMarkerRef = useRef<any>(null);
 
+  // Address search state
+  const [addressQuery, setAddressQuery] = useState('');
+  const [geocodeResults, setGeocodeResults] = useState<GeocodeResult[]>([]);
+  const [isGeocoding, setIsGeocoding] = useState(false);
+  const [addressCoords, setAddressCoords] = useState<[number, number] | undefined>();
+  const [addressName, setAddressName] = useState('');
+
+  // Effective destination: address input overrides contact prop
+  const effectiveDestination = addressCoords ?? destination;
+  const effectiveName = addressName || contactName || '';
+
+  // Reset address when a contact destination is set from outside
+  useEffect(() => {
+    if (destination) {
+      setAddressCoords(undefined);
+      setAddressName('');
+      setAddressQuery('');
+      setGeocodeResults([]);
+    }
+  }, [destination]);
+
+  // Debounced geocoding
+  useEffect(() => {
+    if (addressQuery.length < 3) {
+      setGeocodeResults([]);
+      setIsGeocoding(false);
+      return;
+    }
+
+    const token = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
+    if (!token?.startsWith('pk.')) return;
+
+    setIsGeocoding(true);
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(
+          `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(addressQuery)}.json?access_token=${token}&language=es&limit=5`
+        );
+        const data = await res.json();
+        setGeocodeResults(
+          (data.features || []).map((f: any) => ({
+            id: f.id,
+            name: f.place_name,
+            coords: f.center as [number, number],
+          }))
+        );
+      } catch {
+        setGeocodeResults([]);
+      } finally {
+        setIsGeocoding(false);
+      }
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [addressQuery]);
+
+  const clearAddress = () => {
+    setAddressQuery('');
+    setGeocodeResults([]);
+    setAddressCoords(undefined);
+    setAddressName('');
+  };
+
   useEffect(() => {
     const handleStateChange = (newState: NavigationState) => {
       setNavState(newState);
     };
-
     navigationService.addListener(handleStateChange);
-
-    return () => {
-      navigationService.removeListener(handleStateChange);
-    };
+    return () => navigationService.removeListener(handleStateChange);
   }, []);
 
   // Initialize Mapbox map when navigation becomes active
   useEffect(() => {
     if (!navState.isNavigating) {
-      // Clean up map when navigation stops
       if (navMapInstance.current) {
         navMapInstance.current.remove();
         navMapInstance.current = null;
@@ -58,7 +121,6 @@ const NavigationInterface: React.FC<NavigationInterfaceProps> = ({
       return;
     }
 
-    // Wait a tick for mapRef.current to be set after render
     const initTimer = setTimeout(() => {
       if (!mapRef.current) return;
       const mapboxgl = (window as any).mapboxgl;
@@ -81,8 +143,6 @@ const NavigationInterface: React.FC<NavigationInterfaceProps> = ({
 
       navMapInstance.current.on('load', () => {
         const route = navigationService.getState().currentRoute;
-
-        // Draw route polyline
         if (route?.geometry?.length) {
           navMapInstance.current.addSource('nav-route', {
             type: 'geojson',
@@ -101,7 +161,6 @@ const NavigationInterface: React.FC<NavigationInterfaceProps> = ({
           });
         }
 
-        // Destination marker
         const dest = navigationService.getState().destination;
         if (dest) {
           new mapboxgl.Marker({ color: '#ef4444' })
@@ -109,7 +168,6 @@ const NavigationInterface: React.FC<NavigationInterfaceProps> = ({
             .addTo(navMapInstance.current);
         }
 
-        // User marker
         const userEl = document.createElement('div');
         userEl.innerHTML = `<div style="width:36px;height:36px;border-radius:50%;background:#3b82f6;border:4px solid white;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 3px 10px rgba(0,0,0,0.4)">🚗</div>`;
         const userLoc = navigationService.getState().userLocation;
@@ -139,227 +197,255 @@ const NavigationInterface: React.FC<NavigationInterfaceProps> = ({
   }, [navState.userLocation]);
 
   const handleStartNavigation = async () => {
-    if (!destination) return;
-
+    if (!effectiveDestination) return;
     setIsStarting(true);
-    const success = await navigationService.startNavigation(destination, contactName);
+    const success = await navigationService.startNavigation(effectiveDestination, effectiveName);
     setIsStarting(false);
-
     if (!success) {
       alert('Error al iniciar la navegación. Verifica los permisos de ubicación.');
     }
   };
 
-  const handleStopNavigation = () => {
-    navigationService.stopNavigation();
-  };
+  const handleStopNavigation = () => navigationService.stopNavigation();
+  const toggleVoice = () => navigationService.toggleVoice(!navState.voiceEnabled);
+  const repeatInstruction = () => navigationService.repeatInstruction();
 
-  const toggleVoice = () => {
-    navigationService.toggleVoice(!navState.voiceEnabled);
-  };
+  const formatDistance = (meters: number) =>
+    meters < 1000 ? `${Math.round(meters)} m` : `${(meters / 1000).toFixed(1)} km`;
 
-  const repeatInstruction = () => {
-    navigationService.repeatInstruction();
-  };
-
-  const formatDistance = (meters: number): string => {
-    if (meters < 1000) {
-      return `${Math.round(meters)} m`;
-    } else {
-      return `${(meters / 1000).toFixed(1)} km`;
-    }
-  };
-
-  const formatTime = (seconds: number): string => {
+  const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
-    if (minutes < 60) {
-      return `${minutes} min`;
-    } else {
-      const hours = Math.floor(minutes / 60);
-      const remainingMinutes = minutes % 60;
-      return `${hours}h ${remainingMinutes}min`;
-    }
+    if (minutes < 60) return `${minutes} min`;
+    const hours = Math.floor(minutes / 60);
+    return `${hours}h ${minutes % 60}min`;
   };
 
   if (!isVisible) return null;
 
   return (
-    <div className="fixed inset-0 bg-white z-50 flex flex-col">
+    <div className="fixed inset-0 bg-background z-50 flex flex-col">
       {/* Header */}
-      <div className="bg-blue-600 text-white p-4 shadow-lg">
+      <div className="bg-blue-600 dark:bg-blue-700 text-white px-4 py-3 shadow-lg flex-shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <Navigation size={24} />
+            <Navigation size={22} />
             <div>
-              <h2 className="text-lg font-semibold">
+              <h2 className="text-base font-semibold leading-tight">
                 {navState.isNavigating ? 'Navegando' : 'Urban Drive GPS'}
               </h2>
-              {contactName && (
-                <p className="text-blue-100 text-sm">Hacia: {contactName}</p>
+              {effectiveName && !navState.isNavigating && (
+                <p className="text-blue-200 text-xs">Hacia: {effectiveName}</p>
               )}
             </div>
           </div>
-          
+
           <div className="flex items-center space-x-2">
             {navState.isNavigating && (
               <>
                 <button
                   onClick={toggleVoice}
-                  className="p-2 rounded-full bg-blue-700 hover:bg-blue-800 transition-colors"
+                  className="p-2 rounded-full bg-blue-700 dark:bg-blue-800 hover:bg-blue-800 transition-colors"
                   title={navState.voiceEnabled ? 'Desactivar voz' : 'Activar voz'}
                 >
-                  {navState.voiceEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
+                  {navState.voiceEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
                 </button>
-                
                 <button
                   onClick={repeatInstruction}
-                  className="p-2 rounded-full bg-blue-700 hover:bg-blue-800 transition-colors"
+                  className="p-2 rounded-full bg-blue-700 dark:bg-blue-800 hover:bg-blue-800 transition-colors"
                   title="Repetir instrucción"
                 >
-                  <RotateCcw size={20} />
+                  <RotateCcw size={18} />
                 </button>
               </>
             )}
-            
             <button
               onClick={onClose}
               className="p-2 rounded-full bg-red-600 hover:bg-red-700 transition-colors"
             >
-              <X size={20} />
+              <X size={18} />
             </button>
           </div>
         </div>
       </div>
 
-      {/* Navigation Info */}
+      {/* Navigation Info — shown while navigating */}
       {navState.isNavigating && (
-        <div className="bg-gray-50 p-4 border-b">
+        <div className="bg-card border-b border-border px-4 py-3 flex-shrink-0">
           <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-6">
               <div className="text-center">
-                <div className="text-2xl font-bold text-gray-900">
+                <div className="text-2xl font-bold text-foreground">
                   {formatDistance(navState.remainingDistance)}
                 </div>
-                <div className="text-sm text-gray-600">Distancia</div>
+                <div className="text-xs text-muted-foreground">Distancia</div>
               </div>
-              
               <div className="text-center">
-                <div className="text-2xl font-bold text-gray-900">
+                <div className="text-2xl font-bold text-foreground">
                   {formatTime(navState.remainingTime)}
                 </div>
-                <div className="text-sm text-gray-600">Tiempo</div>
+                <div className="text-xs text-muted-foreground">Tiempo</div>
               </div>
             </div>
-            
             <button
               onClick={handleStopNavigation}
-              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium text-sm transition-colors"
             >
               Finalizar
             </button>
           </div>
-          
-          <div className="bg-white p-3 rounded-lg shadow-sm">
+
+          <div className="bg-muted/50 p-3 rounded-lg border border-border">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                <Navigation size={20} className="text-blue-600" />
+              <div className="w-9 h-9 bg-blue-100 dark:bg-blue-900/40 rounded-full flex items-center justify-center flex-shrink-0">
+                <Navigation size={18} className="text-blue-600 dark:text-blue-400" />
               </div>
-              <div className="flex-1">
-                <p className="text-lg font-medium text-gray-900">
-                  {navState.nextInstruction || 'Calculando ruta...'}
-                </p>
-              </div>
+              <p className="text-sm font-medium text-foreground leading-snug">
+                {navState.nextInstruction || 'Calculando ruta...'}
+              </p>
             </div>
           </div>
         </div>
       )}
 
       {/* Main Content */}
-      <div className="flex-1 relative">
+      <div className="flex-1 relative overflow-hidden">
         {!navState.isNavigating ? (
-          <div className="h-full flex flex-col bg-gradient-to-br from-blue-50 to-indigo-100 overflow-y-auto">
-            <div className="max-w-md w-full mx-auto p-6 space-y-4">
+          <div className="h-full overflow-y-auto bg-background">
+            <div className="max-w-md w-full mx-auto p-4 space-y-3">
 
-              {/* ── Destination already set (coming from "Navigate here") ── */}
-              {destination ? (
-                <>
-                  <div className="text-center">
-                    <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <MapPin size={32} className="text-white" />
+              {/* Address search input */}
+              {!effectiveDestination && (
+                <div className="relative">
+                  <div className="flex items-center gap-2 bg-card border border-border rounded-xl px-4 py-3 shadow-sm">
+                    {isGeocoding ? (
+                      <RefreshCw size={17} className="text-muted-foreground animate-spin flex-shrink-0" />
+                    ) : (
+                      <Search size={17} className="text-muted-foreground flex-shrink-0" />
+                    )}
+                    <input
+                      type="text"
+                      value={addressQuery}
+                      onChange={(e) => setAddressQuery(e.target.value)}
+                      placeholder="Buscar dirección o lugar..."
+                      className="flex-1 bg-transparent text-foreground placeholder:text-muted-foreground text-sm outline-none min-w-0"
+                    />
+                    {addressQuery && (
+                      <button onClick={clearAddress} className="flex-shrink-0">
+                        <X size={15} className="text-muted-foreground hover:text-foreground" />
+                      </button>
+                    )}
+                  </div>
+
+                  {geocodeResults.length > 0 && (
+                    <div className="absolute top-full mt-1 left-0 right-0 bg-card border border-border rounded-xl shadow-xl z-10 overflow-hidden">
+                      {geocodeResults.map((r) => (
+                        <button
+                          key={r.id}
+                          onClick={() => {
+                            setAddressCoords(r.coords);
+                            setAddressName(r.name);
+                            setAddressQuery('');
+                            setGeocodeResults([]);
+                          }}
+                          className="w-full flex items-start gap-3 px-4 py-3 hover:bg-accent transition-colors text-left border-b border-border last:border-0"
+                        >
+                          <MapPin size={15} className="text-blue-500 flex-shrink-0 mt-0.5" />
+                          <span className="text-sm text-foreground leading-snug">{r.name}</span>
+                        </button>
+                      ))}
                     </div>
-                    <h3 className="text-xl font-bold text-gray-900">
-                      {contactName ? `Navegar hacia ${contactName}` : 'Destino seleccionado'}
+                  )}
+                </div>
+              )}
+
+              {/* Destination card + Start button */}
+              {effectiveDestination ? (
+                <>
+                  <div className="text-center pt-1">
+                    <div className="w-14 h-14 bg-blue-600 dark:bg-blue-700 rounded-full flex items-center justify-center mx-auto mb-2">
+                      <MapPin size={28} className="text-white" />
+                    </div>
+                    <h3 className="text-lg font-bold text-foreground">
+                      {effectiveName ? `Navegar hacia ${effectiveName}` : 'Destino seleccionado'}
                     </h3>
                   </div>
 
-                  <div className="bg-white p-4 rounded-lg shadow-sm border">
-                    <div className="flex items-center space-x-3">
-                      <MapPin size={20} className="text-blue-600 flex-shrink-0" />
-                      <div>
-                        <p className="font-medium text-gray-900">{contactName || 'Destino'}</p>
-                        <p className="text-sm text-gray-500">
-                          {destination[1].toFixed(5)}, {destination[0].toFixed(5)}
+                  <div className="bg-card border border-border p-4 rounded-xl shadow-sm">
+                    <div className="flex items-start gap-3">
+                      <MapPin size={18} className="text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+                      <div className="min-w-0">
+                        <p className="font-medium text-foreground truncate">{effectiveName || 'Destino'}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {effectiveDestination[1].toFixed(5)}, {effectiveDestination[0].toFixed(5)}
                         </p>
                       </div>
                     </div>
                   </div>
 
+                  {/* Change destination */}
+                  <button
+                    onClick={clearAddress}
+                    className="w-full text-xs text-muted-foreground hover:text-foreground transition-colors py-1"
+                  >
+                    Cambiar destino
+                  </button>
+
                   <button
                     onClick={handleStartNavigation}
                     disabled={isStarting}
-                    className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white py-4 px-6 rounded-xl font-semibold text-lg transition-colors flex items-center justify-center gap-2"
+                    className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 dark:bg-blue-700 dark:hover:bg-blue-600 text-white py-4 px-6 rounded-xl font-semibold text-base transition-colors flex items-center justify-center gap-2"
                   >
                     {isStarting ? (
-                      <><Clock size={22} className="animate-spin" /><span>Calculando ruta...</span></>
+                      <><Clock size={20} className="animate-spin" /><span>Calculando ruta...</span></>
                     ) : (
-                      <><Navigation size={22} /><span>Iniciar Navegación</span></>
+                      <><Navigation size={20} /><span>Iniciar Navegación</span></>
                     )}
                   </button>
                 </>
               ) : (
                 <>
-                  {/* ── No destination: show contact picker ── */}
-                  <div className="text-center pt-2">
-                    <div className="w-14 h-14 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <Navigation size={28} className="text-white" />
-                    </div>
-                    <h3 className="text-xl font-bold text-gray-900">¿A dónde vas?</h3>
-                    <p className="text-sm text-gray-500 mt-1">
-                      Selecciona un contacto para navegar hacia él
-                    </p>
-                  </div>
+                  {/* Contact picker (only when no address typed) */}
+                  {!addressQuery && (
+                    <>
+                      <div className="flex items-center gap-3 py-1">
+                        <div className="flex-1 h-px bg-border" />
+                        <span className="text-xs text-muted-foreground">o elige un contacto</span>
+                        <div className="flex-1 h-px bg-border" />
+                      </div>
 
-                  {contactsForNav.length > 0 ? (
-                    <div className="space-y-2">
-                      {contactsForNav.map((c) => (
-                        <button
-                          key={c.id}
-                          onClick={() => onSelectContact?.(c)}
-                          className="w-full flex items-center gap-3 bg-white hover:bg-blue-50 active:bg-blue-100 p-4 rounded-xl shadow-sm border transition-colors text-left"
-                        >
-                          <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white text-lg flex-shrink-0 ${c.userType === 'driver' ? 'bg-emerald-500' : 'bg-blue-500'}`}>
-                            {c.userType === 'driver' ? '🚗' : '👤'}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="font-semibold text-gray-900 truncate">{c.displayName}</p>
-                            <p className="text-xs text-gray-500">
-                              {c.userType === 'driver' ? 'Conductor' : 'Usuario'}
-                              {c.phone ? ` · ${c.phone}` : ''}
-                            </p>
-                          </div>
-                          <Navigation size={18} className="text-blue-500 flex-shrink-0" />
-                        </button>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="bg-white p-5 rounded-xl shadow-sm border text-center">
-                      <p className="text-gray-500 text-sm mb-2">
-                        Ningún contacto tiene ubicación activa ahora mismo.
-                      </p>
-                      <p className="text-gray-400 text-xs">
-                        Cuando un contacto comparta su GPS, aparecerá aquí.
-                      </p>
-                    </div>
+                      {contactsForNav.length > 0 ? (
+                        <div className="space-y-2">
+                          {contactsForNav.map((c) => (
+                            <button
+                              key={c.id}
+                              onClick={() => onSelectContact?.(c)}
+                              className="w-full flex items-center gap-3 bg-card hover:bg-accent active:bg-accent/80 border border-border p-4 rounded-xl shadow-sm transition-colors text-left"
+                            >
+                              <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white text-base flex-shrink-0 ${c.userType === 'driver' ? 'bg-emerald-500' : 'bg-blue-500'}`}>
+                                {c.userType === 'driver' ? '🚗' : '👤'}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="font-semibold text-foreground truncate text-sm">{c.displayName}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {c.userType === 'driver' ? 'Conductor' : 'Usuario'}
+                                  {c.phone ? ` · ${c.phone}` : ''}
+                                </p>
+                              </div>
+                              <Navigation size={16} className="text-blue-500 flex-shrink-0" />
+                            </button>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="bg-card border border-border p-5 rounded-xl text-center">
+                          <p className="text-muted-foreground text-sm mb-1">
+                            Ningún contacto tiene ubicación activa.
+                          </p>
+                          <p className="text-muted-foreground text-xs">
+                            Busca una dirección arriba o espera a que un contacto comparta su GPS.
+                          </p>
+                        </div>
+                      )}
+                    </>
                   )}
                 </>
               )}
@@ -369,7 +455,6 @@ const NavigationInterface: React.FC<NavigationInterfaceProps> = ({
           // Live Mapbox map during navigation
           <div className="h-full relative">
             <div ref={mapRef} className="absolute inset-0" />
-            {/* GPS waiting overlay — shown before map loads */}
             {!navState.userLocation && (
               <div className="absolute inset-0 flex items-center justify-center bg-gray-900/80 text-white">
                 <div className="text-center">
@@ -382,23 +467,23 @@ const NavigationInterface: React.FC<NavigationInterfaceProps> = ({
         )}
       </div>
 
-      {/* Footer con información adicional */}
-      <div className="bg-gray-50 p-3 border-t">
-        <div className="flex items-center justify-between text-sm text-gray-600">
-          <div className="flex items-center space-x-4">
-            <span>Urban Drive GPS</span>
+      {/* Footer */}
+      <div className="bg-card border-t border-border px-4 py-2 flex-shrink-0">
+        <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <span>Urban Drive GPS</span>
+          <div className="flex items-center gap-3">
             {navState.userLocation && (
               <span>
-                📍 {navState.userLocation[1].toFixed(4)}, {navState.userLocation[0].toFixed(4)}
+                {navState.userLocation[1].toFixed(4)}, {navState.userLocation[0].toFixed(4)}
               </span>
             )}
+            {navState.isNavigating && (
+              <div className="flex items-center gap-1.5">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                <span>GPS Activo</span>
+              </div>
+            )}
           </div>
-          {navState.isNavigating && (
-            <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-              <span>GPS Activo</span>
-            </div>
-          )}
         </div>
       </div>
     </div>
