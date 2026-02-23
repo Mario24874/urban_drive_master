@@ -103,7 +103,7 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({ user, onUpdate }) => {
     try {
       const compressed = await compressImage(file);
       const fileRef = storageRef(storage, `avatars/${user.id}`);
-      await uploadBytes(fileRef, compressed);
+      await uploadBytes(fileRef, compressed, { contentType: 'image/jpeg' });
       const url = await getDownloadURL(fileRef);
 
       if (auth.currentUser) {
