@@ -3,6 +3,82 @@ import { Navigation } from 'lucide-react';
 import useContactTracking from '../hooks/useContactTracking';
 import NavigationInterface from './NavigationInterface';
 
+function createAvatarMarkerEl(
+  photoURL: string | undefined,
+  displayName: string,
+  markerUserType: 'user' | 'driver',
+  isCurrentUser: boolean,
+  isTracking?: boolean
+): HTMLElement {
+  const size = isCurrentUser ? 36 : 30;
+  const borderColor = isCurrentUser
+    ? '#3b82f6'
+    : markerUserType === 'driver'
+    ? '#10b981'
+    : '#6b7280';
+  const borderWidth = isCurrentUser ? 3 : 2;
+  const bgColor = isCurrentUser
+    ? '#3b82f6'
+    : markerUserType === 'driver'
+    ? '#10b981'
+    : '#6b7280';
+
+  const initials = displayName
+    ? displayName.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
+    : '?';
+
+  const innerContent = photoURL
+    ? `<img src="${photoURL}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="" />`
+    : `<span style="font-size:${isCurrentUser ? 13 : 11}px;font-weight:bold;color:white;user-select:none;">${initials}</span>`;
+
+  const trackingDot = isCurrentUser
+    ? `<div style="
+        position:absolute;
+        top:-4px;
+        right:-4px;
+        width:10px;
+        height:10px;
+        background-color:${isTracking ? '#10b981' : '#ef4444'};
+        border:2px solid white;
+        border-radius:50%;
+        z-index:1;
+        ${isTracking ? 'animation:pulse 2s infinite;' : ''}
+      "></div>`
+    : '';
+
+  const el = document.createElement('div');
+  el.className = `gps-marker ${isCurrentUser ? 'user-marker' : 'contact-marker'}`;
+  el.style.cssText = 'position:relative;display:inline-block;';
+  el.innerHTML = `
+    <div style="
+      width:${size}px;
+      height:${size}px;
+      border-radius:50%;
+      background-color:${bgColor};
+      border:${borderWidth}px solid ${borderColor};
+      box-shadow:0 3px 8px rgba(0,0,0,0.35);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      overflow:hidden;
+      cursor:${isCurrentUser ? 'default' : 'pointer'};
+    ">${innerContent}</div>
+    ${trackingDot}
+    <div style="
+      position:absolute;
+      bottom:-8px;
+      left:50%;
+      transform:translateX(-50%);
+      width:0;
+      height:0;
+      border-left:6px solid transparent;
+      border-right:6px solid transparent;
+      border-top:8px solid ${borderColor};
+    "></div>
+  `;
+  return el;
+}
+
 interface GPSMapComponentProps {
   userLocation: any;
   user: any;
@@ -147,7 +223,7 @@ const GPSMapComponent: React.FC<GPSMapComponentProps> = ({
             timeout: 10000,
             maximumAge: 60000
           },
-          trackUserLocation: true,
+          trackUserLocation: false,
           showUserHeading: true,
           showAccuracyCircle: true,
           fitBoundsOptions: {
@@ -156,11 +232,6 @@ const GPSMapComponent: React.FC<GPSMapComponentProps> = ({
         });
         
         map.current.addControl(geolocateControl, 'top-right');
-
-        // Activar automáticamente la geolocalización
-        map.current.on('load', () => {
-          geolocateControl.trigger();
-        });
 
       } catch (error) {
         console.error('Error creating GPS map:', error);
@@ -182,38 +253,13 @@ const GPSMapComponent: React.FC<GPSMapComponentProps> = ({
         [userLocation.longitude, userLocation.latitude] : null);
 
       if (currentUserLocation) {
-        const userMarkerEl = document.createElement('div');
-        userMarkerEl.className = 'gps-marker user-marker';
-        userMarkerEl.innerHTML = `
-          <div style="
-            width: 32px; 
-            height: 32px; 
-            border-radius: 50%; 
-            background-color: #3b82f6; 
-            border: 4px solid white; 
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 14px;
-            font-weight: bold;
-            position: relative;
-          ">
-            ${userType === 'driver' ? '🚗' : '👤'}
-            <div style="
-              position: absolute;
-              top: -8px;
-              right: -8px;
-              width: 12px;
-              height: 12px;
-              background-color: ${isTracking ? '#10b981' : '#ef4444'};
-              border: 2px solid white;
-              border-radius: 50%;
-              ${isTracking ? 'animation: pulse 2s infinite;' : ''}
-            "></div>
-          </div>
-        `;
+        const userMarkerEl = createAvatarMarkerEl(
+          user?.photoURL,
+          user?.displayName || user?.email || 'U',
+          userType,
+          true,
+          isTracking
+        );
 
         new mapboxgl.Marker(userMarkerEl)
           .setLngLat(currentUserLocation)
@@ -238,33 +284,12 @@ const GPSMapComponent: React.FC<GPSMapComponentProps> = ({
       visibleContacts.forEach(contact => {
         if (!contact.location) return;
 
-        const contactMarkerEl = document.createElement('div');
-        const isDriver = contact.userType === 'driver';
-        contactMarkerEl.className = 'gps-marker contact-marker';
-        
-        contactMarkerEl.innerHTML = `
-          <div style="
-            width: 28px; 
-            height: 28px; 
-            border-radius: 50%; 
-            background-color: ${isDriver ? '#10b981' : '#6b7280'}; 
-            border: 3px solid white; 
-            box-shadow: 0 3px 6px rgba(0,0,0,0.3);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 12px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: transform 0.2s ease;
-          " 
-          onmouseover="this.style.transform='scale(1.1)'"
-          onmouseout="this.style.transform='scale(1)'"
-          >
-            ${isDriver ? '🚗' : '👤'}
-          </div>
-        `;
+        const contactMarkerEl = createAvatarMarkerEl(
+          contact.photoURL,
+          contact.displayName || '?',
+          contact.userType || 'user',
+          false
+        );
 
         // Click handler para navegación
         contactMarkerEl.addEventListener('click', () => {
@@ -276,11 +301,11 @@ const GPSMapComponent: React.FC<GPSMapComponentProps> = ({
           .setPopup(
             new mapboxgl.Popup({ offset: 28 }).setHTML(`
               <div style="padding: 12px; min-width: 220px;">
-                <h3 style="margin: 0 0 8px 0; font-weight: bold; color: ${isDriver ? '#10b981' : '#6b7280'};">
-                  ${isDriver ? '🚗' : '👤'} ${contact.displayName}
+                <h3 style="margin: 0 0 8px 0; font-weight: bold; color: ${contact.userType === 'driver' ? '#10b981' : '#6b7280'};">
+                  ${contact.userType === 'driver' ? '🚗' : '👤'} ${contact.displayName}
                 </h3>
                 <p style="margin: 0 0 8px 0; font-size: 12px; color: #666;">
-                  ${isDriver ? 'Conductor' : 'Usuario'}<br>
+                  ${contact.userType === 'driver' ? 'Conductor' : 'Usuario'}<br>
                   📞 ${contact.phone || 'No especificado'}<br>
                   ${contact.distanceFromUser ? '📍 ' + formatDistance(contact.distanceFromUser) : '📍 Ubicación disponible'}<br>
                   🕐 ${contact.lastSeen || 'Ahora'}
@@ -459,26 +484,13 @@ const GPSMapComponent: React.FC<GPSMapComponentProps> = ({
       [userLocation.longitude, userLocation.latitude] : null);
 
     if (currentUserLocation) {
-      const userMarkerEl = document.createElement('div');
-      userMarkerEl.className = 'gps-marker user-marker';
-      userMarkerEl.innerHTML = `
-        <div style="
-          width: 32px; 
-          height: 32px; 
-          border-radius: 50%; 
-          background-color: #3b82f6; 
-          border: 4px solid white; 
-          box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: white;
-          font-size: 14px;
-          font-weight: bold;
-        ">
-          ${userType === 'driver' ? '🚗' : '👤'}
-        </div>
-      `;
+      const userMarkerEl = createAvatarMarkerEl(
+        user?.photoURL,
+        user?.displayName || user?.email || 'U',
+        userType,
+        true,
+        isTracking
+      );
 
       new mapboxgl.Marker(userMarkerEl)
         .setLngLat(currentUserLocation)
@@ -489,27 +501,12 @@ const GPSMapComponent: React.FC<GPSMapComponentProps> = ({
     visibleContacts.forEach(contact => {
       if (!contact.location) return;
 
-      const contactMarkerEl = document.createElement('div');
-      contactMarkerEl.className = 'gps-marker contact-marker';
-      contactMarkerEl.innerHTML = `
-        <div style="
-          width: 28px; 
-          height: 28px; 
-          border-radius: 50%; 
-          background-color: ${contact.userType === 'driver' ? '#10b981' : '#6b7280'}; 
-          border: 3px solid white; 
-          box-shadow: 0 3px 6px rgba(0,0,0,0.3);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: white;
-          font-size: 12px;
-          font-weight: bold;
-          cursor: pointer;
-        ">
-          ${contact.userType === 'driver' ? '🚗' : '👤'}
-        </div>
-      `;
+      const contactMarkerEl = createAvatarMarkerEl(
+        contact.photoURL,
+        contact.displayName || '?',
+        contact.userType || 'user',
+        false
+      );
 
       contactMarkerEl.addEventListener('click', () => {
         handleNavigateToContact(contact);
@@ -538,31 +535,31 @@ const GPSMapComponent: React.FC<GPSMapComponentProps> = ({
   return (
     <div className="w-full h-full flex flex-col relative">
       {/* Información de estado GPS */}
-      <div className="flex-shrink-0 p-3 bg-gray-50 border-b">
+      <div className="flex-shrink-0 px-4 py-2 bg-card border-b border-border">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <div className={`w-3 h-3 rounded-full ${isTracking ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
-            <span className="text-sm font-medium">
+            <div className={`w-2.5 h-2.5 rounded-full ${isTracking ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
+            <span className="text-sm font-medium text-foreground">
               GPS {isTracking ? 'Activo' : 'Inactivo'}
             </span>
           </div>
-          <div className="grid grid-cols-3 gap-3 text-center text-xs">
-            <div>
-              <div className="font-semibold text-blue-600">{totalContacts}</div>
-              <div className="text-gray-500">En mapa</div>
+          <div className="flex items-center gap-4 text-xs">
+            <div className="text-center">
+              <div className="font-semibold text-blue-600 dark:text-blue-400">{totalContacts}</div>
+              <div className="text-muted-foreground">En mapa</div>
             </div>
-            <div>
-              <div className="font-semibold text-emerald-600">{drivers}</div>
-              <div className="text-gray-500">Conductores</div>
+            <div className="text-center">
+              <div className="font-semibold text-emerald-600 dark:text-emerald-400">{drivers}</div>
+              <div className="text-muted-foreground">Conductores</div>
             </div>
-            <div>
-              <div className="font-semibold text-gray-600">{users}</div>
-              <div className="text-gray-500">Usuarios</div>
+            <div className="text-center">
+              <div className="font-semibold text-foreground">{users}</div>
+              <div className="text-muted-foreground">Usuarios</div>
             </div>
           </div>
         </div>
         {error && (
-          <p className="mt-2 text-xs text-red-600">⚠️ {error}</p>
+          <p className="mt-1 text-xs text-destructive">⚠️ {error}</p>
         )}
       </div>
 
@@ -575,7 +572,7 @@ const GPSMapComponent: React.FC<GPSMapComponentProps> = ({
       {/* Botón flotante de navegación */}
       <button
         onClick={() => setShowNavigation(true)}
-        className="absolute bottom-4 right-4 bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-full shadow-lg transition-colors z-10"
+        className="absolute bottom-4 right-4 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-400 text-white p-4 rounded-full shadow-xl transition-colors z-10"
         title="Abrir navegación GPS"
       >
         <Navigation size={24} />

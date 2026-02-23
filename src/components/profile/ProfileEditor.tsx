@@ -1,11 +1,13 @@
-import React, { memo } from 'react';
+import React, { memo, useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
+import { Camera, RefreshCw } from 'lucide-react';
 import { updateProfile } from 'firebase/auth';
-import { auth } from '../../services/firebase';
+import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { auth, storage } from '../../services/firebase';
 import { writeData } from '../../services/database-sync';
 import type { UserData } from '../../types';
 
@@ -49,6 +51,77 @@ const profileSchema = z.object({
 type ProfileFormValues = z.infer<typeof profileSchema>;
 
 const ProfileEditor: React.FC<ProfileEditorProps> = ({ user, onUpdate }) => {
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file');
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('Image must be smaller than 2 MB');
+      return;
+    }
+
+    const compressImage = (f: File): Promise<Blob> =>
+      new Promise((resolve, reject) => {
+        const img = new Image();
+        const url = URL.createObjectURL(f);
+        img.onload = () => {
+          URL.revokeObjectURL(url);
+          const maxSize = 400;
+          let { width, height } = img;
+          if (width > maxSize || height > maxSize) {
+            if (width > height) {
+              height = Math.round((height * maxSize) / width);
+              width = maxSize;
+            } else {
+              width = Math.round((width * maxSize) / height);
+              height = maxSize;
+            }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d')!;
+          ctx.drawImage(img, 0, 0, width, height);
+          canvas.toBlob(
+            (blob) => (blob ? resolve(blob) : reject(new Error('Compression failed'))),
+            'image/jpeg',
+            0.8
+          );
+        };
+        img.onerror = reject;
+        img.src = url;
+      });
+
+    setUploadingPhoto(true);
+    try {
+      const compressed = await compressImage(file);
+      const fileRef = storageRef(storage, `avatars/${user.id}`);
+      await uploadBytes(fileRef, compressed);
+      const url = await getDownloadURL(fileRef);
+
+      if (auth.currentUser) {
+        await updateProfile(auth.currentUser, { photoURL: url });
+      }
+      const collName = user.userType === 'driver' ? 'drivers' : 'users';
+      await writeData(collName, user.id, { ...user, photoURL: url });
+      onUpdate?.({ ...user, photoURL: url });
+      toast.success('Photo updated successfully');
+    } catch (error: any) {
+      console.error('Error uploading photo:', error);
+      toast.error('Failed to upload photo', { description: error.message || 'Please try again' });
+    } finally {
+      setUploadingPhoto(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
@@ -123,10 +196,31 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({ user, onUpdate }) => {
       <Card>
         <CardHeader>
           <div className="flex items-center space-x-4 mb-4">
-            <Avatar className="h-20 w-20">
-              <AvatarImage src={user.photoURL} alt={user.displayName} />
-              <AvatarFallback className="text-2xl">{getUserInitials()}</AvatarFallback>
-            </Avatar>
+            <div
+              className="relative cursor-pointer group"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <Avatar className="h-20 w-20">
+                <AvatarImage src={user.photoURL} alt={user.displayName} />
+                <AvatarFallback className="text-2xl">{getUserInitials()}</AvatarFallback>
+              </Avatar>
+              {uploadingPhoto ? (
+                <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40">
+                  <RefreshCw className="h-6 w-6 text-white animate-spin" />
+                </div>
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Camera className="h-6 w-6 text-white" />
+                </div>
+              )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handlePhotoChange}
+              />
+            </div>
             <div>
               <CardTitle>Edit Profile</CardTitle>
               <CardDescription>{user.email}</CardDescription>
