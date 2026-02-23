@@ -6,8 +6,7 @@ import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import { Camera, RefreshCw } from 'lucide-react';
 import { updateProfile } from 'firebase/auth';
-import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { auth, storage } from '../../services/firebase';
+import { auth } from '../../services/firebase';
 import { writeData } from '../../services/database-sync';
 import type { UserData } from '../../types';
 
@@ -67,13 +66,13 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({ user, onUpdate }) => {
       return;
     }
 
-    const compressImage = (f: File): Promise<Blob> =>
+    const compressToDataURL = (f: File): Promise<string> =>
       new Promise((resolve, reject) => {
         const img = new Image();
         const url = URL.createObjectURL(f);
         img.onload = () => {
           URL.revokeObjectURL(url);
-          const maxSize = 400;
+          const maxSize = 200;
           let { width, height } = img;
           if (width > maxSize || height > maxSize) {
             if (width > height) {
@@ -89,11 +88,7 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({ user, onUpdate }) => {
           canvas.height = height;
           const ctx = canvas.getContext('2d')!;
           ctx.drawImage(img, 0, 0, width, height);
-          canvas.toBlob(
-            (blob) => (blob ? resolve(blob) : reject(new Error('Compression failed'))),
-            'image/jpeg',
-            0.8
-          );
+          resolve(canvas.toDataURL('image/jpeg', 0.7));
         };
         img.onerror = reject;
         img.src = url;
@@ -101,20 +96,13 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({ user, onUpdate }) => {
 
     setUploadingPhoto(true);
     try {
-      const compressed = await compressImage(file);
-      const fileRef = storageRef(storage, `avatars/${user.id}`);
-      await uploadBytes(fileRef, compressed, { contentType: 'image/jpeg' });
-      const url = await getDownloadURL(fileRef);
-
-      if (auth.currentUser) {
-        await updateProfile(auth.currentUser, { photoURL: url });
-      }
+      const dataURL = await compressToDataURL(file);
       const collName = user.userType === 'driver' ? 'drivers' : 'users';
-      await writeData(collName, user.id, { ...user, photoURL: url });
-      onUpdate?.({ ...user, photoURL: url });
+      await writeData(collName, user.id, { ...user, photoURL: dataURL });
+      onUpdate?.({ ...user, photoURL: dataURL });
       toast.success('Foto actualizada correctamente');
     } catch (error: any) {
-      console.error('Error uploading photo:', error);
+      console.error('Error al actualizar la foto:', error);
       toast.error('Error al subir la foto', { description: error.message || 'Intenta de nuevo' });
     } finally {
       setUploadingPhoto(false);
@@ -223,7 +211,7 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({ user, onUpdate }) => {
             </div>
             <div>
               <CardTitle>Edit Profile</CardTitle>
-              <p className="text-xs text-muted-foreground mt-1">Toca el avatar para cambiar foto<br/>Máx 2 MB · se comprime a 400×400</p>
+              <p className="text-xs text-muted-foreground mt-1">Toca el avatar para cambiar foto<br/>Máx 2 MB · se comprime a 200×200</p>
               <CardDescription>{user.email}</CardDescription>
             </div>
           </div>
