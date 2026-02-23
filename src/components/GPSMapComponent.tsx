@@ -103,6 +103,7 @@ const GPSMapComponent: React.FC<GPSMapComponentProps> = ({
   const [showNavigation, setShowNavigation] = useState(false);
   const [navigationDestination, setNavigationDestination] = useState<[number, number] | undefined>();
   const [selectedContactName, setSelectedContactName] = useState<string>('');
+  const [mapLoaded, setMapLoaded] = useState(false);
   
   const {
     visibleContacts,
@@ -112,7 +113,6 @@ const GPSMapComponent: React.FC<GPSMapComponentProps> = ({
     startLocationTracking,
     stopLocationTracking,
     selectContactForNavigation,
-    formatDistance,
     totalContacts,
     nearbyContacts,
     drivers,
@@ -201,7 +201,7 @@ const GPSMapComponent: React.FC<GPSMapComponentProps> = ({
 
         map.current.on('load', () => {
           console.log('GPS Map loaded successfully');
-          addMarkersToMap();
+          setMapLoaded(true);
         });
 
         map.current.on('error', (e: any) => {
@@ -237,111 +237,6 @@ const GPSMapComponent: React.FC<GPSMapComponentProps> = ({
         console.error('Error creating GPS map:', error);
         showFallbackMap();
       }
-    };
-
-    const addMarkersToMap = () => {
-      const mapboxgl = (window as any).mapboxgl;
-      
-      if (!mapboxgl || !map.current) return;
-
-      // Limpiar marcadores existentes
-      const existingMarkers = document.querySelectorAll('.gps-marker');
-      existingMarkers.forEach(marker => marker.remove());
-
-      // Agregar marcador del usuario actual (más prominente)
-      const currentUserLocation = trackedUserLocation || (userLocation ? 
-        [userLocation.longitude, userLocation.latitude] : null);
-
-      if (currentUserLocation) {
-        const userMarkerEl = createAvatarMarkerEl(
-          user?.photoURL,
-          user?.displayName || user?.email || 'U',
-          userType,
-          true,
-          isTracking
-        );
-
-        new mapboxgl.Marker(userMarkerEl)
-          .setLngLat(currentUserLocation)
-          .setPopup(
-            new mapboxgl.Popup({ offset: 35 }).setHTML(`
-              <div style="padding: 12px; min-width: 200px;">
-                <h3 style="margin: 0 0 8px 0; font-weight: bold; color: #3b82f6;">
-                  ${userType === 'driver' ? '🚗' : '👤'} Tú (${userType === 'driver' ? 'Conductor' : 'Usuario'})
-                </h3>
-                <p style="margin: 0; font-size: 12px; color: #666;">
-                  ${user?.displayName || user?.email}<br>
-                  ${isTracking ? '🟢 GPS Activo' : '🔴 GPS Inactivo'}<br>
-                  📍 ${currentUserLocation[1].toFixed(6)}, ${currentUserLocation[0].toFixed(6)}
-                </p>
-              </div>
-            `)
-          )
-          .addTo(map.current);
-      }
-
-      // Agregar marcadores de contactos visibles
-      visibleContacts.forEach(contact => {
-        if (!contact.location) return;
-
-        const contactMarkerEl = createAvatarMarkerEl(
-          contact.photoURL,
-          contact.displayName || '?',
-          contact.userType || 'user',
-          false
-        );
-
-        // Click handler para navegación
-        contactMarkerEl.addEventListener('click', () => {
-          handleNavigateToContact(contact);
-        });
-
-        new mapboxgl.Marker(contactMarkerEl)
-          .setLngLat([contact.location.longitude, contact.location.latitude])
-          .setPopup(
-            new mapboxgl.Popup({ offset: 28 }).setHTML(`
-              <div style="padding: 12px; min-width: 220px;">
-                <h3 style="margin: 0 0 8px 0; font-weight: bold; color: ${contact.userType === 'driver' ? '#10b981' : '#6b7280'};">
-                  ${contact.userType === 'driver' ? '🚗' : '👤'} ${contact.displayName}
-                </h3>
-                <p style="margin: 0 0 8px 0; font-size: 12px; color: #666;">
-                  ${contact.userType === 'driver' ? 'Conductor' : 'Usuario'}<br>
-                  📞 ${contact.phone || 'No especificado'}<br>
-                  ${contact.distanceFromUser ? '📍 ' + formatDistance(contact.distanceFromUser) : '📍 Ubicación disponible'}<br>
-                  🕐 ${contact.lastSeen || 'Ahora'}
-                </p>
-                <button 
-                  onclick="window.navigateToThisContact && window.navigateToThisContact('${contact.id}')"
-                  style="
-                    width: 100%;
-                    background-color: #3b82f6;
-                    color: white;
-                    border: none;
-                    padding: 8px 12px;
-                    border-radius: 6px;
-                    font-size: 12px;
-                    font-weight: 500;
-                    cursor: pointer;
-                    transition: background-color 0.2s;
-                  "
-                  onmouseover="this.style.backgroundColor='#2563eb'"
-                  onmouseout="this.style.backgroundColor='#3b82f6'"
-                >
-                  🧭 Navegar aquí
-                </button>
-              </div>
-            `)
-          )
-          .addTo(map.current);
-      });
-
-      // Configurar función global para navegación desde popup
-      (window as any).navigateToThisContact = (contactId: string) => {
-        const contact = visibleContacts.find(c => c.id === contactId);
-        if (contact) {
-          handleNavigateToContact(contact);
-        }
-      };
     };
 
     const showFallbackMap = () => {
@@ -458,7 +353,7 @@ const GPSMapComponent: React.FC<GPSMapComponentProps> = ({
 
   // Actualizar marcadores cuando cambien los contactos o ubicación
   useEffect(() => {
-    if (!map.current || !map.current.loaded()) return;
+    if (!map.current || !mapLoaded) return;
 
     // Limpiar marcadores existentes
     const existingMarkers = document.querySelectorAll('.gps-marker');
@@ -505,7 +400,7 @@ const GPSMapComponent: React.FC<GPSMapComponentProps> = ({
         .setLngLat([contact.location.longitude, contact.location.latitude])
         .addTo(map.current);
     });
-  }, [visibleContacts, trackedUserLocation, userLocation, userType]);
+  }, [visibleContacts, trackedUserLocation, userLocation, userType, mapLoaded]);
 
   const handleNavigateToContact = (contact: any) => {
     if (selectContactForNavigation(contact) && contact.location) {
