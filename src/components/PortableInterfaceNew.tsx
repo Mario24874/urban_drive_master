@@ -25,7 +25,7 @@ import {
 } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, MapPinOff, Eye, EyeOff } from 'lucide-react';
 import { Home, MapPin, Users, MessageSquare, User as UserIcon } from './Icons';
 
 interface PortableInterfaceProps {
@@ -195,9 +195,11 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-muted-foreground">Location</p>
-                      <p className="text-2xl font-bold">
-                        {location ? '📍' : '❌'}
-                      </p>
+                      <div className="text-2xl font-bold">
+                        {location
+                          ? <MapPin size={28} className="text-green-400" />
+                          : <MapPinOff size={28} className="text-destructive" />}
+                      </div>
                     </div>
                     <MapPin className="text-muted-foreground" size={32} />
                   </div>
@@ -212,9 +214,11 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-muted-foreground">Status</p>
-                      <p className="text-2xl font-bold">
-                        {user.isVisible ? '🟢' : '⚫'}
-                      </p>
+                      <div className="text-2xl font-bold">
+                        {user.isVisible
+                          ? <Eye size={28} className="text-green-400" />
+                          : <EyeOff size={28} className="text-muted-foreground" />}
+                      </div>
                     </div>
                     <UserIcon className="text-muted-foreground" size={32} />
                   </div>

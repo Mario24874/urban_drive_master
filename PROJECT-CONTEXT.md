@@ -1,7 +1,7 @@
 # Urban Drive - Contexto Completo del Proyecto
 
-**Fecha de creación:** 2025-07-24  
-**Última actualización:** 2026-02-20
+**Fecha de creación:** 2025-07-24
+**Última actualización:** 2026-02-24
 **Estado:** v1.0.0 PWA - Funcional en producción. Contactos, GPS, navegación, ajustes y PWA update completos.
 
 ---
@@ -1175,6 +1175,72 @@ if (!allowed) return <UpgradePrompt tier={upgradeTo} />;
    - Módulo Cadena de Frío
    - Módulo Firma Digital para couriers
    - Módulo Bienestar Animal
+
+---
+
+---
+
+## 🗓️ BITÁCORA DE CAMBIOS RECIENTES (2026-02-24)
+
+### Fix: Service Worker — diálogo de actualización persistente
+**Problema:** El diálogo "Nueva versión disponible" se cerraba casi inmediatamente.
+**Causa raíz:** `public/sw.js` llamaba `self.skipWaiting()` dentro del handler `install`,
+lo que hacía que el SW tomara control inmediato antes de que el usuario pudiera interactuar.
+**Solución:** Eliminar `self.skipWaiting()` del install handler. El SW ahora permanece en
+estado `waiting` hasta que el usuario pulsa "Actualizar ahora", que envía el mensaje
+`{ type: 'SKIP_WAITING' }` (ya manejado en el handler `message`).
+**Archivos:** `public/sw.js`
+
+### Fix: Deduplicación de contactos en mapa
+**Problema:** Un contacto que existía en ambas colecciones (`users` y `drivers`) aparecía
+dos veces en el mapa como dos globos separados.
+**Causa raíz:** `handleSnapshot` en `useContactTracking` particionaba por `userType`, no
+por `id`, permitiendo duplicados cuando un documento existe en ambas colecciones.
+**Solución:** Filtro `Set<string>` post-merge por `id` (primer ocurrencia gana).
+**Archivos:** `src/hooks/useContactTracking.ts`
+
+### Feat: Avatares en marcadores del mapa GPS
+**Cambios:**
+- `GPSMapComponent` — función `createAvatarMarkerEl()`: círculo con foto del usuario/contacto
+  (o iniciales como fallback), borde coloreado por tipo (azul=yo, verde=driver, gris=user),
+  punta triangular CSS, dot animado de tracking en el usuario actual.
+- `NavigationInterface` — contact picker y marcador de navegación activa ahora usan avatares
+  reales en lugar de emojis 🚗/👤. Nuevo componente `NavAvatar` (React JSX).
+- `GPSMapComponent` pasa prop `user` a `NavigationInterface` para el marcador de navegación.
+
+### Feat: Voz GPS mejorada (Web Speech API)
+**Cambios en `src/services/navigation.ts`:**
+- Selección inteligente de voz: prioriza Google voices en español (alta calidad en Chrome/Android),
+  luego voces masculinas por nombre (Alvaro, Diego, Jorge, Carlos…), luego cualquier español,
+  luego inglés masculino como fallback.
+- `pitch: 0.8` (antes 1.0) — tono más grave y autoritario.
+- Dos reintentos de carga de voces (200ms + 1000ms) para Chrome en Android.
+
+### Feat: Fondo de pantalla en GPS / NavigationInterface
+**Cambio:** `NavigationInterface` muestra `/assets/background.jpg` con overlay `bg-black/65`
+como fondo, igual que el resto de la app. El área de selección de destino es transparente.
+Durante navegación activa, el mapa Mapbox ocupa toda la pantalla.
+**Archivos:** `src/components/NavigationInterface.tsx`
+
+### Feat: Iconos modernos — reemplazo de emojis
+**Antes:** 🚗 Driver / 👤 User / 📍 Location / 🟢 Visible / ⚫ Hidden
+**Después:** Iconos lucide-react coherentes con el design system de la app:
+- `<Car size={10} />` para conductores
+- `<UserRound size={10} />` para usuarios
+- `<MapPin size={28} className="text-green-400" />` para ubicación activa
+- `<MapPinOff size={28} className="text-destructive" />` para sin ubicación
+- `<Eye size={28} className="text-green-400" />` para visible
+- `<EyeOff size={28} className="text-muted-foreground" />` para oculto
+**Archivos:** `src/components/contacts/ContactList.tsx`, `src/components/SettingsSheet.tsx`,
+`src/components/PortableInterfaceNew.tsx`
+
+### Feat: Foto de perfil — upload y propagación
+**Cambio:** Las fotos se comprimen a 200×200 JPEG (calidad 0.7) y se almacenan como data URL
+directamente en Firestore (`photoURL` en el documento del usuario). No se usa Firebase Storage
+(requería Blaze + CORS). La actualización se propaga inmediatamente al estado de App.tsx via
+callback `onUserUpdate` → `PortableInterfaceNew` → `ProfileEditor`.
+**Archivos:** `src/components/profile/ProfileEditor.tsx`, `src/App.tsx`,
+`src/components/PortableInterfaceNew.tsx`
 
 ---
 

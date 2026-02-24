@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search, UserPlus, Check, X, Trash2,
   Eye, EyeOff, MessageSquare, MapPin, Clock,
-  MoreVertical, Navigation,
+  MoreVertical, Navigation, Car, UserRound,
 } from 'lucide-react';
 import type { Contact, Invitation } from '../../types';
 import { useContacts } from '../../hooks/useContacts';
@@ -101,8 +101,10 @@ const ContactItem: React.FC<{
           )}
         </div>
         <div className="flex items-center gap-2 mt-0.5">
-          <Badge variant="outline" className="text-xs py-0">
-            {contact.userType === 'driver' ? '🚗 Driver' : '👤 User'}
+          <Badge variant="outline" className="text-xs py-0 flex items-center gap-1">
+            {contact.userType === 'driver'
+              ? <><Car size={10} />Driver</>
+              : <><UserRound size={10} />User</>}
           </Badge>
           {contact.phone && (
             <span className="text-xs text-muted-foreground truncate">{contact.phone}</span>
@@ -137,8 +139,10 @@ const ContactItem: React.FC<{
               </Avatar>
               <div>
                 <SheetTitle className="text-left">{contact.displayName}</SheetTitle>
-                <SheetDescription className="text-left text-xs">
-                  {contact.userType === 'driver' ? '🚗 Driver' : '👤 User'}
+                <SheetDescription className="text-left text-xs flex items-center gap-1">
+                  {contact.userType === 'driver'
+                    ? <><Car size={10} />Driver</>
+                    : <><UserRound size={10} />User</>}
                   {contact.phone ? ` · ${contact.phone}` : ''}
                 </SheetDescription>
               </div>
@@ -224,9 +228,11 @@ const InvitationItem: React.FC<{
       {type === 'received' ? (
         <>
           <p className="text-sm font-medium">{invitation.fromName || invitation.fromEmail}</p>
-          <p className="text-xs text-muted-foreground">
-            {invitation.fromType === 'driver' ? '🚗 Driver' : '👤 User'} •{' '}
-            {invitation.fromPhone || invitation.fromEmail}
+          <p className="text-xs text-muted-foreground flex items-center gap-1">
+            {invitation.fromType === 'driver'
+              ? <><Car size={10} />Driver</>
+              : <><UserRound size={10} />User</>}
+            {' '}•{' '}{invitation.fromPhone || invitation.fromEmail}
           </p>
         </>
       ) : (

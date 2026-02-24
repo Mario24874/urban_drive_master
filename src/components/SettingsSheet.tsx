@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Moon, Sun, LogOut, RefreshCw, Settings, Download } from 'lucide-react';
+import { Moon, Sun, LogOut, RefreshCw, Settings, Download, Car, UserRound } from 'lucide-react';
 import { useApp } from '../contexts/AppContext';
 import type { UserData } from '../types';
 
@@ -96,8 +96,10 @@ const SettingsSheet: React.FC<SettingsSheetProps> = ({ user, onLogout }) => {
               <div className="flex-1 min-w-0">
                 <p className="font-semibold truncate">{user.displayName || user.email}</p>
                 <p className="text-sm text-muted-foreground truncate">{user.email}</p>
-                <Badge variant="outline" className="mt-1 text-xs">
-                  {user.userType === 'driver' ? '🚗 Driver' : '👤 User'}
+                <Badge variant="outline" className="mt-1 text-xs flex items-center gap-1">
+                  {user.userType === 'driver'
+                    ? <><Car size={10} />Driver</>
+                    : <><UserRound size={10} />User</>}
                 </Badge>
               </div>
             </div>

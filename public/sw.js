@@ -11,17 +11,17 @@ const urlsToCache = [
   // Static assets will be cached automatically by Vite PWA plugin
 ];
 
-// Install service worker
+// Install service worker.
+// DO NOT call self.skipWaiting() here — the new SW must stay in the
+// 'installed/waiting' state so PWAUpdateNotification can show the
+// persistent update dialog. skipWaiting is only triggered when the
+// user explicitly clicks "Actualizar ahora" (SKIP_WAITING message).
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
         console.log('Opened cache');
         return cache.addAll(urlsToCache);
-      })
-      .then(() => {
-        // Force the waiting service worker to become the active service worker
-        self.skipWaiting();
       })
   );
 });

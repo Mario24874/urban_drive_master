@@ -265,7 +265,13 @@ const NavigationInterface: React.FC<NavigationInterfaceProps> = ({
   if (!isVisible) return null;
 
   return (
-    <div className="fixed inset-0 bg-background z-50 flex flex-col">
+    <div className="fixed inset-0 z-50 flex flex-col">
+      {/* Branded background — same image as the main app */}
+      <div
+        className="absolute inset-0 -z-10 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: 'url(/assets/background.jpg)' }}
+      />
+      <div className="absolute inset-0 -z-10 bg-black/65" />
       {/* Header */}
       <div className="bg-blue-600 dark:bg-blue-700 text-white px-4 py-3 shadow-lg flex-shrink-0">
         <div className="flex items-center justify-between">
@@ -352,7 +358,7 @@ const NavigationInterface: React.FC<NavigationInterfaceProps> = ({
       {/* Main Content */}
       <div className="flex-1 relative overflow-hidden">
         {!navState.isNavigating ? (
-          <div className="h-full overflow-y-auto bg-background">
+          <div className="h-full overflow-y-auto bg-transparent">
             <div className="max-w-md w-full mx-auto p-4 space-y-3">
 
               {/* Address search input */}
