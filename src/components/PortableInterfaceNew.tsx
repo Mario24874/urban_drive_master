@@ -33,6 +33,7 @@ interface PortableInterfaceProps {
   isAuthenticated: boolean;
   handleLogin?: (data: any) => void;
   handleRegister?: () => void;
+  onUserUpdate?: (updatedUser: UserData) => void;
 }
 
 const PortableInterface: React.FC<PortableInterfaceProps> = ({
@@ -40,6 +41,7 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
   isAuthenticated,
   handleLogin,
   handleRegister,
+  onUserUpdate,
 }) => {
   const [activeTab, setActiveTab] = useState('home');
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
@@ -309,7 +311,7 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
 
           {/* Profile Tab */}
           <TabsContent value="profile" className="h-full m-0 overflow-y-auto">
-            <ProfileEditor user={user} />
+            <ProfileEditor user={user} onUpdate={onUserUpdate} />
           </TabsContent>
         </div>
 

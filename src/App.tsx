@@ -93,7 +93,11 @@ function App() {
         ) : (
           <div className="relative z-10 flex-1">
             <Suspense fallback={<LoadingSpinner />}>
-              <PortableInterface user={user} isAuthenticated={isAuthenticated} />
+              <PortableInterface
+                user={user}
+                isAuthenticated={isAuthenticated}
+                onUserUpdate={(updatedUser) => setUser(updatedUser)}
+              />
             </Suspense>
           </div>
         )}
