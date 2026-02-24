@@ -8,6 +8,7 @@ interface ContactForNav {
   userType: 'user' | 'driver';
   location: { longitude: number; latitude: number } | null;
   phone?: string;
+  photoURL?: string;
 }
 
 interface GeocodeResult {
@@ -23,6 +24,34 @@ interface NavigationInterfaceProps {
   contactName?: string;
   contactsForNav?: ContactForNav[];
   onSelectContact?: (contact: ContactForNav) => void;
+  user?: any;
+}
+
+/** Render a circular avatar: photo if available, initials otherwise */
+function NavAvatar({ photoURL, displayName, userType, size = 40 }: {
+  photoURL?: string;
+  displayName: string;
+  userType: 'user' | 'driver';
+  size?: number;
+}) {
+  const initials = displayName
+    ? displayName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+    : '?';
+  const bg = userType === 'driver' ? 'bg-emerald-500' : 'bg-blue-500';
+  const sizeClass = size === 40 ? 'w-10 h-10 text-sm' : 'w-9 h-9 text-xs';
+
+  if (photoURL) {
+    return (
+      <div className={`${sizeClass} rounded-full overflow-hidden flex-shrink-0 border-2 border-white/20`}>
+        <img src={photoURL} alt={displayName} className="w-full h-full object-cover" />
+      </div>
+    );
+  }
+  return (
+    <div className={`${sizeClass} rounded-full ${bg} flex items-center justify-center flex-shrink-0 text-white font-bold`}>
+      {initials}
+    </div>
+  );
 }
 
 const NavigationInterface: React.FC<NavigationInterfaceProps> = ({
@@ -32,6 +61,7 @@ const NavigationInterface: React.FC<NavigationInterfaceProps> = ({
   contactName,
   contactsForNav = [],
   onSelectContact,
+  user,
 }) => {
   const [navState, setNavState] = useState<NavigationState>(navigationService.getState());
   const [isStarting, setIsStarting] = useState(false);
@@ -169,10 +199,22 @@ const NavigationInterface: React.FC<NavigationInterfaceProps> = ({
         }
 
         const userEl = document.createElement('div');
-        userEl.innerHTML = `<div style="width:36px;height:36px;border-radius:50%;background:#3b82f6;border:4px solid white;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 3px 10px rgba(0,0,0,0.4)">🚗</div>`;
+        const _photoURL = user?.photoURL || '';
+        const _name = user?.displayName || user?.email || 'Yo';
+        const _initials = _name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2);
+        const _inner = _photoURL
+          ? `<img src="${_photoURL}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="" />`
+          : `<span style="font-size:13px;font-weight:bold;color:white;user-select:none;">${_initials}</span>`;
+        const markerDiv = document.createElement('div');
+        markerDiv.style.cssText = 'position:relative;display:inline-block;';
+        markerDiv.innerHTML = `
+          <div style="width:36px;height:36px;border-radius:50%;background:#3b82f6;border:3px solid white;display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 3px 10px rgba(0,0,0,0.4);">${_inner}</div>
+          <div style="position:absolute;bottom:-8px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:8px solid #3b82f6;"></div>
+        `;
+        userEl.appendChild(markerDiv);
         const userLoc = navigationService.getState().userLocation;
-        if (userEl.firstChild && userLoc) {
-          userMarkerRef.current = new mapboxgl.Marker({ element: userEl.firstChild as HTMLElement })
+        if (userLoc) {
+          userMarkerRef.current = new mapboxgl.Marker({ element: markerDiv })
             .setLngLat(userLoc)
             .addTo(navMapInstance.current);
         }
@@ -421,9 +463,11 @@ const NavigationInterface: React.FC<NavigationInterfaceProps> = ({
                               onClick={() => onSelectContact?.(c)}
                               className="w-full flex items-center gap-3 bg-card hover:bg-accent active:bg-accent/80 border border-border p-4 rounded-xl shadow-sm transition-colors text-left"
                             >
-                              <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white text-base flex-shrink-0 ${c.userType === 'driver' ? 'bg-emerald-500' : 'bg-blue-500'}`}>
-                                {c.userType === 'driver' ? '🚗' : '👤'}
-                              </div>
+                              <NavAvatar
+                                photoURL={c.photoURL}
+                                displayName={c.displayName}
+                                userType={c.userType}
+                              />
                               <div className="flex-1 min-w-0">
                                 <p className="font-semibold text-foreground truncate text-sm">{c.displayName}</p>
                                 <p className="text-xs text-muted-foreground">

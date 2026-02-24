@@ -470,6 +470,7 @@ const GPSMapComponent: React.FC<GPSMapComponentProps> = ({
         contactName={selectedContactName}
         contactsForNav={visibleContacts.filter(c => c.location) as any}
         onSelectContact={handleNavigateToContact}
+        user={user}
       />
 
       {/* CSS para animaciones */}

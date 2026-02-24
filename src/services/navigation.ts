@@ -61,7 +61,13 @@ class NavigationService {
   }
 
   /**
-   * Inicializar voces de síntesis de voz
+   * Inicializar voces de síntesis de voz.
+   * Orden de prioridad para máxima calidad y tono autoritario:
+   *  1. Google español (alta calidad, Chrome/Android)
+   *  2. Voz masculina en español (cualquier plataforma)
+   *  3. Cualquier español
+   *  4. Voz masculina en inglés (fallback de calidad)
+   *  5. Primera voz disponible
    */
   private initializeVoices(): void {
     if (!('speechSynthesis' in window)) {
@@ -71,37 +77,51 @@ class NavigationService {
 
     const loadVoices = () => {
       const voices = window.speechSynthesis.getVoices();
-
       if (voices.length === 0) return;
 
-      // Buscar voz en español (prioridad: es-ES, es-MX, es-US, cualquier es-*)
+      const isSpanish = (v: SpeechSynthesisVoice) => v.lang.startsWith('es');
+      const isGoogle = (v: SpeechSynthesisVoice) => v.name.toLowerCase().includes('google');
+      const isMale = (v: SpeechSynthesisVoice) => {
+        const n = v.name.toLowerCase();
+        return n.includes('male') || n.includes('masculin') || n.includes('alvaro') ||
+               n.includes('diego') || n.includes('jorge') || n.includes('carlos') ||
+               n.includes('guy') || n.includes('david') || n.includes('mark');
+      };
+
       this.selectedVoice =
+        // 1. Google español masculino (máxima calidad en Chrome/Android)
+        voices.find(v => isGoogle(v) && isSpanish(v) && isMale(v)) ||
+        // 2. Google español (cualquier género — Google voices son de alta calidad)
+        voices.find(v => isGoogle(v) && isSpanish(v)) ||
+        // 3. Español masculino nativo del SO
+        voices.find(v => isSpanish(v) && isMale(v)) ||
+        // 4. es-ES (Castilla, acento neutro y claro)
         voices.find(v => v.lang === 'es-ES') ||
-        voices.find(v => v.lang === 'es-MX') ||
-        voices.find(v => v.lang === 'es-US') ||
-        voices.find(v => v.lang.startsWith('es-')) ||
-        voices.find(v => v.lang.startsWith('es')) ||
-        voices[0]; // Fallback a la primera voz disponible
+        // 5. es-MX o cualquier español
+        voices.find(v => isSpanish(v)) ||
+        // 6. Voz masculina en inglés (fallback de calidad)
+        voices.find(v => v.lang.startsWith('en') && isMale(v)) ||
+        voices[0];
 
       this.voicesLoaded = true;
 
-      console.log('Voice system initialized:', {
-        totalVoices: voices.length,
-        selectedVoice: this.selectedVoice?.name,
-        selectedLang: this.selectedVoice?.lang
+      console.log('[Navigation] Voice selected:', {
+        name: this.selectedVoice?.name,
+        lang: this.selectedVoice?.lang,
+        total: voices.length,
+        allSpanish: voices.filter(isSpanish).map(v => v.name),
       });
     };
 
-    // Cargar voces inmediatamente
     loadVoices();
 
-    // Escuchar evento de cambio de voces (necesario en algunos navegadores)
     if (window.speechSynthesis.onvoiceschanged !== undefined) {
       window.speechSynthesis.onvoiceschanged = loadVoices;
     }
 
-    // Intentar de nuevo después de un delay (fallback para Chrome en Android)
-    setTimeout(loadVoices, 100);
+    // Fallback para Chrome en Android que carga voces de forma asíncrona
+    setTimeout(loadVoices, 200);
+    setTimeout(loadVoices, 1000);
   }
 
   /**
@@ -401,10 +421,10 @@ class NavigationService {
             utterance.lang = 'es-ES';
           }
 
-          // Configuración óptima para navegación
-          utterance.rate = 0.95; // Velocidad ligeramente más lenta para claridad
-          utterance.pitch = 1.0; // Tono normal
-          utterance.volume = 1.0; // Volumen máximo
+          // Tono profundo y autoritario (estilo asistente de IA)
+          utterance.rate = 1.0;   // Velocidad natural
+          utterance.pitch = 0.8;  // Más grave = más comandante
+          utterance.volume = 1.0;
 
           let resolved = false;
 
