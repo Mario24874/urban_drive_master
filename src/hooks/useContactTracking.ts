@@ -184,9 +184,11 @@ export const useContactTracking = (userId: string, userType: 'user' | 'driver') 
               return contact;
             });
 
-            const all = [...others, ...withDistance].sort((a, b) =>
-              (a.distanceFromUser ?? Infinity) - (b.distanceFromUser ?? Infinity),
-            );
+            // Deduplicate by id: a contact in both collections should appear only once
+            const seen = new Set<string>();
+            const all = [...others, ...withDistance]
+              .filter(c => { if (seen.has(c.id)) return false; seen.add(c.id); return true; })
+              .sort((a, b) => (a.distanceFromUser ?? Infinity) - (b.distanceFromUser ?? Infinity));
 
             return { ...prev, visibleContacts: all };
           });
