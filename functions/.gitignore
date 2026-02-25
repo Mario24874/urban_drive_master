@@ -2,6 +2,11 @@
 lib/**/*.js
 lib/**/*.js.map
 
+# Environment variables (never commit secrets)
+.env
+.env.*
+!.env.example
+
 # TypeScript v1 declaration files
 typings/
 

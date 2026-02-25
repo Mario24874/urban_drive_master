@@ -4,7 +4,7 @@ import Stripe from 'stripe';
 
 // ─── Stripe client (secret key from Cloud Functions secrets) ─────────────────
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? '', {
-  apiVersion: '2024-04-10',
+  apiVersion: '2024-06-20',
 });
 
 const APP_URL = process.env.APP_URL ?? 'https://urbandrive-1082b.web.app';
@@ -21,7 +21,7 @@ function db() {
  * Output: { url: string }
  */
 export const createCheckoutSession = onCall(
-  { cors: true, secrets: ['STRIPE_SECRET_KEY'] },
+  { cors: true },
   async (request) => {
     const uid = request.auth?.uid;
     if (!uid) {
@@ -81,7 +81,7 @@ export const createCheckoutSession = onCall(
  *                   customer.subscription.deleted
  */
 export const stripeWebhook = onRequest(
-  { cors: false, secrets: ['STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET'] },
+  { cors: false },
   async (req, res) => {
     const sig = req.headers['stripe-signature'] as string;
     const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET ?? '';
