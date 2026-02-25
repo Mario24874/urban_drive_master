@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Moon, Sun, LogOut, RefreshCw, Settings, Download, Car, UserRound } from 'lucide-react';
+import { Moon, Sun, LogOut, RefreshCw, Settings, Download, Car, UserRound, Sparkles } from 'lucide-react';
 import { useApp } from '../contexts/AppContext';
 import type { UserData } from '../types';
 
@@ -12,9 +12,10 @@ import { Separator } from '@/components/ui/separator';
 interface SettingsSheetProps {
   user: UserData;
   onLogout: () => void;
+  onOpenPricing?: () => void;
 }
 
-const SettingsSheet: React.FC<SettingsSheetProps> = ({ user, onLogout }) => {
+const SettingsSheet: React.FC<SettingsSheetProps> = ({ user, onLogout, onOpenPricing }) => {
   const { theme, setTheme, lang, setLang, t } = useApp();
 
   // Update state — reads initial value from window flag set by PWAUpdateNotification
@@ -104,6 +105,25 @@ const SettingsSheet: React.FC<SettingsSheetProps> = ({ user, onLogout }) => {
               </div>
             </div>
           </div>
+
+          {/* ── Subscription ── */}
+          {onOpenPricing && (
+            <div className="px-6 pb-4">
+              <button
+                onClick={onOpenPricing}
+                className="w-full flex items-center justify-between gap-3 p-4 rounded-xl bg-gradient-to-r from-amber-600/15 via-yellow-500/10 to-orange-500/15 border border-amber-500/25 hover:border-amber-400/40 transition-all text-left"
+              >
+                <div className="flex items-center gap-2">
+                  <Sparkles size={16} className="text-amber-400 flex-shrink-0" />
+                  <div>
+                    <p className="text-sm font-semibold text-amber-300">Planes de suscripción</p>
+                    <p className="text-xs text-amber-300/50">Bronce · Plata · Oro</p>
+                  </div>
+                </div>
+                <span className="text-amber-400/70 text-xs">→</span>
+              </button>
+            </div>
+          )}
 
           <Separator className="mx-6 w-auto" />
 

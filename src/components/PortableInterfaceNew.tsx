@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { signOut } from 'firebase/auth';
 import { auth } from '../services/firebase';
 import { useLocation } from '../hooks/useLocation';
 import { useInvitations } from '../hooks/useInvitations';
 import { useApp } from '../contexts/AppContext';
+import { useSubscription } from '../features/enterprise/hooks/useSubscription';
 import type { UserData, Contact } from '../types';
 
 // Components
@@ -15,6 +16,7 @@ import ContactList from './contacts/ContactList';
 import SettingsSheet from './SettingsSheet';
 import Login from './Login';
 import Register from './Register';
+import PricingPlans from '../features/enterprise/components/PricingPlans';
 
 // Shadcn UI Components
 import {
@@ -47,8 +49,10 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [showRegister, setShowRegister] = useState(false);
   const [navTarget, setNavTarget] = useState<Contact | null>(null);
+  const [showPricing, setShowPricing] = useState(false);
 
   const { t } = useApp();
+  const { tier: subscriptionTier, isActive: hasActiveSub } = useSubscription(user?.id ?? null);
 
   // Custom hooks
   const { location, loading: locationLoading, refreshLocation } = useLocation(user);
@@ -111,6 +115,7 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
   }
 
   return (
+  <>
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -122,7 +127,7 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
           <img src="/assets/UrbanDrive.png" alt="Urban Drive" className="h-8 w-8 rounded-xl" />
           <span className="font-bold text-white text-base hidden sm:inline">Urban Drive</span>
         </div>
-        <SettingsSheet user={user} onLogout={handleLogout} />
+        <SettingsSheet user={user} onLogout={handleLogout} onOpenPricing={() => setShowPricing(true)} />
       </header>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
@@ -178,6 +183,24 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
                     : t('subtitleUser')}
                 </p>
               </div>
+
+              {/* Upgrade banner — only for free users */}
+              {!hasActiveSub && (
+                <motion.button
+                  initial={{ opacity: 0, scale: 0.97 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  onClick={() => setShowPricing(true)}
+                  className="w-full flex items-center justify-between gap-3 p-4 rounded-xl bg-gradient-to-r from-amber-600/20 via-yellow-500/15 to-orange-500/20 border border-amber-500/30 hover:border-amber-400/50 transition-all text-left"
+                >
+                  <div>
+                    <p className="text-amber-300 font-semibold text-sm">✨ Desbloquea más funciones</p>
+                    <p className="text-amber-300/60 text-xs mt-0.5">Planes desde $19/mes · Cancela cuando quieras</p>
+                  </div>
+                  <span className="flex-shrink-0 bg-amber-500 text-white text-xs font-bold px-3 py-1.5 rounded-full">
+                    Ver planes
+                  </span>
+                </motion.button>
+              )}
 
               {/* Quick Stats */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -351,6 +374,26 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
         </div>
       </Tabs>
     </motion.div>
+
+    {/* Pricing Plans overlay */}
+    <AnimatePresence>
+      {showPricing && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="fixed inset-0 z-50"
+        >
+          <PricingPlans
+            userId={user.id}
+            currentTier={subscriptionTier}
+            onClose={() => setShowPricing(false)}
+          />
+        </motion.div>
+      )}
+    </AnimatePresence>
+  </>
   );
 };
 

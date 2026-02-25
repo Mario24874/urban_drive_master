@@ -23,7 +23,7 @@ export interface FeatureGateResult {
   requiredTier: SubscriptionTier | null;
 }
 
-const TIER_ORDER: SubscriptionTier[] = ['free', 'basic', 'professional', 'enterprise'];
+const TIER_ORDER: SubscriptionTier[] = ['free', 'bronce', 'plata', 'oro'];
 
 function findRequiredTier(feature: FeatureKey, current?: number): SubscriptionTier | null {
   for (const tier of TIER_ORDER) {
@@ -75,9 +75,9 @@ const FEATURE_LABELS: Record<FeatureKey, string> = {
 
 const TIER_NAMES: Record<SubscriptionTier, string> = {
   free: 'Gratuito',
-  basic: 'Básico',
-  professional: 'Profesional',
-  enterprise: 'Empresarial',
+  bronce: 'Bronce',
+  plata: 'Plata',
+  oro: 'Oro',
 };
 
 /**
