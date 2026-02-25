@@ -1,5 +1,6 @@
 import React, { useState, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useApp } from '../../contexts/AppContext';
 import {
   Search, UserPlus, Check, X, Trash2,
   Eye, EyeOff, MessageSquare, MapPin, Clock,
@@ -72,6 +73,7 @@ const ContactItem: React.FC<{
   onRemove: () => void;
   onNavigate?: () => void;
 }> = ({ contact, isSelected, isVisible, onSelect, onToggleVisibility, onRemove, onNavigate }) => {
+  const { t } = useApp();
   const [actionSheetOpen, setActionSheetOpen] = useState(false);
 
   return (
@@ -103,8 +105,8 @@ const ContactItem: React.FC<{
         <div className="flex items-center gap-2 mt-0.5">
           <Badge variant="outline" className="text-xs py-0 flex items-center gap-1">
             {contact.userType === 'driver'
-              ? <><Car size={10} />Driver</>
-              : <><UserRound size={10} />User</>}
+              ? <><Car size={10} />{t('typeDriver')}</>
+              : <><UserRound size={10} />{t('typeUser')}</>}
           </Badge>
           {contact.phone && (
             <span className="text-xs text-muted-foreground truncate">{contact.phone}</span>
@@ -141,8 +143,8 @@ const ContactItem: React.FC<{
                 <SheetTitle className="text-left">{contact.displayName}</SheetTitle>
                 <SheetDescription className="text-left text-xs flex items-center gap-1">
                   {contact.userType === 'driver'
-                    ? <><Car size={10} />Driver</>
-                    : <><UserRound size={10} />User</>}
+                    ? <><Car size={10} />{t('typeDriver')}</>
+                    : <><UserRound size={10} />{t('typeUser')}</>}
                   {contact.phone ? ` · ${contact.phone}` : ''}
                 </SheetDescription>
               </div>
@@ -157,7 +159,7 @@ const ContactItem: React.FC<{
               onClick={() => { onSelect(); setActionSheetOpen(false); }}
             >
               <MessageSquare size={20} />
-              Send message
+              {t('sendMessage')}
             </Button>
 
             {/* Navigate — only if contact has a location */}
@@ -168,7 +170,7 @@ const ContactItem: React.FC<{
                 onClick={() => { onNavigate(); setActionSheetOpen(false); }}
               >
                 <Navigation size={20} className="text-blue-400" />
-                Navigate here
+                {t('navigateHere')}
               </Button>
             )}
 
@@ -181,8 +183,8 @@ const ContactItem: React.FC<{
               onClick={() => { onToggleVisibility(); setActionSheetOpen(false); }}
             >
               {isVisible
-                ? <><EyeOff size={20} /><span>Hide my location</span></>
-                : <><Eye size={20} className="text-green-400" /><span>Show my location</span></>
+                ? <><EyeOff size={20} /><span>{t('hideLocation')}</span></>
+                : <><Eye size={20} className="text-green-400" /><span>{t('showLocation')}</span></>
               }
             </Button>
 
@@ -195,7 +197,7 @@ const ContactItem: React.FC<{
               onClick={() => { onRemove(); setActionSheetOpen(false); }}
             >
               <Trash2 size={20} />
-              Remove contact
+              {t('removeContact')}
             </Button>
           </div>
         </SheetContent>
@@ -211,7 +213,9 @@ const InvitationItem: React.FC<{
   onAccept?: () => void;
   onReject?: () => void;
   onCancel?: () => void;
-}> = ({ invitation, type, onAccept, onReject, onCancel }) => (
+}> = ({ invitation, type, onAccept, onReject, onCancel }) => {
+  const { t } = useApp();
+  return (
   <motion.div
     initial={{ opacity: 0, y: 8 }}
     animate={{ opacity: 1, y: 0 }}
@@ -230,8 +234,8 @@ const InvitationItem: React.FC<{
           <p className="text-sm font-medium">{invitation.fromName || invitation.fromEmail}</p>
           <p className="text-xs text-muted-foreground flex items-center gap-1">
             {invitation.fromType === 'driver'
-              ? <><Car size={10} />Driver</>
-              : <><UserRound size={10} />User</>}
+              ? <><Car size={10} />{t('typeDriver')}</>
+              : <><UserRound size={10} />{t('typeUser')}</>}
             {' '}•{' '}{invitation.fromPhone || invitation.fromEmail}
           </p>
         </>
@@ -283,7 +287,8 @@ const InvitationItem: React.FC<{
       </Button>
     )}
   </motion.div>
-);
+  );
+};
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 const ContactList: React.FC<ContactListProps> = ({
@@ -295,6 +300,7 @@ const ContactList: React.FC<ContactListProps> = ({
   onNavigateToContact,
   invitationsData,
 }) => {
+  const { t } = useApp();
   const [searchTerm, setSearchTerm] = useState('');
   const [inviteInput, setInviteInput] = useState('');
   const [addSheetOpen, setAddSheetOpen] = useState(false);
@@ -358,8 +364,8 @@ const ContactList: React.FC<ContactListProps> = ({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-bold text-white">Contacts</h2>
-          <p className="text-xs text-white/60">{contacts.length} contact{contacts.length !== 1 ? 's' : ''}</p>
+          <h2 className="text-lg font-bold text-white">{t('contacts')}</h2>
+          <p className="text-xs text-white/60">{contacts.length} {contacts.length !== 1 ? t('contactCountPlural') : t('contactCount')}</p>
         </div>
 
         {/* Add Contact Sheet */}
@@ -367,20 +373,20 @@ const ContactList: React.FC<ContactListProps> = ({
           <SheetTrigger asChild>
             <Button size="sm" variant="secondary" className="gap-2">
               <UserPlus size={16} />
-              Add Contact
+              {t('addContact')}
             </Button>
           </SheetTrigger>
           <SheetContent side="bottom" className="rounded-t-2xl pb-8">
             <SheetHeader className="text-left mb-4">
-              <SheetTitle>Add Contact</SheetTitle>
+              <SheetTitle>{t('addContact')}</SheetTitle>
               <SheetDescription>
-                Enter the email or phone number of the person you want to add.
+                {t('enterEmailOrPhone')}
               </SheetDescription>
             </SheetHeader>
 
             <div className="flex gap-2">
               <Input
-                placeholder="Email or phone number"
+                placeholder={t('emailOrPhone')}
                 value={inviteInput}
                 onChange={(e) => setInviteInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSendInvite()}
@@ -394,7 +400,7 @@ const ContactList: React.FC<ContactListProps> = ({
                     className="w-4 h-4 border-2 border-current border-t-transparent rounded-full"
                   />
                 ) : (
-                  'Send'
+                  t('sendInvitation')
                 )}
               </Button>
             </div>
@@ -406,10 +412,10 @@ const ContactList: React.FC<ContactListProps> = ({
       <Tabs defaultValue="contacts" className="flex-1 flex flex-col min-h-0">
         <TabsList className="w-full grid grid-cols-2">
           <TabsTrigger value="contacts">
-            Contacts {contacts.length > 0 && <Badge variant="secondary" className="ml-2 text-xs">{contacts.length}</Badge>}
+            {t('contacts')} {contacts.length > 0 && <Badge variant="secondary" className="ml-2 text-xs">{contacts.length}</Badge>}
           </TabsTrigger>
           <TabsTrigger value="invitations">
-            Invitations{' '}
+            {t('invitationsTab')}{' '}
             {pendingCount > 0 && (
               <Badge variant="destructive" className="ml-2 text-xs">{pendingCount}</Badge>
             )}
@@ -421,7 +427,7 @@ const ContactList: React.FC<ContactListProps> = ({
           <div className="relative mb-2">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
             <Input
-              placeholder="Search contacts…"
+              placeholder={t('searchContacts')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-9"
@@ -436,7 +442,7 @@ const ContactList: React.FC<ContactListProps> = ({
                 className="flex flex-col items-center justify-center py-12 text-white/50"
               >
                 <p className="text-sm">
-                  {searchTerm ? 'No contacts match your search' : 'No contacts yet'}
+                  {searchTerm ? t('noContactsSearch') : t('noContacts')}
                 </p>
                 {!searchTerm && (
                   <Button
@@ -444,7 +450,7 @@ const ContactList: React.FC<ContactListProps> = ({
                     className="mt-2 text-xs"
                     onClick={() => setAddSheetOpen(true)}
                   >
-                    + Add your first contact
+                    {t('addFirstContact')}
                   </Button>
                 )}
               </motion.div>
@@ -479,7 +485,7 @@ const ContactList: React.FC<ContactListProps> = ({
             {received.length > 0 && (
               <div className="mb-4">
                 <p className="text-xs font-semibold text-white/60 uppercase tracking-wider px-1 mb-2">
-                  Received
+                  {t('receivedInvitations')}
                 </p>
                 <AnimatePresence>
                   {received.map((inv) => (
@@ -498,7 +504,7 @@ const ContactList: React.FC<ContactListProps> = ({
             {sent.length > 0 && (
               <div>
                 <p className="text-xs font-semibold text-white/60 uppercase tracking-wider px-1 mb-2">
-                  Sent
+                  {t('sentInvitations')}
                 </p>
                 <AnimatePresence>
                   {sent.map((inv) => (
@@ -519,7 +525,7 @@ const ContactList: React.FC<ContactListProps> = ({
                 animate={{ opacity: 1 }}
                 className="flex items-center justify-center py-12 text-white/50"
               >
-                <p className="text-sm">No invitations yet</p>
+                <p className="text-sm">{t('noInvitations')}</p>
               </motion.div>
             )}
           </ScrollArea>
@@ -530,18 +536,17 @@ const ContactList: React.FC<ContactListProps> = ({
       <Dialog open={!!removeTarget} onOpenChange={(o) => !o && setRemoveTarget(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Remove contact?</DialogTitle>
+            <DialogTitle>{t('removeContact')}</DialogTitle>
             <DialogDescription>
-              {removeTarget?.displayName} will be removed from your contacts and you'll be removed
-              from theirs. You can invite them again later.
+              {removeTarget?.displayName} {t('removeContactDesc')}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setRemoveTarget(null)}>
-              Cancel
+              {t('cancel')}
             </Button>
             <Button variant="destructive" onClick={handleRemoveConfirm}>
-              Remove
+              {t('remove')}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -8,6 +8,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { useApp } from '../contexts/AppContext';
 
 /**
  * Listens for Service Worker updates and shows a persistent dialog.
@@ -19,6 +20,7 @@ import { Button } from '@/components/ui/button';
  *   CustomEvent 'pwa-update-available' – dispatched so SettingsSheet can react
  */
 const PWAUpdateNotification: React.FC = () => {
+  const { t } = useApp();
   const [showDialog, setShowDialog] = useState(false);
   const newWorkerRef = useRef<ServiceWorker | null>(null);
 
@@ -94,21 +96,19 @@ const PWAUpdateNotification: React.FC = () => {
         className="max-w-sm"
       >
         <DialogHeader>
-          <DialogTitle>🆕 Nueva versión disponible</DialogTitle>
+          <DialogTitle>{t('newVersion')}</DialogTitle>
           <DialogDescription className="pt-1">
-            Hay una actualización de <strong>Urban Drive</strong> lista para instalarse.
-            ¿Quieres aplicarla ahora?
+            {t('updateDescription')}
             <br /><br />
-            Si eliges <em>Más tarde</em>, la actualización quedará pendiente y podrás
-            aplicarla desde <strong>Ajustes → Buscar actualizaciones</strong>.
+            {t('updateDescriptionLater')}
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="gap-2 sm:gap-0">
           <Button variant="outline" onClick={handleLater}>
-            Más tarde
+            {t('updateLater')}
           </Button>
           <Button onClick={handleUpdate}>
-            Actualizar ahora
+            {t('updateNow')}
           </Button>
         </DialogFooter>
       </DialogContent>

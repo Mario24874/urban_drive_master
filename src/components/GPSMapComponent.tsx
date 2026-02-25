@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState, memo } from 'react';
 import { Navigation } from 'lucide-react';
 import useContactTracking from '../hooks/useContactTracking';
 import NavigationInterface from './NavigationInterface';
+import { useApp } from '../contexts/AppContext';
 
 function createAvatarMarkerEl(
   photoURL: string | undefined,
@@ -97,9 +98,10 @@ const GPSMapComponent: React.FC<GPSMapComponentProps> = ({
   isActive = true,
   navTarget,
 }) => {
+  const { t } = useApp();
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<any>(null);
-  
+
   const [showNavigation, setShowNavigation] = useState(false);
   const [navigationDestination, setNavigationDestination] = useState<[number, number] | undefined>();
   const [selectedContactName, setSelectedContactName] = useState<string>('');
@@ -424,21 +426,21 @@ const GPSMapComponent: React.FC<GPSMapComponentProps> = ({
           <div className="flex items-center space-x-2">
             <div className={`w-2.5 h-2.5 rounded-full ${isTracking ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
             <span className="text-sm font-medium text-foreground">
-              GPS {isTracking ? 'Activo' : 'Inactivo'}
+              GPS {isTracking ? t('active') : t('inactive')}
             </span>
           </div>
           <div className="flex items-center gap-4 text-xs">
             <div className="text-center">
               <div className="font-semibold text-blue-600 dark:text-blue-400">{totalContacts}</div>
-              <div className="text-muted-foreground">En mapa</div>
+              <div className="text-muted-foreground">{t('inMap')}</div>
             </div>
             <div className="text-center">
               <div className="font-semibold text-emerald-600 dark:text-emerald-400">{drivers}</div>
-              <div className="text-muted-foreground">Conductores</div>
+              <div className="text-muted-foreground">{t('driversLabel')}</div>
             </div>
             <div className="text-center">
               <div className="font-semibold text-foreground">{users}</div>
-              <div className="text-muted-foreground">Usuarios</div>
+              <div className="text-muted-foreground">{t('usersLabel')}</div>
             </div>
           </div>
         </div>
@@ -457,7 +459,7 @@ const GPSMapComponent: React.FC<GPSMapComponentProps> = ({
       <button
         onClick={() => setShowNavigation(true)}
         className="absolute bottom-4 right-4 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-400 text-white p-4 rounded-full shadow-xl transition-colors z-10"
-        title="Abrir navegación GPS"
+        title={t('openGpsNav')}
       >
         <Navigation size={24} />
       </button>

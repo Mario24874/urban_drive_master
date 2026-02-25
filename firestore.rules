@@ -1,8 +1,120 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /{document=**} {
-      allow read, write: if true;
+
+    // ── Helper functions ────────────────────────────────────────────────────
+    function isSignedIn() {
+      return request.auth != null;
     }
+
+    function isOwner(uid) {
+      return request.auth.uid == uid;
+    }
+
+    function isMember(memberList) {
+      return request.auth.uid in memberList;
+    }
+
+    // ── Users ───────────────────────────────────────────────────────────────
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      allow write: if isOwner(userId);
+    }
+
+    // ── Drivers ─────────────────────────────────────────────────────────────
+    match /drivers/{userId} {
+      allow read: if isSignedIn();
+      allow write: if isOwner(userId);
+    }
+
+    // ── Driver locations ────────────────────────────────────────────────────
+    match /driver_locations/{driverId} {
+      allow read: if isSignedIn();
+      allow write: if isOwner(driverId);
+    }
+
+    // ── Messages ────────────────────────────────────────────────────────────
+    match /messages/{messageId} {
+      allow read: if isSignedIn() && (
+        resource.data.senderId == request.auth.uid ||
+        resource.data.receiverId == request.auth.uid
+      );
+      // Messages are immutable once created; only creation allowed
+      allow create: if isSignedIn() &&
+        request.resource.data.senderId == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    // ── Conversations ───────────────────────────────────────────────────────
+    match /conversations/{conversationId} {
+      allow read, write: if isSignedIn() && (
+        resource == null ||
+        request.auth.uid in resource.data.participantIds
+      );
+    }
+
+    // ── Invitations ─────────────────────────────────────────────────────────
+    match /invitations/{invitationId} {
+      allow read: if isSignedIn() && (
+        resource.data.fromUserId == request.auth.uid ||
+        resource.data.toEmail == request.auth.token.email ||
+        resource.data.toPhone == request.auth.token.phone_number
+      );
+      allow create: if isSignedIn() &&
+        request.resource.data.fromUserId == request.auth.uid;
+      allow update: if isSignedIn() && (
+        resource.data.fromUserId == request.auth.uid ||
+        resource.data.toEmail == request.auth.token.email ||
+        resource.data.toPhone == request.auth.token.phone_number
+      );
+      allow delete: if isSignedIn() &&
+        resource.data.fromUserId == request.auth.uid;
+    }
+
+    // ── Companies ───────────────────────────────────────────────────────────
+    match /companies/{companyId} {
+      allow read: if isSignedIn() && (
+        resource.data.ownerId == request.auth.uid ||
+        isMember(resource.data.adminIds) ||
+        isMember(resource.data.memberIds)
+      );
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() && (
+        isMember(resource.data.adminIds) ||
+        resource.data.ownerId == request.auth.uid
+      );
+      allow delete: if isSignedIn() &&
+        resource.data.ownerId == request.auth.uid;
+    }
+
+    // ── Subscriptions ───────────────────────────────────────────────────────
+    match /subscriptions/{subscriptionId} {
+      allow read: if isSignedIn() && (
+        resource.data.ownerId == request.auth.uid ||
+        isMember(resource.data.adminIds)
+      );
+      allow write: if isSignedIn() &&
+        resource.data.ownerId == request.auth.uid;
+    }
+
+    // ── Vehicles ────────────────────────────────────────────────────────────
+    match /vehicles/{vehicleId} {
+      // Read: any member of the company can read
+      allow read: if isSignedIn();
+      // Write: only company admins (checked via company doc would require get())
+      // For Phase 1, allow authenticated writes; tighten in Phase 2
+      allow write: if isSignedIn();
+    }
+
+    // ── Billing history (invoices) ──────────────────────────────────────────
+    match /billingHistory/{invoiceId} {
+      allow read: if isSignedIn() && (
+        resource.data.ownerId == request.auth.uid ||
+        isMember(resource.data.adminIds)
+      );
+      allow write: if isSignedIn() &&
+        resource.data.ownerId == request.auth.uid;
+    }
+
   }
 }

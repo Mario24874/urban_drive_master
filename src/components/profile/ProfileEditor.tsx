@@ -6,8 +6,10 @@ import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import { Camera, RefreshCw } from 'lucide-react';
 import { updateProfile } from 'firebase/auth';
-import { auth } from '../../services/firebase';
+import { doc, updateDoc } from 'firebase/firestore';
+import { auth, db } from '../../services/firebase';
 import { writeData } from '../../services/database-sync';
+import { useApp } from '../../contexts/AppContext';
 import type { UserData } from '../../types';
 
 // Shadcn UI Components
@@ -50,6 +52,7 @@ const profileSchema = z.object({
 type ProfileFormValues = z.infer<typeof profileSchema>;
 
 const ProfileEditor: React.FC<ProfileEditorProps> = ({ user, onUpdate }) => {
+  const { t } = useApp();
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -58,11 +61,11 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({ user, onUpdate }) => {
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      toast.error('Selecciona un archivo de imagen');
+      toast.error(t('selectImage'));
       return;
     }
     if (file.size > 2 * 1024 * 1024) {
-      toast.error('La imagen debe ser menor a 2 MB');
+      toast.error(t('imageTooLarge'));
       return;
     }
 
@@ -98,12 +101,12 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({ user, onUpdate }) => {
     try {
       const dataURL = await compressToDataURL(file);
       const collName = user.userType === 'driver' ? 'drivers' : 'users';
-      await writeData(collName, user.id, { ...user, photoURL: dataURL });
+      await updateDoc(doc(db, collName, user.id), { photoURL: dataURL });
       onUpdate?.({ ...user, photoURL: dataURL });
-      toast.success('Foto actualizada correctamente');
+      toast.success(t('photoUpdated'));
     } catch (error: any) {
       console.error('Error al actualizar la foto:', error);
-      toast.error('Error al subir la foto', { description: error.message || 'Intenta de nuevo' });
+      toast.error(t('photoError'), { description: error.message });
     } finally {
       setUploadingPhoto(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -147,9 +150,7 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({ user, onUpdate }) => {
       const collection = user.userType === 'driver' ? 'drivers' : 'users';
       await writeData(collection, user.id, updatedUser);
 
-      toast.success('Profile updated successfully', {
-        description: 'Your changes have been saved',
-      });
+      toast.success(t('profileUpdated'));
 
       // Callback to parent component
       if (onUpdate) {
@@ -157,9 +158,7 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({ user, onUpdate }) => {
       }
     } catch (error: any) {
       console.error('Error updating profile:', error);
-      toast.error('Failed to update profile', {
-        description: error.message || 'Please try again',
-      });
+      toast.error(t('profileError'), { description: error.message });
     }
   };
 
@@ -210,8 +209,8 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({ user, onUpdate }) => {
               />
             </div>
             <div>
-              <CardTitle>Edit Profile</CardTitle>
-              <p className="text-xs text-muted-foreground mt-1">Toca el avatar para cambiar foto<br/>Máx 2 MB · se comprime a 200×200</p>
+              <CardTitle>{t('editProfile')}</CardTitle>
+              <p className="text-xs text-muted-foreground mt-1">{t('tapAvatarToChange')}<br/>{t('maxPhotoSize')}</p>
               <CardDescription>{user.email}</CardDescription>
             </div>
           </div>
@@ -226,7 +225,7 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({ user, onUpdate }) => {
                 name="displayName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Display Name</FormLabel>
+                    <FormLabel>{t('displayName')}</FormLabel>
                     <FormControl>
                       <Input placeholder="John Doe" {...field} />
                     </FormControl>
@@ -241,12 +240,12 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({ user, onUpdate }) => {
                 name="username"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Username (optional)</FormLabel>
+                    <FormLabel>{t('usernameOptional')}</FormLabel>
                     <FormControl>
                       <Input placeholder="@johndoe" {...field} />
                     </FormControl>
                     <FormDescription>
-                      Your unique username for the platform
+                      {t('usernameDesc')}
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -259,7 +258,7 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({ user, onUpdate }) => {
                 name="phone"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Phone (optional)</FormLabel>
+                    <FormLabel>{t('phoneOptional')}</FormLabel>
                     <FormControl>
                       <Input type="tel" placeholder="+1 234 567 8900" {...field} />
                     </FormControl>
@@ -274,7 +273,7 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({ user, onUpdate }) => {
                 name="bio"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Bio (optional)</FormLabel>
+                    <FormLabel>{t('bioOptional')}</FormLabel>
                     <FormControl>
                       <textarea
                         {...field}
@@ -284,7 +283,7 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({ user, onUpdate }) => {
                       />
                     </FormControl>
                     <FormDescription>
-                      Max 160 characters
+                      {t('bioMaxChars')}
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -297,7 +296,7 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({ user, onUpdate }) => {
                 name="userType"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Account Type</FormLabel>
+                    <FormLabel>{t('accountType')}</FormLabel>
                     <FormControl>
                       <div className="grid grid-cols-2 gap-3">
                         <Label
@@ -322,7 +321,7 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({ user, onUpdate }) => {
                                 field.value === 'user' ? 'bg-primary' : 'bg-muted'
                               }`}
                             />
-                            <span className="text-sm font-medium">User</span>
+                            <span className="text-sm font-medium">{t('typeUser')}</span>
                           </div>
                         </Label>
 
@@ -348,7 +347,7 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({ user, onUpdate }) => {
                                 field.value === 'driver' ? 'bg-primary' : 'bg-muted'
                               }`}
                             />
-                            <span className="text-sm font-medium">Driver</span>
+                            <span className="text-sm font-medium">{t('typeDriver')}</span>
                           </div>
                         </Label>
                       </div>
@@ -365,9 +364,9 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({ user, onUpdate }) => {
                 render={({ field }) => (
                   <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                     <div className="space-y-0.5">
-                      <FormLabel className="text-base">Visibility</FormLabel>
+                      <FormLabel className="text-base">{t('visibility')}</FormLabel>
                       <FormDescription>
-                        Make your profile visible to other users
+                        {t('visibilityDesc')}
                       </FormDescription>
                     </div>
                     <FormControl>
@@ -387,10 +386,10 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({ user, onUpdate }) => {
                 {isLoading ? (
                   <>
                     <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                    Saving...
+                    {t('saving')}
                   </>
                 ) : (
-                  'Save Changes'
+                  t('saveChanges')
                 )}
               </Button>
             </form>

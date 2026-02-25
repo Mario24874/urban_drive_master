@@ -88,7 +88,7 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
                 onClick={() => setShowRegister(false)}
                 className="text-sm"
               >
-                Already have an account? Sign in
+                {t('alreadyHaveAccount')}
               </Button>
             </div>
           </div>
@@ -101,7 +101,7 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
                 onClick={() => setShowRegister(true)}
                 className="text-sm"
               >
-                Don't have an account? Sign up
+                {t('dontHaveAccount')}
               </Button>
             </div>
           </div>
@@ -170,12 +170,12 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
             >
               <div>
                 <h1 className="text-3xl font-bold mb-2">
-                  Welcome, {user.displayName || user.email}!
+                  {t('welcome')}, {user.displayName || user.email}!
                 </h1>
                 <p className="text-muted-foreground">
                   {user.userType === 'driver'
-                    ? 'Start your day as a driver'
-                    : 'Find available drivers near you'}
+                    ? t('subtitleDriver')
+                    : t('subtitleUser')}
                 </p>
               </div>
 
@@ -184,7 +184,7 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
                 <div className="bg-card p-6 rounded-lg border">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-muted-foreground">Contacts</p>
+                      <p className="text-sm text-muted-foreground">{t('contacts')}</p>
                       <p className="text-2xl font-bold">{user.contacts?.length ?? 0}</p>
                     </div>
                     <Users className="text-muted-foreground" size={32} />
@@ -194,7 +194,7 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
                 <div className="bg-card p-6 rounded-lg border">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-muted-foreground">Location</p>
+                      <p className="text-sm text-muted-foreground">{t('location')}</p>
                       <div className="text-2xl font-bold">
                         {location
                           ? <MapPin size={28} className="text-green-400" />
@@ -205,7 +205,7 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
                   </div>
                   {location && (
                     <p className="text-xs text-muted-foreground mt-2">
-                      Accuracy: {Math.round(location.accuracy || 0)}m
+                      {t('accuracy')}: {Math.round(location.accuracy || 0)}m
                     </p>
                   )}
                 </div>
@@ -213,7 +213,7 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
                 <div className="bg-card p-6 rounded-lg border">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-muted-foreground">Status</p>
+                      <p className="text-sm text-muted-foreground">{t('status')}</p>
                       <div className="text-2xl font-bold">
                         {user.isVisible
                           ? <Eye size={28} className="text-green-400" />
@@ -223,14 +223,14 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
                     <UserIcon className="text-muted-foreground" size={32} />
                   </div>
                   <p className="text-xs text-muted-foreground mt-2">
-                    {user.isVisible ? 'Visible' : 'Hidden'}
+                    {user.isVisible ? t('visible') : t('hidden')}
                   </p>
                 </div>
               </div>
 
               {/* Quick Actions */}
               <div className="space-y-2">
-                <h2 className="text-lg font-semibold">Quick Actions</h2>
+                <h2 className="text-lg font-semibold">{t('quickActions')}</h2>
                 <div className="grid grid-cols-2 gap-3">
                   <Button
                     onClick={refreshLocation}
@@ -242,7 +242,7 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
                       size={20}
                       className={`mr-2 ${locationLoading ? 'animate-spin' : ''}`}
                     />
-                    Refresh Location
+                    {t('refreshLocation')}
                   </Button>
                   <Button
                     onClick={() => setActiveTab('map')}
@@ -250,7 +250,7 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
                     className="h-auto py-4"
                   >
                     <MapPin size={20} className="mr-2" />
-                    View Map
+                    {t('viewMap')}
                   </Button>
                   <Button
                     onClick={() => setActiveTab('contacts')}
@@ -258,7 +258,7 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
                     className="h-auto py-4"
                   >
                     <Users size={20} className="mr-2" />
-                    Browse Contacts
+                    {t('browseContacts')}
                   </Button>
                   <Button
                     onClick={() => setActiveTab('profile')}
@@ -266,7 +266,7 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
                     className="h-auto py-4"
                   >
                     <UserIcon size={20} className="mr-2" />
-                    Edit Profile
+                    {t('editProfile')}
                   </Button>
                 </div>
               </div>

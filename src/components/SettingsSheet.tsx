@@ -184,7 +184,7 @@ const SettingsSheet: React.FC<SettingsSheetProps> = ({ user, onLogout }) => {
                 <div className="flex items-center gap-2 min-w-0">
                   <Download size={16} className="text-orange-400 flex-shrink-0" />
                   <span className="text-sm text-orange-400 font-medium">
-                    Nueva versión disponible
+                    {t('updateAvailable')}
                   </span>
                 </div>
                 <Button
@@ -192,7 +192,7 @@ const SettingsSheet: React.FC<SettingsSheetProps> = ({ user, onLogout }) => {
                   className="bg-orange-500 hover:bg-orange-600 text-white flex-shrink-0"
                   onClick={handleApplyUpdate}
                 >
-                  Actualizar
+                  {t('update')}
                 </Button>
               </div>
             )}
@@ -206,13 +206,13 @@ const SettingsSheet: React.FC<SettingsSheetProps> = ({ user, onLogout }) => {
               disabled={isChecking || updateAvailable}
             >
               <RefreshCw size={15} className={isChecking ? 'animate-spin' : ''} />
-              {isChecking ? 'Buscando actualizaciones…' : t('checkUpdates')}
+              {isChecking ? t('lookingForUpdates') : t('checkUpdates')}
             </Button>
 
             {/* Result of last check */}
             {checkResult === 'up-to-date' && (
               <p className="text-xs text-center text-muted-foreground">
-                ✓ Ya tienes la última versión
+                {t('alreadyUpToDate')}
               </p>
             )}
           </div>

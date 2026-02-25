@@ -3,6 +3,7 @@ import { Send, ArrowLeft, Check, CheckCheck, Search, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import messagingService, { Message } from '../services/messaging';
 import { Contact } from '../types';
+import { useApp } from '../contexts/AppContext';
 
 // Shadcn UI Components
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -23,6 +24,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   selectedContact,
   onBack,
 }) => {
+  const { t } = useApp();
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [sending, setSending] = useState(false);
@@ -150,7 +152,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       >
         <div className="text-center">
           <MessageSquareIcon className="w-16 h-16 mx-auto mb-4 text-muted" />
-          <p className="text-lg">Select a contact to start chatting</p>
+          <p className="text-lg">{t('selectContactToChat')}</p>
         </div>
       </motion.div>
     );
@@ -178,8 +180,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
               <div>
                 <h3 className="font-semibold">{selectedContact.displayName}</h3>
                 <p className="text-sm text-muted-foreground">
-                  {selectedContact.userType === 'driver' ? '🚗 Driver' : '👤 User'}
-                  {selectedContact.isVisible && ' • 🟢 Online'}
+                  {selectedContact.userType === 'driver' ? t('driverBadge') : t('userBadge')}
+                  {selectedContact.isVisible && ` • 🟢 ${t('online')}`}
                 </p>
               </div>
             </div>
@@ -205,10 +207,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                  placeholder="Search in conversation..."
+                  placeholder={t('searchConversation')}
                   className="flex-1"
                 />
-                <Button onClick={handleSearch}>Search</Button>
+                <Button onClick={handleSearch}>{t('search')}</Button>
               </div>
             </motion.div>
           )}
@@ -232,8 +234,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
             className="flex items-center justify-center h-full text-muted-foreground"
           >
             <div className="text-center">
-              <p className="text-lg mb-2">No messages yet</p>
-              <p className="text-sm">Send the first message to start the conversation</p>
+              <p className="text-lg mb-2">{t('noMessagesYet')}</p>
+              <p className="text-sm">{t('sendFirstMessage')}</p>
             </div>
           </motion.div>
         ) : (
@@ -328,7 +330,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder="Type a message..."
+            placeholder={t('typeMessage')}
             disabled={sending}
             className="flex-1 rounded-full"
           />

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Navigation, Volume2, VolumeX, RotateCcw, X, MapPin, Clock, Search, RefreshCw } from 'lucide-react';
 import navigationService, { NavigationState } from '../services/navigation';
+import { useApp } from '../contexts/AppContext';
 
 interface ContactForNav {
   id: string;
@@ -63,6 +64,7 @@ const NavigationInterface: React.FC<NavigationInterfaceProps> = ({
   onSelectContact,
   user,
 }) => {
+  const { t } = useApp();
   const [navState, setNavState] = useState<NavigationState>(navigationService.getState());
   const [isStarting, setIsStarting] = useState(false);
   const mapRef = useRef<HTMLDivElement>(null);
@@ -279,10 +281,10 @@ const NavigationInterface: React.FC<NavigationInterfaceProps> = ({
             <Navigation size={22} />
             <div>
               <h2 className="text-base font-semibold leading-tight">
-                {navState.isNavigating ? 'Navegando' : 'Urban Drive GPS'}
+                {navState.isNavigating ? t('navigating') : 'Urban Drive GPS'}
               </h2>
               {effectiveName && !navState.isNavigating && (
-                <p className="text-blue-200 text-xs">Hacia: {effectiveName}</p>
+                <p className="text-blue-200 text-xs">{t('toDestination')}{effectiveName}</p>
               )}
             </div>
           </div>
@@ -293,14 +295,14 @@ const NavigationInterface: React.FC<NavigationInterfaceProps> = ({
                 <button
                   onClick={toggleVoice}
                   className="p-2 rounded-full bg-blue-700 dark:bg-blue-800 hover:bg-blue-800 transition-colors"
-                  title={navState.voiceEnabled ? 'Desactivar voz' : 'Activar voz'}
+                  title={navState.voiceEnabled ? t('muteVoice') : t('unmuteVoice')}
                 >
                   {navState.voiceEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
                 </button>
                 <button
                   onClick={repeatInstruction}
                   className="p-2 rounded-full bg-blue-700 dark:bg-blue-800 hover:bg-blue-800 transition-colors"
-                  title="Repetir instrucción"
+                  title={t('repeatInstruction')}
                 >
                   <RotateCcw size={18} />
                 </button>
@@ -325,20 +327,20 @@ const NavigationInterface: React.FC<NavigationInterfaceProps> = ({
                 <div className="text-2xl font-bold text-foreground">
                   {formatDistance(navState.remainingDistance)}
                 </div>
-                <div className="text-xs text-muted-foreground">Distancia</div>
+                <div className="text-xs text-muted-foreground">{t('distanceLabel')}</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-foreground">
                   {formatTime(navState.remainingTime)}
                 </div>
-                <div className="text-xs text-muted-foreground">Tiempo</div>
+                <div className="text-xs text-muted-foreground">{t('timeLabel')}</div>
               </div>
             </div>
             <button
               onClick={handleStopNavigation}
               className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium text-sm transition-colors"
             >
-              Finalizar
+              {t('endNavigation')}
             </button>
           </div>
 
@@ -348,7 +350,7 @@ const NavigationInterface: React.FC<NavigationInterfaceProps> = ({
                 <Navigation size={18} className="text-blue-600 dark:text-blue-400" />
               </div>
               <p className="text-sm font-medium text-foreground leading-snug">
-                {navState.nextInstruction || 'Calculando ruta...'}
+                {navState.nextInstruction || t('calculating')}
               </p>
             </div>
           </div>
@@ -374,7 +376,7 @@ const NavigationInterface: React.FC<NavigationInterfaceProps> = ({
                       type="text"
                       value={addressQuery}
                       onChange={(e) => setAddressQuery(e.target.value)}
-                      placeholder="Buscar dirección o lugar..."
+                      placeholder={t('searchAddress')}
                       className="flex-1 bg-transparent text-foreground placeholder:text-muted-foreground text-sm outline-none min-w-0"
                     />
                     {addressQuery && (
@@ -414,7 +416,7 @@ const NavigationInterface: React.FC<NavigationInterfaceProps> = ({
                       <MapPin size={28} className="text-white" />
                     </div>
                     <h3 className="text-lg font-bold text-foreground">
-                      {effectiveName ? `Navegar hacia ${effectiveName}` : 'Destino seleccionado'}
+                      {effectiveName ? `${t('toDestination')}${effectiveName}` : t('searchAddress')}
                     </h3>
                   </div>
 
@@ -435,7 +437,7 @@ const NavigationInterface: React.FC<NavigationInterfaceProps> = ({
                     onClick={clearAddress}
                     className="w-full text-xs text-muted-foreground hover:text-foreground transition-colors py-1"
                   >
-                    Cambiar destino
+                    {t('changeDestination')}
                   </button>
 
                   <button
@@ -444,9 +446,9 @@ const NavigationInterface: React.FC<NavigationInterfaceProps> = ({
                     className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 dark:bg-blue-700 dark:hover:bg-blue-600 text-white py-4 px-6 rounded-xl font-semibold text-base transition-colors flex items-center justify-center gap-2"
                   >
                     {isStarting ? (
-                      <><Clock size={20} className="animate-spin" /><span>Calculando ruta...</span></>
+                      <><Clock size={20} className="animate-spin" /><span>{t('calculating')}</span></>
                     ) : (
-                      <><Navigation size={20} /><span>Iniciar Navegación</span></>
+                      <><Navigation size={20} /><span>{t('startNavigation')}</span></>
                     )}
                   </button>
                 </>
@@ -457,7 +459,7 @@ const NavigationInterface: React.FC<NavigationInterfaceProps> = ({
                     <>
                       <div className="flex items-center gap-3 py-1">
                         <div className="flex-1 h-px bg-border" />
-                        <span className="text-xs text-muted-foreground">o elige un contacto</span>
+                        <span className="text-xs text-muted-foreground">{t('chooseContact')}</span>
                         <div className="flex-1 h-px bg-border" />
                       </div>
 
@@ -488,10 +490,10 @@ const NavigationInterface: React.FC<NavigationInterfaceProps> = ({
                       ) : (
                         <div className="bg-card border border-border p-5 rounded-xl text-center">
                           <p className="text-muted-foreground text-sm mb-1">
-                            Ningún contacto tiene ubicación activa.
+                            {t('noContactsGPS')}
                           </p>
                           <p className="text-muted-foreground text-xs">
-                            Busca una dirección arriba o espera a que un contacto comparta su GPS.
+                            {t('noContactsGPSHint')}
                           </p>
                         </div>
                       )}
@@ -509,7 +511,7 @@ const NavigationInterface: React.FC<NavigationInterfaceProps> = ({
               <div className="absolute inset-0 flex items-center justify-center bg-gray-900/80 text-white">
                 <div className="text-center">
                   <Navigation size={40} className="mx-auto mb-3 animate-pulse" />
-                  <p className="text-sm">Esperando señal GPS...</p>
+                  <p className="text-sm">{t('waitingGPS')}</p>
                 </div>
               </div>
             )}
@@ -530,7 +532,7 @@ const NavigationInterface: React.FC<NavigationInterfaceProps> = ({
             {navState.isNavigating && (
               <div className="flex items-center gap-1.5">
                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                <span>GPS Activo</span>
+                <span>{t('gpsActive')}</span>
               </div>
             )}
           </div>

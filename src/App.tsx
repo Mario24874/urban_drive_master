@@ -44,11 +44,11 @@ function App() {
           }
 
           const completeUser = {
+            ...userData,
             id: firebaseUser.uid,
             email: firebaseUser.email,
-            displayName: firebaseUser.displayName || userData?.displayName,
-            photoURL: firebaseUser.photoURL || userData?.photoURL,
-            ...userData,
+            displayName: firebaseUser.displayName || userData?.displayName || '',
+            photoURL: firebaseUser.photoURL || userData?.photoURL || '',
           };
 
           setUser(completeUser);
