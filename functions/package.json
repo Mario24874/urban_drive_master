@@ -12,7 +12,7 @@
   },
   "name": "functions",
   "engines": {
-    "node": "18"
+    "node": "20"
   },
   "dependencies": {
     "@genkit-ai/ai": "^0.5.17",
