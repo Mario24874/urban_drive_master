@@ -219,13 +219,13 @@ async function handleSubscriptionDeleted(stripeSub: Stripe.Subscription) {
 // Keep in sync with src/features/enterprise/config/stripe.ts
 const PRICE_TO_TIER: Record<string, 'bronce' | 'plata' | 'oro'> = {
   // Monthly
-  price_BRONCE_MONTHLY: 'bronce',  // ← replace with real price_... when known
-  price_PLATA_MONTHLY:  'plata',
-  price_ORO_MONTHLY:    'oro',
+  'price_1T4npQB2WAG0h7ZP3FoSzeub': 'bronce',
+  'price_1T4nsDB2WAG0h7ZPCmamsZGT': 'plata',
+  'price_1T4ntQB2WAG0h7ZPXd5ipCOT': 'oro',
   // Yearly
-  price_BRONCE_YEARLY:  'bronce',
-  price_PLATA_YEARLY:   'plata',
-  price_ORO_YEARLY:     'oro',
+  'price_1T4nx6B2WAG0h7ZPCe8k2700': 'bronce',
+  'price_1T4nxvB2WAG0h7ZPKXwVlx5M': 'plata',
+  'price_1T4nygB2WAG0h7ZPrHdrCcTb': 'oro',
 };
 
 function tierFromPriceId(priceId: string): 'bronce' | 'plata' | 'oro' {

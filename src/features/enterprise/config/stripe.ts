@@ -14,16 +14,16 @@
  */
 export const STRIPE_PRICE_IDS = {
   bronce: {
-    monthly: 'price_BRONCE_MONTHLY',   // ← reemplazar con price_...
-    yearly:  'price_BRONCE_YEARLY',    // ← reemplazar con price_...
+    monthly: 'price_1T4npQB2WAG0h7ZP3FoSzeub',
+    yearly:  'price_1T4nx6B2WAG0h7ZPCe8k2700',
   },
   plata: {
-    monthly: 'price_PLATA_MONTHLY',    // ← reemplazar con price_...
-    yearly:  'price_PLATA_YEARLY',     // ← reemplazar con price_...
+    monthly: 'price_1T4nsDB2WAG0h7ZPCmamsZGT',
+    yearly:  'price_1T4nxvB2WAG0h7ZPKXwVlx5M',
   },
   oro: {
-    monthly: 'price_ORO_MONTHLY',      // ← reemplazar con price_...
-    yearly:  'price_ORO_YEARLY',       // ← reemplazar con price_...
+    monthly: 'price_1T4ntQB2WAG0h7ZPXd5ipCOT',
+    yearly:  'price_1T4nygB2WAG0h7ZPrHdrCcTb',
   },
 } as const;
 
