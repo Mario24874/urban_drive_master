@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Moon, Sun, LogOut, RefreshCw, Settings, Download, Car, UserRound, Sparkles, ExternalLink, Building2, Users, Wrench } from 'lucide-react';
+import { Moon, Sun, LogOut, RefreshCw, Settings, Download, Car, UserRound, Sparkles, ExternalLink, Building2, Users, Wrench, FileText } from 'lucide-react';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import app from '../services/firebase';
 import { toast } from 'sonner';
@@ -34,6 +34,7 @@ interface SettingsSheetProps {
   onOpenFleetManager?: () => void;
   onOpenDriverManager?: () => void;
   onOpenMaintenanceScheduler?: () => void;
+  onOpenDocumentsDashboard?: () => void;
 }
 
 const SettingsSheet: React.FC<SettingsSheetProps> = ({
@@ -46,6 +47,7 @@ const SettingsSheet: React.FC<SettingsSheetProps> = ({
   onOpenFleetManager,
   onOpenDriverManager,
   onOpenMaintenanceScheduler,
+  onOpenDocumentsDashboard,
 }) => {
   const { theme, setTheme, lang, setLang, t } = useApp();
 
@@ -250,6 +252,14 @@ const SettingsSheet: React.FC<SettingsSheetProps> = ({
                       onClick={onOpenMaintenanceScheduler}
                     >
                       <Wrench size={15} /> {t('manageMaintenance')}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full gap-2 justify-start"
+                      onClick={onOpenDocumentsDashboard}
+                    >
+                      <FileText size={15} /> {t('manageDocuments')}
                     </Button>
                   </>
                 )}

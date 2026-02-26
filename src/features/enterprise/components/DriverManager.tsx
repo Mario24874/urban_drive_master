@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { X, Plus, Lock, Users, Pencil, Trash2, Car } from 'lucide-react';
+import { X, Plus, Lock, Users, Pencil, Trash2, Car, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import { useApp } from '../../../contexts/AppContext';
 import { useDrivers } from '../hooks/useDrivers';
 import { useFleet } from '../hooks/useFleet';
+import DocumentVault from './DocumentVault';
 import { SUBSCRIPTION_PLANS } from '../types/subscription';
 import type { SubscriptionTier } from '../types/subscription';
 import type { CompanyDriver } from '../types/company';
@@ -60,6 +61,9 @@ const DriverManager: React.FC<DriverManagerProps> = ({
   const [form, setForm] = useState<FormData>(DEFAULT_FORM);
   const [saving, setSaving] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [documentDriver, setDocumentDriver] = useState<{
+    id: string; name: string;
+  } | null>(null);
 
   const openAdd = () => {
     if (isAtLimit) {
@@ -247,6 +251,13 @@ const DriverManager: React.FC<DriverManagerProps> = ({
                     </div>
                     <div className="flex items-center gap-1">
                       <button
+                        onClick={() => setDocumentDriver({ id: d.id, name: d.name })}
+                        className="w-8 h-8 rounded-lg bg-white/5 hover:bg-blue-500/20 flex items-center justify-center text-white/50 hover:text-blue-400 transition-colors"
+                        title="Documentos"
+                      >
+                        <FileText size={14} />
+                      </button>
+                      <button
                         onClick={() => openEdit(d)}
                         className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/50 hover:text-white/80 transition-colors"
                       >
@@ -379,6 +390,18 @@ const DriverManager: React.FC<DriverManagerProps> = ({
           </div>
         </SheetContent>
       </Sheet>
+
+      {/* DocumentVault sub-overlay */}
+      {documentDriver && (
+        <DocumentVault
+          entityId={documentDriver.id}
+          entityType="driver"
+          entityName={documentDriver.name}
+          companyId={companyId}
+          onClose={() => setDocumentDriver(null)}
+          zIndex="z-[60]"
+        />
+      )}
 
       {/* Confirm delete dialog */}
       {confirmDeleteId && (

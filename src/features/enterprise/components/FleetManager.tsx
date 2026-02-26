@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Plus, Lock, Car, Pencil, Trash2, Wrench } from 'lucide-react';
+import { X, Plus, Lock, Car, Pencil, Trash2, Wrench, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import { useApp } from '../../../contexts/AppContext';
 import { useFleet } from '../hooks/useFleet';
@@ -7,6 +7,7 @@ import { SUBSCRIPTION_PLANS } from '../types/subscription';
 import type { SubscriptionTier } from '../types/subscription';
 import type { Vehicle, VehicleCategory, FuelType } from '../types/vehicle';
 import MaintenanceLog from './MaintenanceLog';
+import DocumentVault from './DocumentVault';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -87,6 +88,9 @@ const FleetManager: React.FC<FleetManagerProps> = ({
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [maintenanceVehicle, setMaintenanceVehicle] = useState<{
     id: string; plate: string; mileageKm: number;
+  } | null>(null);
+  const [documentVehicle, setDocumentVehicle] = useState<{
+    id: string; plate: string;
   } | null>(null);
 
   const openAdd = () => {
@@ -285,6 +289,13 @@ const FleetManager: React.FC<FleetManagerProps> = ({
                       <Wrench size={14} />
                     </button>
                     <button
+                      onClick={() => setDocumentVehicle({ id: v.id, plate: v.plate })}
+                      className="w-8 h-8 rounded-lg bg-white/5 hover:bg-blue-500/20 flex items-center justify-center text-white/50 hover:text-blue-400 transition-colors"
+                      title="Documentos"
+                    >
+                      <FileText size={14} />
+                    </button>
+                    <button
                       onClick={() => openEdit(v)}
                       className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/50 hover:text-white/80 transition-colors"
                     >
@@ -443,6 +454,18 @@ const FleetManager: React.FC<FleetManagerProps> = ({
           vehicleMileageKm={maintenanceVehicle.mileageKm}
           companyId={companyId}
           onClose={() => setMaintenanceVehicle(null)}
+        />
+      )}
+
+      {/* Document Vault sub-overlay */}
+      {documentVehicle && (
+        <DocumentVault
+          entityId={documentVehicle.id}
+          entityType="vehicle"
+          entityName={documentVehicle.plate}
+          companyId={companyId}
+          onClose={() => setDocumentVehicle(null)}
+          zIndex="z-[60]"
         />
       )}
     </>

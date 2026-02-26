@@ -45,3 +45,15 @@ export type {
 } from './maintenance';
 
 export { getMaintenanceStatus } from './maintenance';
+
+export type {
+  DocumentEntityType,
+  CompanyDocType,
+  VehicleDocType,
+  DriverDocType,
+  AnyDocType,
+  DocumentStatus,
+  DocumentRecord,
+} from './documents';
+
+export { getDocumentStatus, DOC_TYPE_LABELS, COMPANY_DOC_TYPES, VEHICLE_DOC_TYPES, DRIVER_DOC_TYPES } from './documents';

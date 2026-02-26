@@ -111,6 +111,11 @@ service cloud.firestore {
       allow read, write: if isSignedIn();
     }
 
+    // ── Company Documents ────────────────────────────────────────────────────
+    match /company_documents/{documentId} {
+      allow read, write: if isSignedIn();
+    }
+
     // ── Vehicle Maintenance ──────────────────────────────────────────────────
     match /vehicle_maintenance/{recordId} {
       allow read, write: if isSignedIn();
