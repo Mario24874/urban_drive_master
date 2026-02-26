@@ -152,6 +152,16 @@ const translations: Record<Lang, Record<string, string>> = {
     update: 'Update',
     lookingForUpdates: 'Looking for updates…',
     alreadyUpToDate: '✓ You already have the latest version',
+
+    // Subscription plan display
+    planFree: 'Free Plan',
+    planBronce: 'Bronce',
+    planPlata: 'Plata',
+    planOro: 'Oro',
+    planActive: 'Active plan',
+    planChangePlan: 'Change plan',
+    planUpgrade: 'Upgrade',
+    planContactsLimit: 'contacts',
   },
   es: {
     // Navigation tabs
@@ -293,6 +303,16 @@ const translations: Record<Lang, Record<string, string>> = {
     update: 'Actualizar',
     lookingForUpdates: 'Buscando actualizaciones…',
     alreadyUpToDate: '✓ Ya tienes la última versión',
+
+    // Subscription plan display
+    planFree: 'Plan Gratuito',
+    planBronce: 'Bronce',
+    planPlata: 'Plata',
+    planOro: 'Oro',
+    planActive: 'Plan activo',
+    planChangePlan: 'Cambiar plan',
+    planUpgrade: 'Mejorar plan',
+    planContactsLimit: 'contactos',
   },
 };
 

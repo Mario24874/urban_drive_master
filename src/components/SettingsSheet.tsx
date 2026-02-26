@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Moon, Sun, LogOut, RefreshCw, Settings, Download, Car, UserRound, Sparkles } from 'lucide-react';
 import { useApp } from '../contexts/AppContext';
 import type { UserData } from '../types';
+import type { SubscriptionTier } from '../features/enterprise/types/subscription';
 
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -9,13 +10,24 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 
+const PLAN_BADGE_STYLES: Record<SubscriptionTier, string> = {
+  free:   'bg-white/10 text-white/50 border border-white/15',
+  bronce: 'bg-gradient-to-r from-amber-700 to-amber-500 text-white',
+  plata:  'bg-gradient-to-r from-slate-500 to-slate-300 text-white',
+  oro:    'bg-gradient-to-r from-yellow-500 to-yellow-300 text-gray-900',
+};
+const PLAN_LABELS: Record<SubscriptionTier, string> = {
+  free: 'Plan Gratuito', bronce: 'Bronce', plata: 'Plata', oro: 'Oro',
+};
+
 interface SettingsSheetProps {
   user: UserData;
   onLogout: () => void;
   onOpenPricing?: () => void;
+  subscriptionTier?: SubscriptionTier;
 }
 
-const SettingsSheet: React.FC<SettingsSheetProps> = ({ user, onLogout, onOpenPricing }) => {
+const SettingsSheet: React.FC<SettingsSheetProps> = ({ user, onLogout, onOpenPricing, subscriptionTier = 'free' }) => {
   const { theme, setTheme, lang, setLang, t } = useApp();
 
   // Update state — reads initial value from window flag set by PWAUpdateNotification
@@ -97,11 +109,16 @@ const SettingsSheet: React.FC<SettingsSheetProps> = ({ user, onLogout, onOpenPri
               <div className="flex-1 min-w-0">
                 <p className="font-semibold truncate">{user.displayName || user.email}</p>
                 <p className="text-sm text-muted-foreground truncate">{user.email}</p>
-                <Badge variant="outline" className="mt-1 text-xs flex items-center gap-1">
-                  {user.userType === 'driver'
-                    ? <><Car size={10} />Driver</>
-                    : <><UserRound size={10} />User</>}
-                </Badge>
+                <div className="flex items-center gap-2 mt-1 flex-wrap">
+                  <Badge variant="outline" className="text-xs flex items-center gap-1">
+                    {user.userType === 'driver'
+                      ? <><Car size={10} />Driver</>
+                      : <><UserRound size={10} />User</>}
+                  </Badge>
+                  <span className={`inline-flex items-center text-xs font-semibold px-2 py-0.5 rounded-full ${PLAN_BADGE_STYLES[subscriptionTier]}`}>
+                    {PLAN_LABELS[subscriptionTier]}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
@@ -109,19 +126,37 @@ const SettingsSheet: React.FC<SettingsSheetProps> = ({ user, onLogout, onOpenPri
           {/* ── Subscription ── */}
           {onOpenPricing && (
             <div className="px-6 pb-4">
-              <button
-                onClick={onOpenPricing}
-                className="w-full flex items-center justify-between gap-3 p-4 rounded-xl bg-gradient-to-r from-amber-600/15 via-yellow-500/10 to-orange-500/15 border border-amber-500/25 hover:border-amber-400/40 transition-all text-left"
-              >
-                <div className="flex items-center gap-2">
-                  <Sparkles size={16} className="text-amber-400 flex-shrink-0" />
-                  <div>
-                    <p className="text-sm font-semibold text-amber-300">Planes de suscripción</p>
-                    <p className="text-xs text-amber-300/50">Bronce · Plata · Oro</p>
+              {subscriptionTier === 'free' ? (
+                <button
+                  onClick={onOpenPricing}
+                  className="w-full flex items-center justify-between gap-3 p-4 rounded-xl bg-gradient-to-r from-amber-600/15 via-yellow-500/10 to-orange-500/15 border border-amber-500/25 hover:border-amber-400/40 transition-all text-left"
+                >
+                  <div className="flex items-center gap-2">
+                    <Sparkles size={16} className="text-amber-400 flex-shrink-0" />
+                    <div>
+                      <p className="text-sm font-semibold text-amber-300">Planes de suscripción</p>
+                      <p className="text-xs text-amber-300/50">Bronce · Plata · Oro</p>
+                    </div>
                   </div>
-                </div>
-                <span className="text-amber-400/70 text-xs">→</span>
-              </button>
+                  <span className="text-amber-400/70 text-xs">→</span>
+                </button>
+              ) : (
+                <button
+                  onClick={onOpenPricing}
+                  className="w-full flex items-center justify-between gap-3 p-4 rounded-xl bg-white/5 border border-white/10 hover:border-white/20 transition-all text-left"
+                >
+                  <div className="flex items-center gap-3">
+                    <Sparkles size={16} className="text-white/40 flex-shrink-0" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">{t('planActive')}</p>
+                      <span className={`inline-flex items-center text-sm font-bold px-2.5 py-0.5 rounded-full mt-0.5 ${PLAN_BADGE_STYLES[subscriptionTier]}`}>
+                        {PLAN_LABELS[subscriptionTier]}
+                      </span>
+                    </div>
+                  </div>
+                  <span className="text-white/30 text-xs">{t('planChangePlan')} →</span>
+                </button>
+              )}
             </div>
           )}
 

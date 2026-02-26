@@ -17,6 +17,7 @@ export interface SubscriptionPlanLimits {
   maxVehicles: number;       // -1 = unlimited
   maxModalities: number;     // -1 = unlimited
   maxActiveTrips: number;    // -1 = unlimited
+  maxContacts: number;       // -1 = unlimited
   analyticsAccess: boolean;
   analyticsLevel: 'none' | 'basic' | 'advanced';
   apiAccess: boolean;
@@ -33,6 +34,7 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionTier, SubscriptionPlanLimits
     maxVehicles: 1,
     maxModalities: 0,
     maxActiveTrips: 5,
+    maxContacts: 3,
     analyticsAccess: false,
     analyticsLevel: 'none',
     apiAccess: false,
@@ -47,6 +49,7 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionTier, SubscriptionPlanLimits
     maxVehicles: 3,
     maxModalities: 1,
     maxActiveTrips: 20,
+    maxContacts: 15,
     analyticsAccess: false,
     analyticsLevel: 'none',
     apiAccess: false,
@@ -61,6 +64,7 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionTier, SubscriptionPlanLimits
     maxVehicles: 20,
     maxModalities: 3,
     maxActiveTrips: 200,
+    maxContacts: 50,
     analyticsAccess: true,
     analyticsLevel: 'basic',
     apiAccess: false,
@@ -75,6 +79,7 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionTier, SubscriptionPlanLimits
     maxVehicles: -1,
     maxModalities: -1,
     maxActiveTrips: -1,
+    maxContacts: -1,
     analyticsAccess: true,
     analyticsLevel: 'advanced',
     apiAccess: true,

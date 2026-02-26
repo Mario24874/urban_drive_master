@@ -30,6 +30,24 @@ import { Badge } from '@/components/ui/badge';
 import { RefreshCw, MapPinOff, Eye, EyeOff } from 'lucide-react';
 import { Home, MapPin, Users, MessageSquare, User as UserIcon } from './Icons';
 
+// ─── Plan Badge ───────────────────────────────────────────────────────────────
+const PLAN_BADGE_STYLES: Record<string, string> = {
+  free:   'bg-white/10 text-white/50 border border-white/15',
+  bronce: 'bg-gradient-to-r from-amber-700 to-amber-500 text-white shadow-sm',
+  plata:  'bg-gradient-to-r from-slate-500 to-slate-300 text-white shadow-sm',
+  oro:    'bg-gradient-to-r from-yellow-500 to-yellow-300 text-gray-900 shadow-sm',
+};
+const PLAN_LABELS: Record<string, string> = {
+  free: 'Plan Gratuito', bronce: 'Bronce', plata: 'Plata', oro: 'Oro',
+};
+const PlanBadge: React.FC<{ tier: string; size?: 'sm' | 'lg' }> = ({ tier, size = 'sm' }) => (
+  <span className={`inline-flex items-center font-semibold rounded-full ${
+    size === 'lg' ? 'text-sm px-4 py-1.5' : 'text-xs px-2.5 py-0.5'
+  } ${PLAN_BADGE_STYLES[tier] ?? PLAN_BADGE_STYLES.free}`}>
+    {PLAN_LABELS[tier] ?? 'Plan Gratuito'}
+  </span>
+);
+
 interface PortableInterfaceProps {
   user: UserData | null;
   isAuthenticated: boolean;
@@ -127,7 +145,7 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
           <img src="/assets/UrbanDrive.png" alt="Urban Drive" className="h-8 w-8 rounded-xl" />
           <span className="font-bold text-white text-base hidden sm:inline">Urban Drive</span>
         </div>
-        <SettingsSheet user={user} onLogout={handleLogout} onOpenPricing={() => setShowPricing(true)} />
+        <SettingsSheet user={user} onLogout={handleLogout} onOpenPricing={() => setShowPricing(true)} subscriptionTier={subscriptionTier} />
       </header>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
@@ -174,18 +192,21 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
               className="max-w-4xl mx-auto space-y-6"
             >
               <div>
-                <h1 className="text-3xl font-bold mb-2">
+                <h1 className="text-3xl font-bold mb-1">
                   {t('welcome')}, {user.displayName || user.email}!
                 </h1>
-                <p className="text-muted-foreground">
+                <div className="flex items-center gap-2 mt-1 mb-1">
+                  <PlanBadge tier={subscriptionTier} />
+                </div>
+                <p className="text-muted-foreground text-sm">
                   {user.userType === 'driver'
                     ? t('subtitleDriver')
                     : t('subtitleUser')}
                 </p>
               </div>
 
-              {/* Upgrade banner — only for free users */}
-              {!hasActiveSub && (
+              {/* Plan banner: upgrade CTA for free, active plan info for paid */}
+              {!hasActiveSub ? (
                 <motion.button
                   initial={{ opacity: 0, scale: 0.97 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -197,8 +218,20 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
                     <p className="text-amber-300/60 text-xs mt-0.5">Planes desde $19/mes · Cancela cuando quieras</p>
                   </div>
                   <span className="flex-shrink-0 bg-amber-500 text-white text-xs font-bold px-3 py-1.5 rounded-full">
-                    Ver planes
+                    {t('planUpgrade')}
                   </span>
+                </motion.button>
+              ) : (
+                <motion.button
+                  initial={{ opacity: 0, scale: 0.97 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  onClick={() => setShowPricing(true)}
+                  className="w-full flex items-center justify-between gap-3 p-4 rounded-xl bg-white/5 border border-white/10 hover:border-white/20 transition-all text-left"
+                >
+                  <div className="flex items-center gap-3">
+                    <PlanBadge tier={subscriptionTier} size="lg" />
+                    <p className="text-white/50 text-xs">{t('planChangePlan')} →</p>
+                  </div>
                 </motion.button>
               )}
 
