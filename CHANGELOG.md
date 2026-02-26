@@ -216,13 +216,45 @@ Variables CSS para tema claro/oscuro:
 - [ ] Virtualización de listas largas
 - [ ] Mejoras de accesibilidad (a11y)
 
-### v1.3.0 (Futuro)
-- [ ] Dark mode toggle UI
-- [ ] Soporte i18n (internacionalización)
-- [ ] Notificaciones push
-- [ ] Chat con archivos multimedia
-- [ ] Historial de viajes
-- [ ] Sistema de calificaciones
+### v1.3.0 (Implementado — 2026-02)
+- [x] Capa de pagos Stripe: planes Bronce/Plata/Oro mensual y anual
+- [x] PricingPlans UI full-screen con toggle mensual/anual
+- [x] Cloud Functions: createCheckoutSession + stripeWebhook
+- [x] useSubscription: estado en tiempo real desde Firestore
+- [x] Plan badge en Home y Settings (Gratuito/Bronce/Plata/Oro)
+- [x] i18n completo en todos los componentes (ES/EN)
+- [x] Fix foto de perfil persistente (updateDoc atómico)
+- [x] Enterprise layer Phase 1: tipos Company, Vehicle, Invoice, FeatureGate
+- [x] Límites por plan: maxContacts, maxDrivers, maxVehicles, maxModalities
+
+### v2.0.0 — Enterprise Transport Layer (Planificado)
+Ver plan completo en DEPLOYMENT.md → "Capa empresarial de transporte — Hoja de ruta"
+
+#### Fase 2-A: Ampliar tipos de transporte
+- [ ] 15+ modalidades: pasajeros, escolar, turismo, médico, carga general,
+      refrigerada, hazmat/químicos, animales, valores, productos terminados, carga pesada
+- [ ] Especializaciones de vehículo: hazmat, temperaturas, ganado, blindado, médico
+
+#### Fase 2-B: Módulo de mantenimiento de vehículos
+- [ ] MaintenanceRecord: historial por vehículo (tipo, taller, km, costo, fotos)
+- [ ] Programación: alertas por km y por fecha
+- [ ] 12 tipos de mantenimiento (aceite, frenos, llantas, correa distribución, etc.)
+- [ ] Semáforo ok/warning/overdue
+
+#### Fase 2-C: Documentos, permisos y checklist
+- [ ] Documentos de empresa: cámara de comercio, habilitación transporte, SARLAFT
+- [ ] Documentos por vehículo: SOAT, revisión técnico-mecánica, tarjeta de operación
+- [ ] Documentos por conductor: licencia (categoría), certificado médico, antecedentes
+- [ ] Dashboard de vencimientos con semáforo verde/amarillo/rojo
+
+#### Fase 2-D: UI administrativa
+- [ ] CompanySetup: wizard de registro de empresa
+- [ ] FleetManager: inventario y asignación de vehículos
+- [ ] DriverManager: gestión de conductores
+- [ ] DocumentVault: subida y control de documentos
+- [ ] MaintenanceLog + MaintenanceScheduler
+- [ ] AlertsDashboard: panel centralizado de alertas
+- [ ] FleetAnalytics: reportes de flota (Plata+)
 
 ---
 
