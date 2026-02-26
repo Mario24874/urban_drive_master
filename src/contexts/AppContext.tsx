@@ -278,6 +278,24 @@ const translations: Record<Lang, Record<string, string>> = {
     viewDocument: 'View document',
     allDocsValid: 'All documents are valid',
     noDocumentsYet: 'No documents registered yet',
+
+    // Enterprise — Fleet Analytics
+    fleetAnalytics: 'Fleet Analytics',
+    analyticsLockedTitle: 'Available from Plata plan',
+    analyticsLockedDesc: 'Upgrade to unlock fleet analytics.',
+    kpiActiveVehicles: 'Active Vehicles',
+    kpiAssignedDrivers: 'Assigned Drivers',
+    kpiMaintenanceCost: 'Maintenance Cost',
+    kpiDocCompliance: 'Doc Compliance',
+    maintenanceOverview: 'Maintenance Status',
+    docComplianceOverview: 'Document Compliance',
+    fleetCompositionLabel: 'Fleet Composition',
+    costTrend: 'Cost Trend (6 months)',
+    mileageByVehicle: 'Mileage by Vehicle',
+    avgFleetMileage: 'Fleet Average',
+    oroOnlyFeature: 'Available in Oro plan',
+    noAnalyticsData: 'No data yet.',
+    totalCostLabel: 'Total',
   },
   es: {
     // Navigation tabs
@@ -545,6 +563,24 @@ const translations: Record<Lang, Record<string, string>> = {
     viewDocument: 'Ver documento',
     allDocsValid: 'Todos los documentos están vigentes',
     noDocumentsYet: 'Sin documentos registrados aún',
+
+    // Enterprise — Analíticas de Flota
+    fleetAnalytics: 'Analíticas de Flota',
+    analyticsLockedTitle: 'Disponible desde el plan Plata',
+    analyticsLockedDesc: 'Actualiza para desbloquear analíticas.',
+    kpiActiveVehicles: 'Vehículos activos',
+    kpiAssignedDrivers: 'Conductores asignados',
+    kpiMaintenanceCost: 'Costo de mantenimiento',
+    kpiDocCompliance: 'Cumplimiento documental',
+    maintenanceOverview: 'Estado de mantenimiento',
+    docComplianceOverview: 'Cumplimiento de documentos',
+    fleetCompositionLabel: 'Composición de flota',
+    costTrend: 'Tendencia de costos (6 meses)',
+    mileageByVehicle: 'Kilometraje por vehículo',
+    avgFleetMileage: 'Promedio de flota',
+    oroOnlyFeature: 'Disponible en plan Oro',
+    noAnalyticsData: 'Sin datos aún.',
+    totalCostLabel: 'Total',
   },
 };
 

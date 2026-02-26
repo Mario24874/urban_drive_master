@@ -22,6 +22,7 @@ import FleetManager from '../features/enterprise/components/FleetManager';
 import DriverManager from '../features/enterprise/components/DriverManager';
 import MaintenanceScheduler from '../features/enterprise/components/MaintenanceScheduler';
 import DocumentsDashboard from '../features/enterprise/components/DocumentsDashboard';
+import FleetAnalytics from '../features/enterprise/components/FleetAnalytics';
 import { useCompany } from '../features/enterprise/hooks/useCompany';
 
 // Shadcn UI Components
@@ -81,6 +82,7 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
   const [showDriverManager, setShowDriverManager] = useState(false);
   const [showMaintenanceScheduler, setShowMaintenanceScheduler] = useState(false);
   const [showDocumentsDashboard, setShowDocumentsDashboard] = useState(false);
+  const [showFleetAnalytics, setShowFleetAnalytics] = useState(false);
 
   const { t } = useApp();
   const { tier: subscriptionTier, isActive: hasActiveSub } = useSubscription(user?.id ?? null);
@@ -192,6 +194,7 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
           onOpenDriverManager={() => setShowDriverManager(true)}
           onOpenMaintenanceScheduler={() => setShowMaintenanceScheduler(true)}
           onOpenDocumentsDashboard={() => setShowDocumentsDashboard(true)}
+          onOpenFleetAnalytics={() => setShowFleetAnalytics(true)}
         />
       </header>
 
@@ -519,6 +522,17 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
         companyId={company.id}
         userId={user.id}
         onClose={() => setShowDocumentsDashboard(false)}
+      />
+    )}
+
+    {/* Fleet Analytics overlay */}
+    {showFleetAnalytics && company && (
+      <FleetAnalytics
+        companyId={company.id}
+        userId={user.id}
+        subscriptionTier={subscriptionTier}
+        onClose={() => setShowFleetAnalytics(false)}
+        onUpgrade={() => setShowPricing(true)}
       />
     )}
   </>

@@ -60,6 +60,8 @@ export type { UseMaintenanceResult } from './hooks/useMaintenance';
 export { useMaintenanceByVehicle, useMaintenanceByCompany } from './hooks/useMaintenance';
 export type { UseDocumentsResult } from './hooks/useDocuments';
 export { useDocumentsByEntity, useDocumentsByCompany } from './hooks/useDocuments';
+export type { UseFleetAnalyticsResult, FleetKPIs, MaintenanceStats, DocumentStats, FleetComposition } from './hooks/useFleetAnalytics';
+export { useFleetAnalytics } from './hooks/useFleetAnalytics';
 
 // Components
 export { default as PricingPlans } from './components/PricingPlans';
@@ -70,3 +72,4 @@ export { default as MaintenanceLog } from './components/MaintenanceLog';
 export { default as MaintenanceScheduler } from './components/MaintenanceScheduler';
 export { default as DocumentVault } from './components/DocumentVault';
 export { default as DocumentsDashboard } from './components/DocumentsDashboard';
+export { default as FleetAnalytics } from './components/FleetAnalytics';

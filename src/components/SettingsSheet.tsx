@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Moon, Sun, LogOut, RefreshCw, Settings, Download, Car, UserRound, Sparkles, ExternalLink, Building2, Users, Wrench, FileText } from 'lucide-react';
+import { Moon, Sun, LogOut, RefreshCw, Settings, Download, Car, UserRound, Sparkles, ExternalLink, Building2, Users, Wrench, FileText, BarChart2 } from 'lucide-react';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import app from '../services/firebase';
 import { toast } from 'sonner';
@@ -35,6 +35,7 @@ interface SettingsSheetProps {
   onOpenDriverManager?: () => void;
   onOpenMaintenanceScheduler?: () => void;
   onOpenDocumentsDashboard?: () => void;
+  onOpenFleetAnalytics?: () => void;
 }
 
 const SettingsSheet: React.FC<SettingsSheetProps> = ({
@@ -48,6 +49,7 @@ const SettingsSheet: React.FC<SettingsSheetProps> = ({
   onOpenDriverManager,
   onOpenMaintenanceScheduler,
   onOpenDocumentsDashboard,
+  onOpenFleetAnalytics,
 }) => {
   const { theme, setTheme, lang, setLang, t } = useApp();
 
@@ -260,6 +262,14 @@ const SettingsSheet: React.FC<SettingsSheetProps> = ({
                       onClick={onOpenDocumentsDashboard}
                     >
                       <FileText size={15} /> {t('manageDocuments')}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full gap-2 justify-start"
+                      onClick={onOpenFleetAnalytics}
+                    >
+                      <BarChart2 size={15} /> {t('fleetAnalytics')}
                     </Button>
                   </>
                 )}
