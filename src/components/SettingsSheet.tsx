@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Moon, Sun, LogOut, RefreshCw, Settings, Download, Car, UserRound, Sparkles } from 'lucide-react';
+import { Moon, Sun, LogOut, RefreshCw, Settings, Download, Car, UserRound, Sparkles, ExternalLink } from 'lucide-react';
+import { getFunctions, httpsCallable } from 'firebase/functions';
+import app from '../services/firebase';
+import { toast } from 'sonner';
 import { useApp } from '../contexts/AppContext';
 import type { UserData } from '../types';
 import type { SubscriptionTier } from '../features/enterprise/types/subscription';
@@ -29,6 +32,23 @@ interface SettingsSheetProps {
 
 const SettingsSheet: React.FC<SettingsSheetProps> = ({ user, onLogout, onOpenPricing, subscriptionTier = 'free' }) => {
   const { theme, setTheme, lang, setLang, t } = useApp();
+
+  const [isOpeningPortal, setIsOpeningPortal] = useState(false);
+
+  const handleOpenPortal = async () => {
+    setIsOpeningPortal(true);
+    try {
+      const functions = getFunctions(app);
+      const createPortalSession = httpsCallable(functions, 'createPortalSession');
+      const result = await createPortalSession();
+      const { url } = result.data as { url: string };
+      window.location.href = url;
+    } catch {
+      toast.error(t('portalError'));
+    } finally {
+      setIsOpeningPortal(false);
+    }
+  };
 
   // Update state — reads initial value from window flag set by PWAUpdateNotification
   const [updateAvailable, setUpdateAvailable] = useState<boolean>(
@@ -141,21 +161,33 @@ const SettingsSheet: React.FC<SettingsSheetProps> = ({ user, onLogout, onOpenPri
                   <span className="text-amber-400/70 text-xs">→</span>
                 </button>
               ) : (
-                <button
-                  onClick={onOpenPricing}
-                  className="w-full flex items-center justify-between gap-3 p-4 rounded-xl bg-white/5 border border-white/10 hover:border-white/20 transition-all text-left"
-                >
-                  <div className="flex items-center gap-3">
-                    <Sparkles size={16} className="text-white/40 flex-shrink-0" />
-                    <div>
-                      <p className="text-xs text-muted-foreground">{t('planActive')}</p>
-                      <span className={`inline-flex items-center text-sm font-bold px-2.5 py-0.5 rounded-full mt-0.5 ${PLAN_BADGE_STYLES[subscriptionTier]}`}>
-                        {PLAN_LABELS[subscriptionTier]}
-                      </span>
+                <>
+                  <button
+                    onClick={onOpenPricing}
+                    className="w-full flex items-center justify-between gap-3 p-4 rounded-xl bg-white/5 border border-white/10 hover:border-white/20 transition-all text-left"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Sparkles size={16} className="text-white/40 flex-shrink-0" />
+                      <div>
+                        <p className="text-xs text-muted-foreground">{t('planActive')}</p>
+                        <span className={`inline-flex items-center text-sm font-bold px-2.5 py-0.5 rounded-full mt-0.5 ${PLAN_BADGE_STYLES[subscriptionTier]}`}>
+                          {PLAN_LABELS[subscriptionTier]}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                  <span className="text-white/30 text-xs">{t('planChangePlan')} →</span>
-                </button>
+                    <span className="text-white/30 text-xs">{t('planChangePlan')} →</span>
+                  </button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full gap-2 mt-2"
+                    onClick={handleOpenPortal}
+                    disabled={isOpeningPortal}
+                  >
+                    <ExternalLink size={15} />
+                    {isOpeningPortal ? t('openingPortal') : t('manageSubscription')}
+                  </Button>
+                </>
               )}
             </div>
           )}

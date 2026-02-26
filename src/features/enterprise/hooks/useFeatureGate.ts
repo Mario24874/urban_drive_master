@@ -6,6 +6,7 @@ export type FeatureKey =
   | 'maxVehicles'
   | 'maxModalities'
   | 'maxActiveTrips'
+  | 'maxContacts'
   | 'analyticsAccess'
   | 'apiAccess'
   | 'prioritySupport'
@@ -49,6 +50,8 @@ function isFeatureAllowed(
       return plan.maxModalities === -1 || (current === undefined ? true : current < plan.maxModalities);
     case 'maxActiveTrips':
       return plan.maxActiveTrips === -1 || (current === undefined ? true : current < plan.maxActiveTrips);
+    case 'maxContacts':
+      return plan.maxContacts === -1 || (current === undefined ? true : current < plan.maxContacts);
     case 'analyticsAccess':
       return plan.analyticsAccess;
     case 'apiAccess':
@@ -67,6 +70,7 @@ const FEATURE_LABELS: Record<FeatureKey, string> = {
   maxVehicles: 'vehículos',
   maxModalities: 'modalidades de transporte',
   maxActiveTrips: 'viajes activos simultáneos',
+  maxContacts: 'contactos',
   analyticsAccess: 'acceso a analíticas',
   apiAccess: 'acceso a la API',
   prioritySupport: 'soporte prioritario',

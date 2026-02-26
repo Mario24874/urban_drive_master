@@ -215,6 +215,35 @@ async function handleSubscriptionDeleted(stripeSub: Stripe.Subscription) {
   );
 }
 
+// ─── createPortalSession ──────────────────────────────────────────────────────
+/**
+ * Callable function — opens a Stripe Billing Portal session for the authenticated user.
+ * Output: { url: string }
+ */
+export const createPortalSession = onCall(
+  { cors: true },
+  async (request) => {
+    const uid = request.auth?.uid;
+    if (!uid) {
+      throw new HttpsError('unauthenticated', 'Debes iniciar sesión.');
+    }
+
+    const subSnap = await db().collection('subscriptions').doc(uid).get();
+    const stripeCustomerId = subSnap.data()?.stripeCustomerId;
+
+    if (!stripeCustomerId) {
+      throw new HttpsError('not-found', 'No se encontró tu suscripción de Stripe. Suscríbete primero.');
+    }
+
+    const session = await stripe.billingPortal.sessions.create({
+      customer: stripeCustomerId,
+      return_url: APP_URL,
+    });
+
+    return { url: session.url };
+  }
+);
+
 // ─── Price → Tier mapping ──────────────────────────────────────────────────────
 // Keep in sync with src/features/enterprise/config/stripe.ts
 const PRICE_TO_TIER: Record<string, 'bronce' | 'plata' | 'oro'> = {

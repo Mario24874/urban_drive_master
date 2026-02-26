@@ -576,3 +576,80 @@ firebase functions:log --follow
 # Instalar dependencias de functions
 cd functions && npm install
 ```
+
+---
+
+## Paso a Producción — Claves Live de Stripe
+
+### Requisitos previos
+
+1. Completar el proceso KYC en el Stripe Dashboard (activar cuenta en modo live).
+2. Crear los productos y precios en el modo **Live** de Stripe (no en Test).
+3. Anotar los 6 nuevos `price_live_...` generados.
+
+### Archivos a actualizar
+
+#### `functions/.env`
+
+```env
+STRIPE_SECRET_KEY=sk_live_...          # reemplazar sk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_live_...   # nuevo secreto del webhook live (ver abajo)
+APP_URL=https://urbandrive-1082b.web.app
+```
+
+#### `src/features/enterprise/config/stripe.ts`
+
+Reemplazar los 6 Price IDs de test por los IDs live:
+
+```typescript
+// Mensual
+BRONCE_MONTHLY: 'price_live_...',
+PLATA_MONTHLY:  'price_live_...',
+ORO_MONTHLY:    'price_live_...',
+// Anual
+BRONCE_YEARLY:  'price_live_...',
+PLATA_YEARLY:   'price_live_...',
+ORO_YEARLY:     'price_live_...',
+```
+
+#### `functions/src/stripe.ts` — `PRICE_TO_TIER`
+
+Actualizar el mapa con los mismos 6 Price IDs live:
+
+```typescript
+const PRICE_TO_TIER: Record<string, 'bronce' | 'plata' | 'oro'> = {
+  'price_live_bronce_monthly': 'bronce',
+  'price_live_plata_monthly':  'plata',
+  'price_live_oro_monthly':    'oro',
+  'price_live_bronce_yearly':  'bronce',
+  'price_live_plata_yearly':   'plata',
+  'price_live_oro_yearly':     'oro',
+};
+```
+
+### Webhook en Stripe Dashboard (modo Live)
+
+1. En Stripe Dashboard → Developers → Webhooks → **Add endpoint**.
+2. URL: `https://stripewebhook-lt4pemwk2q-uc.a.run.app`
+3. Eventos: `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`
+4. Copiar el **Signing secret** (`whsec_live_...`) y pegarlo en `functions/.env` → `STRIPE_WEBHOOK_SECRET`.
+
+### Variable en Netlify (si aplica)
+
+Si se expone la clave pública en el frontend via `VITE_STRIPE_PUBLISHABLE_KEY`:
+
+```
+VITE_STRIPE_PUBLISHABLE_KEY=pk_live_...
+```
+
+### Redeploy
+
+```bash
+# 1. Redesplegar Cloud Functions con las claves live
+firebase deploy --only functions
+
+# 2. Push al repo → Netlify redeploya el frontend automáticamente
+git push origin master
+```
+
+> **Nota:** El Portal de Cliente de Stripe (`createPortalSession`) requiere que el Billing Portal esté habilitado en Stripe Dashboard → Settings → Billing → Customer portal.

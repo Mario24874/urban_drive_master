@@ -5,6 +5,7 @@ import {
   Search, UserPlus, Check, X, Trash2,
   Eye, EyeOff, MessageSquare, MapPin, Clock,
   MoreVertical, Navigation, Car, UserRound,
+  Lock, Sparkles,
 } from 'lucide-react';
 import type { Contact, Invitation } from '../../types';
 import { useContacts } from '../../hooks/useContacts';
@@ -53,6 +54,9 @@ interface ContactListProps {
   onSelectContact: (contact: Contact) => void;
   onNavigateToContact?: (contact: Contact) => void;
   invitationsData: InvitationsData;
+  maxContacts?: number;    // -1 = unlimited; default -1
+  planName?: string;       // human-readable plan name for upgrade dialog
+  onUpgrade?: () => void;  // callback to open PricingPlans
 }
 
 const getInitials = (name: string, email?: string) =>
@@ -299,12 +303,16 @@ const ContactList: React.FC<ContactListProps> = ({
   onSelectContact,
   onNavigateToContact,
   invitationsData,
+  maxContacts = -1,
+  planName,
+  onUpgrade,
 }) => {
   const { t } = useApp();
   const [searchTerm, setSearchTerm] = useState('');
   const [inviteInput, setInviteInput] = useState('');
   const [addSheetOpen, setAddSheetOpen] = useState(false);
   const [removeTarget, setRemoveTarget] = useState<Contact | null>(null);
+  const [upgradeDialogOpen, setUpgradeDialogOpen] = useState(false);
 
   const {
     contacts,
@@ -313,6 +321,8 @@ const ContactList: React.FC<ContactListProps> = ({
     removeContact,
     toggleContactVisibility,
   } = useContacts(userId, userType);
+
+  const isAtLimit = maxContacts !== -1 && contacts.length >= maxContacts;
 
   const {
     received,
@@ -365,14 +375,23 @@ const ContactList: React.FC<ContactListProps> = ({
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-bold text-white">{t('contacts')}</h2>
-          <p className="text-xs text-white/60">{contacts.length} {contacts.length !== 1 ? t('contactCountPlural') : t('contactCount')}</p>
+          <p className="text-xs text-white/60">
+            {maxContacts !== -1
+              ? t('contactsOf').replace('{n}', String(contacts.length)).replace('{max}', String(maxContacts))
+              : `${contacts.length} ${contacts.length !== 1 ? t('contactCountPlural') : t('contactCount')}`}
+          </p>
         </div>
 
-        {/* Add Contact Sheet */}
+        {/* Add Contact Sheet / Limit button */}
         <Sheet open={addSheetOpen} onOpenChange={setAddSheetOpen}>
           <SheetTrigger asChild>
-            <Button size="sm" variant="secondary" className="gap-2">
-              <UserPlus size={16} />
+            <Button
+              size="sm"
+              variant="secondary"
+              className="gap-2"
+              onClick={isAtLimit ? (e) => { e.preventDefault(); setUpgradeDialogOpen(true); } : undefined}
+            >
+              {isAtLimit ? <Lock size={16} /> : <UserPlus size={16} />}
               {t('addContact')}
             </Button>
           </SheetTrigger>
@@ -547,6 +566,32 @@ const ContactList: React.FC<ContactListProps> = ({
             </Button>
             <Button variant="destructive" onClick={handleRemoveConfirm}>
               {t('remove')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Upgrade dialog — shown when contact limit is reached */}
+      <Dialog open={upgradeDialogOpen} onOpenChange={setUpgradeDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('contactLimitTitle')}</DialogTitle>
+            <DialogDescription>
+              {t('contactLimitDesc')
+                .replace('{max}', String(maxContacts))
+                .replace('{plan}', planName ?? String(maxContacts))}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setUpgradeDialogOpen(false)}>
+              {t('cancel')}
+            </Button>
+            <Button
+              onClick={() => { setUpgradeDialogOpen(false); onUpgrade?.(); }}
+              className="bg-amber-500 hover:bg-amber-600 text-white"
+            >
+              <Sparkles size={15} className="mr-2" />
+              {t('upgradePlan')}
             </Button>
           </DialogFooter>
         </DialogContent>

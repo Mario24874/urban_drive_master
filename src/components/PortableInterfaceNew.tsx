@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { signOut } from 'firebase/auth';
 import { auth } from '../services/firebase';
@@ -28,6 +28,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { RefreshCw, MapPinOff, Eye, EyeOff } from 'lucide-react';
+import { SUBSCRIPTION_PLANS } from '../features/enterprise/types/subscription';
+import { toast } from 'sonner';
 import { Home, MapPin, Users, MessageSquare, User as UserIcon } from './Icons';
 
 // ─── Plan Badge ───────────────────────────────────────────────────────────────
@@ -71,6 +73,28 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
 
   const { t } = useApp();
   const { tier: subscriptionTier, isActive: hasActiveSub } = useSubscription(user?.id ?? null);
+
+  const maxContacts = SUBSCRIPTION_PLANS[subscriptionTier].maxContacts;
+
+  // Detect post-payment redirect params (?subscription=success|canceled)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const result = params.get('subscription');
+    if (result === 'success') {
+      window.history.replaceState({}, '', '/');
+      const timer = setTimeout(() => {
+        toast.success(t('subscriptionActivated'), {
+          description: t('subscriptionActivatedDesc').replace('{plan}', PLAN_LABELS[subscriptionTier] ?? subscriptionTier),
+          duration: 6000,
+        });
+      }, 800);
+      return () => clearTimeout(timer);
+    }
+    if (result === 'canceled') {
+      window.history.replaceState({}, '', '/');
+      toast.info(t('subscriptionCanceled'));
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Custom hooks
   const { location, loading: locationLoading, refreshLocation } = useLocation(user);
@@ -355,6 +379,9 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
                 }}
                 onNavigateToContact={handleNavigateToContact}
                 invitationsData={invitationsData}
+                maxContacts={maxContacts}
+                planName={PLAN_LABELS[subscriptionTier]}
+                onUpgrade={() => setShowPricing(true)}
               />
             </div>
           </TabsContent>

@@ -6,4 +6,4 @@ if (!admin.apps.length) {
 }
 
 // ── Stripe Cloud Functions ────────────────────────────────────────────────────
-export { createCheckoutSession, stripeWebhook } from './stripe';
+export { createCheckoutSession, stripeWebhook, createPortalSession } from './stripe';

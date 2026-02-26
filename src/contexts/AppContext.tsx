@@ -162,6 +162,21 @@ const translations: Record<Lang, Record<string, string>> = {
     planChangePlan: 'Change plan',
     planUpgrade: 'Upgrade',
     planContactsLimit: 'contacts',
+
+    // Contact limit
+    contactLimitTitle: 'Contact Limit Reached',
+    contactLimitDesc: 'You have reached the limit of {max} contacts on the {plan} plan. Upgrade to add more.',
+    upgradePlan: 'Upgrade Plan',
+    // Portal
+    manageSubscription: 'Manage Subscription',
+    openingPortal: 'Opening portal...',
+    portalError: 'Could not open the subscription portal. Please try again.',
+    // Post-payment success
+    subscriptionActivated: 'Subscription activated!',
+    subscriptionActivatedDesc: 'Welcome to the {plan} plan. Enjoy your new features.',
+    subscriptionCanceled: 'Checkout canceled',
+    // Contacts count with limit
+    contactsOf: '{n} of {max}',
   },
   es: {
     // Navigation tabs
@@ -313,6 +328,21 @@ const translations: Record<Lang, Record<string, string>> = {
     planChangePlan: 'Cambiar plan',
     planUpgrade: 'Mejorar plan',
     planContactsLimit: 'contactos',
+
+    // Contact limit
+    contactLimitTitle: 'Límite de contactos alcanzado',
+    contactLimitDesc: 'Has alcanzado el límite de {max} contactos del plan {plan}. Actualiza tu plan para agregar más.',
+    upgradePlan: 'Actualizar plan',
+    // Portal
+    manageSubscription: 'Gestionar suscripción',
+    openingPortal: 'Abriendo portal...',
+    portalError: 'No se pudo abrir el portal de suscripción. Por favor intenta de nuevo.',
+    // Post-payment success
+    subscriptionActivated: '¡Suscripción activada!',
+    subscriptionActivatedDesc: 'Bienvenido al plan {plan}. Disfruta tus nuevas funciones.',
+    subscriptionCanceled: 'Pago cancelado',
+    // Contacts count with limit
+    contactsOf: '{n} de {max}',
   },
 };
 
