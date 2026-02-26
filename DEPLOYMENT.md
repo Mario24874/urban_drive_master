@@ -123,6 +123,55 @@ CP:     10001
 
 ---
 
+## Autenticación y recuperación de contraseña
+
+### Estado actual (Firebase Auth)
+
+La recuperación de contraseña **ya está implementada y funciona** sin configuración adicional.
+
+**Flujo actual:**
+```
+Usuario escribe su email en la pantalla de login
+  → toca "Forgot your password?"
+  → Firebase envía automáticamente un email con enlace de recuperación
+  → Usuario hace clic en el enlace → elige nueva contraseña
+  → Vuelve a la app e inicia sesión normalmente
+```
+
+El email proviene de `noreply@urbandrive-1082b.firebaseapp.com` con plantilla genérica de Firebase en inglés. Funcional para la fase de pruebas.
+
+### Personalización del email (antes del lanzamiento público)
+
+Antes de abrir al público, personalizar la plantilla en:
+**Firebase Console → Authentication → Templates → Password reset**
+
+Campos a actualizar:
+- **From name:** `Urban Drive`
+- **Subject:** `Recupera tu contraseña de Urban Drive`
+- **Body:** mensaje en español con la marca
+
+### Migración al VPS con dominio propio
+
+Cuando la app esté en el VPS con dominio propio, hay dos opciones:
+
+**Opción A — Mantener Firebase Auth (recomendado):**
+- Firebase Auth sigue funcionando igual
+- Solo hay que agregar el dominio propio a la lista de dominios autorizados:
+  **Firebase Console → Authentication → Settings → Authorized domains → Add domain**
+- El email de recuperación puede configurarse con dominio propio en:
+  **Firebase Console → Authentication → Templates → Customize domain**
+  (requiere verificación DNS del dominio)
+- No se cambia ninguna línea de código
+
+**Opción B — Migrar a autenticación propia (no recomendado):**
+- Requiere implementar JWT, bcrypt, sesiones, refresh tokens, etc.
+- Alto costo de desarrollo y riesgo de seguridad
+- Solo tiene sentido si se abandona Firebase completamente
+
+**Conclusión:** mantener Firebase Auth en la migración al VPS es la decisión correcta.
+
+---
+
 ## Migración a VPS con Easypanel (Hoja de ruta futura)
 
 > **Estado:** Planificado para después de la fase de pruebas en producción.
