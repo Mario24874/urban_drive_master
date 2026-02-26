@@ -322,6 +322,219 @@ Easypanel gestiona automáticamente los certificados SSL con Let's Encrypt. Solo
 
 ---
 
+## Capa empresarial de transporte — Hoja de ruta (Fase 2)
+
+> **Estado:** Tipos TypeScript implementados. UI y lógica de negocio pendientes.
+
+### Lo que está implementado (solo tipos, sin UI)
+
+| Archivo | Contenido |
+|---|---|
+| `types/company.ts` | Company, CompanyAddress, CompanyContact, CompanyDocument |
+| `types/vehicle.ts` | Vehicle, VehicleCategory, VehicleSpecialization, FleetSummary |
+| `types/subscription.ts` | Planes Bronce/Plata/Oro con límites por feature |
+| `types/invoice.ts` | Invoice, InvoiceLineItem, PaymentAttempt, BillingSummary |
+| `hooks/useFeatureGate.ts` | Control de acceso por plan (maxDrivers, maxVehicles, etc.) |
+
+---
+
+### Fase 2-A — Ampliar tipos de transporte
+
+#### Modalidades a agregar en `types/company.ts`
+
+```typescript
+export type TransportModality =
+  // Pasajeros
+  | 'taxi'
+  | 'rideshare'
+  | 'shuttle'
+  | 'charter'
+  | 'rental'
+  | 'passengers_intercity'   // intermunicipal
+  | 'school_transport'       // escolar
+  | 'tourism'                // turismo / excursiones
+  | 'medical_transport'      // médico / traslado clínico
+  | 'funeral'                // servicios funerarios
+  // Carga
+  | 'delivery'               // mensajería / última milla
+  | 'logistics'              // logística general
+  | 'cargo_general'          // carga general
+  | 'cargo_refrigerated'     // cadena de frío
+  | 'cargo_hazmat'           // materiales peligrosos / químicos
+  | 'cargo_animals'          // animales vivos
+  | 'cargo_valuables'        // valores / seguridad
+  | 'cargo_finished_goods'   // productos terminados / manufactura
+  | 'cargo_heavy'            // carga pesada / sobredimensionada
+```
+
+#### Especializaciones de vehículo a agregar en `types/vehicle.ts`
+
+```typescript
+export interface VehicleSpecialization {
+  accessible: boolean;          // silla de ruedas
+  refrigerated: boolean;        // cadena de frío
+  refrigerationTempMin?: number; // temperatura mínima °C
+  refrigerationTempMax?: number; // temperatura máxima °C
+  heavyCargo: boolean;
+  petFriendly: boolean;
+  luxuryClass: boolean;
+  hazmatCertified: boolean;     // habilitado para materiales peligrosos
+  hazmatClasses?: string[];     // clases UN (1-9)
+  livestockCapacity?: number;   // cabezas de ganado
+  armoredVehicle: boolean;      // blindado (para valores)
+  medicalEquipped: boolean;     // equipado médicamente
+}
+```
+
+---
+
+### Fase 2-B — Módulo de mantenimiento de vehículos
+
+#### Nuevos tipos a crear en `types/maintenance.ts`
+
+```typescript
+// Tipos de mantenimiento programado
+export type MaintenanceType =
+  | 'oil_change'           // cambio de aceite
+  | 'brake_service'        // frenos
+  | 'tire_rotation'        // rotación de llantas
+  | 'tire_replacement'     // cambio de llantas
+  | 'timing_belt'          // correa de distribución
+  | 'air_filter'           // filtro de aire
+  | 'fuel_filter'          // filtro de combustible
+  | 'battery'              // batería
+  | 'transmission_service' // caja de cambios
+  | 'alignment'            // alineación y balanceo
+  | 'preventive'           // mantenimiento preventivo general
+  | 'corrective'           // correctivo / reparación
+  | 'other';
+
+export interface MaintenanceRecord {
+  id: string;
+  vehicleId: string;
+  companyId: string;
+  type: MaintenanceType;
+  description: string;
+  workshopName?: string;
+  technician?: string;
+  mileageAtService: number;     // km al momento del servicio
+  costUsd?: number;
+  partsReplaced?: string[];
+  nextServiceMileage?: number;  // próximo servicio en km
+  nextServiceDate?: Date;       // próximo servicio por fecha
+  completedAt: Date;
+  createdBy: string;            // uid del admin que registró
+  attachmentUrls?: string[];    // fotos / facturas
+}
+
+export interface MaintenanceAlert {
+  vehicleId: string;
+  type: MaintenanceType;
+  description: string;
+  dueDate?: Date;
+  dueMileage?: number;
+  currentMileage: number;
+  daysUntilDue?: number;
+  mileageUntilDue?: number;
+  severity: 'ok' | 'warning' | 'overdue'; // semáforo
+}
+```
+
+---
+
+### Fase 2-C — Documentos, permisos y checklist
+
+#### Tipos de documentos ampliados (reemplaza los 5 actuales)
+
+```typescript
+// Para la empresa
+export type CompanyDocumentType =
+  | 'business_license'       // cámara de comercio / registro mercantil
+  | 'tax_certificate'        // certificado tributario / RUT
+  | 'transport_permit'       // habilitación como empresa de transporte
+  | 'insurance_policy'       // póliza de seguros de empresa
+  | 'hazmat_authorization'   // autorización para materiales peligrosos
+  | 'animal_transport_cert'  // certificado transporte animales
+  | 'other';
+
+// Por vehículo
+export type VehicleDocumentType =
+  | 'soat'                   // seguro obligatorio (SOAT en Colombia)
+  | 'technical_inspection'   // revisión técnico-mecánica
+  | 'vehicle_registration'   // tarjeta de propiedad
+  | 'operation_card'         // tarjeta de operación
+  | 'route_permit'           // permiso de ruta
+  | 'hazmat_placard'         // placa de materiales peligrosos
+  | 'other';
+
+// Por conductor
+export type DriverDocumentType =
+  | 'drivers_license'        // licencia (con categoría)
+  | 'medical_certificate'    // certificado médico
+  | 'background_check'       // antecedentes judiciales
+  | 'defensive_driving'      // curso manejo defensivo
+  | 'hazmat_training'        // capacitación materiales peligrosos
+  | 'other';
+
+export interface Document {
+  id: string;
+  entityId: string;          // vehicleId | driverId | companyId
+  entityType: 'company' | 'vehicle' | 'driver';
+  type: CompanyDocumentType | VehicleDocumentType | DriverDocumentType;
+  name: string;
+  documentNumber?: string;   // número de documento
+  issuedBy?: string;         // entidad emisora
+  issuedAt?: Date;
+  expiresAt?: Date;
+  fileUrl?: string;
+  verified: boolean;
+  verifiedBy?: string;       // uid del admin
+  notes?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// Para el dashboard de vencimientos
+export interface DocumentAlert {
+  document: Document;
+  daysUntilExpiry: number;
+  severity: 'ok' | 'warning' | 'expired'; // verde/amarillo/rojo
+  // warning: < 30 días; expired: ya venció
+}
+```
+
+---
+
+### Fase 2-D — Componentes UI pendientes
+
+| Componente | Descripción |
+|---|---|
+| `CompanySetup` | Wizard de registro de empresa (datos legales, modalidades) |
+| `FleetManager` | Inventario de vehículos, agregar/editar, asignar conductor |
+| `DriverManager` | Gestión de conductores, asignación de vehículos |
+| `DocumentVault` | Subida y control de documentos con semáforo de vencimientos |
+| `MaintenanceLog` | Registro de servicios, historial por vehículo |
+| `MaintenanceScheduler` | Programación de próximos mantenimientos |
+| `AlertsDashboard` | Panel centralizado: documentos por vencer + mantenimientos pendientes |
+| `FleetAnalytics` | Reportes: viajes, km, costos de mantenimiento por vehículo/periodo |
+
+---
+
+### Dependencia de planes para funciones empresariales
+
+| Función | Free | Bronce | Plata | Oro |
+|---|---|---|---|---|
+| Registro de empresa | ✗ | ✓ | ✓ | ✓ |
+| Gestión de flota | ✗ | hasta 3 | hasta 20 | Ilimitados |
+| Conductores | 1 (personal) | 3 | 20 | Ilimitados |
+| Modalidades de transporte | 0 | 1 | 3 | Todas |
+| Documentos por vencer | ✗ | ✓ básico | ✓ completo | ✓ completo |
+| Mantenimiento de vehículos | ✗ | ✓ básico | ✓ completo | ✓ completo |
+| Analíticas de flota | ✗ | ✗ | ✓ básicas | ✓ avanzadas |
+| API REST para integración | ✗ | ✗ | ✗ | ✓ |
+
+---
+
 ## Producción — Checklist general
 
 - [ ] Cambiar claves Stripe de `sk_test_` a `sk_live_` y `pk_live_`
