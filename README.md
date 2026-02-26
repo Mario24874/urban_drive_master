@@ -2,10 +2,10 @@
 
 **Modern ride-sharing Progressive Web Application (PWA)**
 
-[![Live Demo](https://img.shields.io/badge/Demo-Live-brightgreen)](https://urban-drive.netlify.app)
+[![Live Demo](https://img.shields.io/badge/Demo-Live-brightgreen)](https://urbandrive-1082b.web.app)
 [![Build Status](https://img.shields.io/badge/Build-Passing-brightgreen)](https://github.com/Mario24874/urban_drive_master)
 [![PWA Ready](https://img.shields.io/badge/PWA-Ready-blue)](https://web.dev/progressive-web-apps/)
-[![Version](https://img.shields.io/badge/Version-1.1.0-blue)](./CHANGELOG.md)
+[![Version](https://img.shields.io/badge/Version-1.3.0-blue)](./CHANGELOG.md)
 [![Bundle Size](https://img.shields.io/badge/Bundle-245KB-success)](./OPTIMIZATIONS.md)
 
 ## 📱 Features
@@ -20,11 +20,18 @@
 - **📊 Responsive Design** - Works on all devices (mobile-first)
 - **🔄 Real-time Sync** - Firebase Firestore integration
 
-### New in v1.1.0 ✨
+### New in v1.3.0 ✨
+- **💳 Subscription payments** - Stripe integration with Bronce / Plata / Oro plans
+  - Monthly and annual billing with 17% discount
+  - Full pricing UI with same app background
+  - Real-time subscription state via Firestore
+- **🏢 Enterprise layer** - Company, Fleet, Invoice and feature-gate types
+- **🌐 Full i18n** - All UI strings translated (ES/EN) via AppContext
+- **👤 Avatar markers** - Contact avatars on GPS map
+- **🔔 Persistent PWA install dialog**
+
+### New in v1.1.0
 - **🎙️ GPS Voice Navigation** - Turn-by-turn voice instructions in Spanish
-  - Intelligent voice selection (es-ES, es-MX, es-US)
-  - Clear audio with optimized volume and rate
-  - Automatic voice cancellation prevents audio queue
 - **⚡ Optimized Performance** - 70% bundle size reduction (844KB → 245KB)
 - **📦 Code Splitting** - Smart chunking for better caching
 - **🎨 Shadcn/UI Integration** - Modern, accessible UI components
@@ -88,6 +95,8 @@ npm run preview
 
 ### Backend & Services
 - **Firebase 10.14** - Authentication and Firestore database
+- **Firebase Cloud Functions v2** - Stripe checkout session + webhook (Node 20)
+- **Stripe** - Subscription payments (Bronce / Plata / Oro)
 - **Mapbox GL JS 3.7** - Interactive 3D maps and turn-by-turn navigation
 - **Service Worker** - Manual PWA implementation for optimal caching
 - **Speech Synthesis API** - Native voice navigation
@@ -143,27 +152,21 @@ Docs/
 
 ## 🌐 Deployment
 
-### Netlify (Recommended)
-
-1. Build the project:
-   ```bash
-   npm run build
-   ```
-
-2. Deploy the `dist/` folder to Netlify
-3. Configure environment variables in Netlify dashboard
-
-### Firebase Hosting
+### Firebase Hosting (actual — producción)
 
 ```bash
-npm install -g firebase-tools
-firebase login
-firebase deploy
+npm run build
+firebase deploy --only hosting
+firebase deploy --only functions   # Cloud Functions (Stripe)
 ```
 
-### Manual Deployment
+URL de producción: https://urbandrive-1082b.web.app
 
-Upload the contents of the `dist/` folder to any static hosting service.
+Ver [DEPLOYMENT.md](./DEPLOYMENT.md) para instrucciones completas, configuración de Stripe y la hoja de ruta de migración a VPS con Easypanel.
+
+### VPS + Easypanel + Dominio propio (hoja de ruta)
+
+Planificado para la siguiente fase de producción. Ver sección "Migración a VPS con Easypanel" en [DEPLOYMENT.md](./DEPLOYMENT.md).
 
 ## 🔧 Configuration
 
@@ -303,4 +306,4 @@ console.table(voices.filter(v => v.lang.startsWith('es')));
 
 **Made with ❤️ for modern urban mobility**
 
-**Version:** 1.1.0 | **Last Updated:** 2025-10-27
+**Version:** 1.3.0 | **Last Updated:** 2026-02-25
