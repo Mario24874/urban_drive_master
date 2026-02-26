@@ -17,6 +17,10 @@ import SettingsSheet from './SettingsSheet';
 import Login from './Login';
 import Register from './Register';
 import PricingPlans from '../features/enterprise/components/PricingPlans';
+import CompanySetup from '../features/enterprise/components/CompanySetup';
+import FleetManager from '../features/enterprise/components/FleetManager';
+import DriverManager from '../features/enterprise/components/DriverManager';
+import { useCompany } from '../features/enterprise/hooks/useCompany';
 
 // Shadcn UI Components
 import {
@@ -70,9 +74,13 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
   const [showRegister, setShowRegister] = useState(false);
   const [navTarget, setNavTarget] = useState<Contact | null>(null);
   const [showPricing, setShowPricing] = useState(false);
+  const [showCompanySetup, setShowCompanySetup] = useState(false);
+  const [showFleetManager, setShowFleetManager] = useState(false);
+  const [showDriverManager, setShowDriverManager] = useState(false);
 
   const { t } = useApp();
   const { tier: subscriptionTier, isActive: hasActiveSub } = useSubscription(user?.id ?? null);
+  const { company } = useCompany(user?.id ?? null);
 
   const maxContacts = SUBSCRIPTION_PLANS[subscriptionTier].maxContacts;
 
@@ -169,7 +177,16 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
           <img src="/assets/UrbanDrive.png" alt="Urban Drive" className="h-8 w-8 rounded-xl" />
           <span className="font-bold text-white text-base hidden sm:inline">Urban Drive</span>
         </div>
-        <SettingsSheet user={user} onLogout={handleLogout} onOpenPricing={() => setShowPricing(true)} subscriptionTier={subscriptionTier} />
+        <SettingsSheet
+          user={user}
+          onLogout={handleLogout}
+          onOpenPricing={() => setShowPricing(true)}
+          subscriptionTier={subscriptionTier}
+          company={company}
+          onOpenCompanySetup={() => setShowCompanySetup(true)}
+          onOpenFleetManager={() => setShowFleetManager(true)}
+          onOpenDriverManager={() => setShowDriverManager(true)}
+        />
       </header>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
@@ -453,6 +470,34 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
         </motion.div>
       )}
     </AnimatePresence>
+
+    {/* Company Setup overlay */}
+    {showCompanySetup && (
+      <CompanySetup
+        userId={user.id}
+        subscriptionTier={subscriptionTier}
+        onClose={() => setShowCompanySetup(false)}
+        onSaved={() => setShowCompanySetup(false)}
+      />
+    )}
+
+    {/* Fleet Manager overlay */}
+    {showFleetManager && company && (
+      <FleetManager
+        companyId={company.id}
+        subscriptionTier={subscriptionTier}
+        onClose={() => setShowFleetManager(false)}
+      />
+    )}
+
+    {/* Driver Manager overlay */}
+    {showDriverManager && company && (
+      <DriverManager
+        companyId={company.id}
+        subscriptionTier={subscriptionTier}
+        onClose={() => setShowDriverManager(false)}
+      />
+    )}
   </>
   );
 };

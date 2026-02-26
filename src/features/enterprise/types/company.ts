@@ -1,13 +1,12 @@
 // Company-related types for the enterprise layer
 
 export type TransportModality =
-  | 'taxi'
-  | 'rideshare'
-  | 'delivery'
-  | 'logistics'
-  | 'shuttle'
-  | 'charter'
-  | 'rental';
+  | 'taxi' | 'rideshare' | 'shuttle' | 'charter' | 'rental'
+  | 'passengers_intercity' | 'school_transport' | 'tourism'
+  | 'medical_transport' | 'funeral'
+  | 'delivery' | 'logistics' | 'cargo_general'
+  | 'cargo_refrigerated' | 'cargo_hazmat' | 'cargo_animals'
+  | 'cargo_valuables' | 'cargo_finished_goods' | 'cargo_heavy';
 
 export interface CompanyAddress {
   street: string;
@@ -51,4 +50,17 @@ export interface Company {
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface CompanyDriver {
+  id: string;
+  companyId: string;
+  name: string;
+  phone?: string;
+  email?: string;
+  licenseNumber?: string;
+  licenseCategory?: string;  // A1, B1, C1, C2, C3, etc.
+  assignedVehicleId?: string;
+  isActive: boolean;
+  createdAt: Date;
 }

@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Moon, Sun, LogOut, RefreshCw, Settings, Download, Car, UserRound, Sparkles, ExternalLink } from 'lucide-react';
+import { Moon, Sun, LogOut, RefreshCw, Settings, Download, Car, UserRound, Sparkles, ExternalLink, Building2, Users } from 'lucide-react';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import app from '../services/firebase';
 import { toast } from 'sonner';
 import { useApp } from '../contexts/AppContext';
 import type { UserData } from '../types';
 import type { SubscriptionTier } from '../features/enterprise/types/subscription';
+import type { Company } from '../features/enterprise/types/company';
 
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -28,9 +29,22 @@ interface SettingsSheetProps {
   onLogout: () => void;
   onOpenPricing?: () => void;
   subscriptionTier?: SubscriptionTier;
+  company?: Company | null;
+  onOpenCompanySetup?: () => void;
+  onOpenFleetManager?: () => void;
+  onOpenDriverManager?: () => void;
 }
 
-const SettingsSheet: React.FC<SettingsSheetProps> = ({ user, onLogout, onOpenPricing, subscriptionTier = 'free' }) => {
+const SettingsSheet: React.FC<SettingsSheetProps> = ({
+  user,
+  onLogout,
+  onOpenPricing,
+  subscriptionTier = 'free',
+  company,
+  onOpenCompanySetup,
+  onOpenFleetManager,
+  onOpenDriverManager,
+}) => {
   const { theme, setTheme, lang, setLang, t } = useApp();
 
   const [isOpeningPortal, setIsOpeningPortal] = useState(false);
@@ -189,6 +203,47 @@ const SettingsSheet: React.FC<SettingsSheetProps> = ({ user, onLogout, onOpenPri
                   </Button>
                 </>
               )}
+            </div>
+          )}
+
+          {/* ── Mi Empresa ── */}
+          {subscriptionTier !== 'free' && onOpenCompanySetup && (
+            <div className="px-6 pb-4">
+              <Separator className="mb-4" />
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                {t('myCompany')}
+              </p>
+              <div className="space-y-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full gap-2 justify-start"
+                  onClick={onOpenCompanySetup}
+                >
+                  <Building2 size={15} />
+                  {company ? company.name : t('setupCompany')}
+                </Button>
+                {company && (
+                  <>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full gap-2 justify-start"
+                      onClick={onOpenFleetManager}
+                    >
+                      <Car size={15} /> {t('manageFleet')}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full gap-2 justify-start"
+                      onClick={onOpenDriverManager}
+                    >
+                      <Users size={15} /> {t('manageDrivers')}
+                    </Button>
+                  </>
+                )}
+              </div>
             </div>
           )}
 

@@ -5,6 +5,7 @@ export type {
   CompanyAddress,
   CompanyContact,
   CompanyDocument,
+  CompanyDriver,
   TransportModality,
 } from './company';
 

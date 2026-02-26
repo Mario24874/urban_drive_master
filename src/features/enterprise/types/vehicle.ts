@@ -18,9 +18,16 @@ export type TransmissionType = 'manual' | 'automatic' | 'cvt';
 export interface VehicleSpecialization {
   accessible: boolean;      // wheelchair accessible
   refrigerated: boolean;    // refrigerated cargo
+  refrigerationTempMin?: number;
+  refrigerationTempMax?: number;
   heavyCargo: boolean;      // heavy cargo rated
   petFriendly: boolean;
   luxuryClass: boolean;
+  hazmatCertified: boolean;
+  hazmatClasses?: string[];     // UN classes 1-9
+  livestockCapacity?: number;
+  armoredVehicle: boolean;
+  medicalEquipped: boolean;
 }
 
 export interface Vehicle {

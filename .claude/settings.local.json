@@ -49,7 +49,12 @@
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "Bash(npm run preview:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(git -C /mnt/c/Proyectos/Urban-Drive-master log --oneline -10)",
+      "Bash(already exists\" error at module load time:\n- src/firebase.ts \\(also called getMessaging\\(\\) which can throw\\)\n- src/services/firebase.ts\n\nFix:\n- services/firebase.ts uses getApps\\(\\) guard to prevent duplicate init\n- firebase.ts now re-exports from services/firebase.ts \\(no double init\\)\n- Bump SW cache to v2.0.0 to force cache invalidation on all browsers\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git revert:*)",
+      "Bash(firebase deploy --only functions 2>&1)",
+      "Bash(firebase deploy --only functions --project urbandrive-1082b 2>&1)"
     ],
     "deny": []
   },
