@@ -1,4 +1,5 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import { auth, db } from './services/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
@@ -9,6 +10,7 @@ import { AppProvider } from './contexts/AppContext';
 // Lazy load heavy components for code splitting
 const PortableInterface = lazy(() => import('./components/PortableInterfaceNew'));
 const PWAUpdateNotification = lazy(() => import('./components/PWAUpdateNotification'));
+const AdminPortal = lazy(() => import('./admin/AdminPortal'));
 
 // Loading component
 const LoadingSpinner = () => (
@@ -21,11 +23,14 @@ const LoadingSpinner = () => (
   </div>
 );
 
-function App() {
+function AppContent() {
+  const location = useLocation();
+  const isAdminRoute = location.pathname.startsWith('/admin');
+
   const [user, setUser] = useState<any>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
-  const [showSplash, setShowSplash] = useState<boolean>(true);
+  const [showSplash, setShowSplash] = useState<boolean>(!isAdminRoute);
 
   // Monitor authentication state
   useEffect(() => {
@@ -74,39 +79,57 @@ function App() {
     return () => unsubscribe();
   }, []);
 
+  // Admin route — clean background, no splash
+  if (isAdminRoute) {
+    return (
+      <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-background"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>}>
+        <AdminPortal />
+      </Suspense>
+    );
+  }
+
+  // Main app route
+  return (
+    <div className="min-h-screen flex flex-col relative">
+      {/* Persistent background image — always rendered */}
+      <div
+        className="fixed inset-0 -z-20 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: `url(/assets/background.jpg)` }}
+      />
+      {/* Dark overlay */}
+      <div className="fixed inset-0 -z-10 bg-black/60" />
+
+      {/* Splash screen on first load */}
+      {showSplash && <SplashScreen onDone={() => setShowSplash(false)} />}
+
+      {loading ? (
+        <LoadingSpinner />
+      ) : (
+        <div className="relative z-10 flex-1">
+          <Suspense fallback={<LoadingSpinner />}>
+            <PortableInterface
+              user={user}
+              isAuthenticated={isAuthenticated}
+              onUserUpdate={(updatedUser) => setUser(updatedUser)}
+            />
+          </Suspense>
+        </div>
+      )}
+
+      {/* PWA Update Notification */}
+      <Suspense fallback={null}>
+        <PWAUpdateNotification />
+      </Suspense>
+    </div>
+  );
+}
+
+function App() {
   return (
     <AppProvider>
-      <div className="min-h-screen flex flex-col relative">
-        {/* Persistent background image — always rendered */}
-        <div
-          className="fixed inset-0 -z-20 bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: `url(/assets/background.jpg)` }}
-        />
-        {/* Dark overlay */}
-        <div className="fixed inset-0 -z-10 bg-black/60" />
-
-        {/* Splash screen on first load */}
-        {showSplash && <SplashScreen onDone={() => setShowSplash(false)} />}
-
-        {loading ? (
-          <LoadingSpinner />
-        ) : (
-          <div className="relative z-10 flex-1">
-            <Suspense fallback={<LoadingSpinner />}>
-              <PortableInterface
-                user={user}
-                isAuthenticated={isAuthenticated}
-                onUserUpdate={(updatedUser) => setUser(updatedUser)}
-              />
-            </Suspense>
-          </div>
-        )}
-
-        {/* PWA Update Notification */}
-        <Suspense fallback={null}>
-          <PWAUpdateNotification />
-        </Suspense>
-      </div>
+      <Routes>
+        <Route path="*" element={<AppContent />} />
+      </Routes>
     </AppProvider>
   );
 }

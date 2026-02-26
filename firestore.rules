@@ -15,6 +15,11 @@ service cloud.firestore {
       return request.auth.uid in memberList;
     }
 
+    function isAdmin() {
+      return isSignedIn() &&
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
     // ── Users ───────────────────────────────────────────────────────────────
     match /users/{userId} {
       allow read: if isSignedIn();
@@ -71,13 +76,19 @@ service cloud.firestore {
         resource.data.fromUserId == request.auth.uid;
     }
 
+    // ── Admins ──────────────────────────────────────────────────────────────
+    match /admins/{adminId} {
+      allow read: if isAdmin() || isOwner(adminId);
+      allow write: if isAdmin();
+    }
+
     // ── Companies ───────────────────────────────────────────────────────────
     match /companies/{companyId} {
-      allow read: if isSignedIn() && (
+      allow read: if isAdmin() || (isSignedIn() && (
         resource.data.ownerId == request.auth.uid ||
         isMember(resource.data.adminIds) ||
         isMember(resource.data.memberIds)
-      );
+      ));
       allow create: if isSignedIn();
       allow update: if isSignedIn() && (
         isMember(resource.data.adminIds) ||
@@ -89,10 +100,10 @@ service cloud.firestore {
 
     // ── Subscriptions ───────────────────────────────────────────────────────
     match /subscriptions/{subscriptionId} {
-      allow read: if isSignedIn() && (
+      allow read: if isAdmin() || (isSignedIn() && (
         resource.data.ownerId == request.auth.uid ||
         isMember(resource.data.adminIds)
-      );
+      ));
       allow write: if isSignedIn() &&
         resource.data.ownerId == request.auth.uid;
     }
@@ -123,10 +134,10 @@ service cloud.firestore {
 
     // ── Billing history (invoices) ──────────────────────────────────────────
     match /billingHistory/{invoiceId} {
-      allow read: if isSignedIn() && (
+      allow read: if isAdmin() || (isSignedIn() && (
         resource.data.ownerId == request.auth.uid ||
         isMember(resource.data.adminIds)
-      );
+      ));
       allow write: if isSignedIn() &&
         resource.data.ownerId == request.auth.uid;
     }
