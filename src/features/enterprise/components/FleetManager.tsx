@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { X, Plus, Lock, Car, Pencil, Trash2 } from 'lucide-react';
+import { X, Plus, Lock, Car, Pencil, Trash2, Wrench } from 'lucide-react';
 import { toast } from 'sonner';
 import { useApp } from '../../../contexts/AppContext';
 import { useFleet } from '../hooks/useFleet';
 import { SUBSCRIPTION_PLANS } from '../types/subscription';
 import type { SubscriptionTier } from '../types/subscription';
 import type { Vehicle, VehicleCategory, FuelType } from '../types/vehicle';
+import MaintenanceLog from './MaintenanceLog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -84,6 +85,9 @@ const FleetManager: React.FC<FleetManagerProps> = ({
   const [form, setForm] = useState<FormData>(DEFAULT_FORM);
   const [saving, setSaving] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [maintenanceVehicle, setMaintenanceVehicle] = useState<{
+    id: string; plate: string; mileageKm: number;
+  } | null>(null);
 
   const openAdd = () => {
     if (isAtLimit) {
@@ -272,6 +276,15 @@ const FleetManager: React.FC<FleetManagerProps> = ({
                       <span className="text-xs">{v.isActive ? '●' : '○'}</span>
                     </button>
                     <button
+                      onClick={() =>
+                        setMaintenanceVehicle({ id: v.id, plate: v.plate, mileageKm: v.mileageKm ?? 0 })
+                      }
+                      className="w-8 h-8 rounded-lg bg-white/5 hover:bg-amber-500/20 flex items-center justify-center text-white/50 hover:text-amber-400 transition-colors"
+                      title="Mantenimiento"
+                    >
+                      <Wrench size={14} />
+                    </button>
+                    <button
                       onClick={() => openEdit(v)}
                       className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/50 hover:text-white/80 transition-colors"
                     >
@@ -420,6 +433,17 @@ const FleetManager: React.FC<FleetManagerProps> = ({
             </div>
           </div>
         </div>
+      )}
+
+      {/* Maintenance Log sub-overlay */}
+      {maintenanceVehicle && (
+        <MaintenanceLog
+          vehicleId={maintenanceVehicle.id}
+          vehiclePlate={maintenanceVehicle.plate}
+          vehicleMileageKm={maintenanceVehicle.mileageKm}
+          companyId={companyId}
+          onClose={() => setMaintenanceVehicle(null)}
+        />
       )}
     </>
   );

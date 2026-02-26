@@ -25,7 +25,13 @@ export type {
   PaymentAttempt,
   Invoice,
   BillingSummary,
+  MaintenanceType,
+  MaintenanceStatus,
+  MaintenanceRecord,
+  MaintenanceAlert,
 } from './types';
+
+export { getMaintenanceStatus } from './types';
 
 export { SUBSCRIPTION_PLANS } from './types';
 
@@ -43,9 +49,13 @@ export type { UseFleetResult } from './hooks/useFleet';
 export { useFleet } from './hooks/useFleet';
 export type { UseDriversResult } from './hooks/useDrivers';
 export { useDrivers } from './hooks/useDrivers';
+export type { UseMaintenanceResult } from './hooks/useMaintenance';
+export { useMaintenanceByVehicle, useMaintenanceByCompany } from './hooks/useMaintenance';
 
 // Components
 export { default as PricingPlans } from './components/PricingPlans';
 export { default as CompanySetup } from './components/CompanySetup';
 export { default as FleetManager } from './components/FleetManager';
 export { default as DriverManager } from './components/DriverManager';
+export { default as MaintenanceLog } from './components/MaintenanceLog';
+export { default as MaintenanceScheduler } from './components/MaintenanceScheduler';

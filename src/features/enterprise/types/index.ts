@@ -36,3 +36,12 @@ export type {
   Invoice,
   BillingSummary,
 } from './invoice';
+
+export type {
+  MaintenanceType,
+  MaintenanceStatus,
+  MaintenanceRecord,
+  MaintenanceAlert,
+} from './maintenance';
+
+export { getMaintenanceStatus } from './maintenance';
