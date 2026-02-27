@@ -388,6 +388,27 @@ Al activarse, notifica a contactos de emergencia predefinidos y/o a un panel de 
 
 ---
 
+### 🎟️ Pendiente — Sistema de Cupones de Descuento (v1.6.0)
+
+**Descripción:** Sistema de cupones de un solo uso aplicables al momento de suscribirse a cualquier plan de pago (Bronce, Plata, Oro). Especificaciones detalladas pendientes de recibir.
+
+**Tipos de cupón definidos:**
+
+| Tipo | Descuento | Uso |
+|---|---|---|
+| Básico | 10% | Un solo uso por usuario |
+| Estándar | 50% | Un solo uso por usuario |
+| Full | 100% | Un solo uso por usuario — acceso gratuito al plan |
+
+**Notas preliminares:**
+- Aplicable a cualquier plan (Bronce, Plata, Oro) y cualquier ciclo (mensual / anual)
+- Cada cupón es de un solo uso — se invalida tras ser canjeado
+- Integración con Stripe (coupon / promotion code) o lógica propia en Cloud Functions
+- Colección Firestore `discount_coupons/{code}` con campos: `discount`, `used`, `usedBy`, `usedAt`, `expiresAt`
+- ⏳ *Especificaciones completas pendientes*
+
+---
+
 ### Pendiente — Otras mejoras
 
 - [ ] Reactivar vite-plugin-pwa con workbox fixes
