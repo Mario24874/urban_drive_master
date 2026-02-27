@@ -148,6 +148,7 @@ const CompanySetup: React.FC<CompanySetupProps> = ({
         </div>
 
         {/* Stepper */}
+        <div className="max-w-lg mx-auto w-full">
         <div className="flex items-center gap-2 pb-4">
           {[1, 2, 3].map((s) => (
             <div key={s} className="flex items-center gap-2 flex-1">
@@ -171,6 +172,7 @@ const CompanySetup: React.FC<CompanySetupProps> = ({
               )}
             </div>
           ))}
+        </div>
         </div>
       </div>
 
@@ -310,42 +312,44 @@ const CompanySetup: React.FC<CompanySetupProps> = ({
       </div>
 
       {/* Footer navigation */}
-      <div className="flex-shrink-0 px-4 py-4 border-t border-white/10 flex gap-3">
-        {step > 1 ? (
-          <Button
-            variant="outline"
-            className="flex-1"
-            onClick={() => setStep((s) => s - 1)}
-          >
-            {t('previous')}
-          </Button>
-        ) : (
-          <Button variant="outline" className="flex-1" onClick={onClose}>
-            {t('cancel')}
-          </Button>
-        )}
-        {step < 3 ? (
-          <Button
-            className="flex-1 bg-amber-500 hover:bg-amber-600 text-white"
-            onClick={() => {
-              if (step === 1 && !name.trim()) {
-                toast.error(t('companyName') + ' es requerido');
-                return;
-              }
-              setStep((s) => s + 1);
-            }}
-          >
-            {t('next')}
-          </Button>
-        ) : (
-          <Button
-            className="flex-1 bg-amber-500 hover:bg-amber-600 text-white"
-            onClick={handleFinish}
-            disabled={saving}
-          >
-            {saving ? 'Guardando...' : t('finish')}
-          </Button>
-        )}
+      <div className="flex-shrink-0 px-4 py-4 border-t border-white/10">
+        <div className="max-w-lg mx-auto flex gap-3">
+          {step > 1 ? (
+            <Button
+              variant="outline"
+              className="flex-1 max-w-[160px]"
+              onClick={() => setStep((s) => s - 1)}
+            >
+              {t('previous')}
+            </Button>
+          ) : (
+            <Button variant="outline" className="flex-1 max-w-[160px]" onClick={onClose}>
+              {t('cancel')}
+            </Button>
+          )}
+          {step < 3 ? (
+            <Button
+              className="flex-1 bg-amber-500 hover:bg-amber-600 text-white"
+              onClick={() => {
+                if (step === 1 && !name.trim()) {
+                  toast.error(t('companyName') + ' es requerido');
+                  return;
+                }
+                setStep((s) => s + 1);
+              }}
+            >
+              {t('next')}
+            </Button>
+          ) : (
+            <Button
+              className="flex-1 bg-amber-500 hover:bg-amber-600 text-white"
+              onClick={handleFinish}
+              disabled={saving}
+            >
+              {saving ? t('saving') : t('finish')}
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );

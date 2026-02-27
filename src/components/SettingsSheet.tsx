@@ -53,6 +53,7 @@ const SettingsSheet: React.FC<SettingsSheetProps> = ({
 }) => {
   const { theme, setTheme, lang, setLang, t } = useApp();
 
+  const [open, setOpen] = useState(false);
   const [isOpeningPortal, setIsOpeningPortal] = useState(false);
 
   const handleOpenPortal = async () => {
@@ -123,7 +124,7 @@ const SettingsSheet: React.FC<SettingsSheetProps> = ({
   };
 
   return (
-    <Sheet>
+    <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         <Button variant="ghost" size="icon" className="h-9 w-9 text-white/80 hover:text-white hover:bg-white/10 relative">
           <Settings size={20} />
@@ -168,13 +169,13 @@ const SettingsSheet: React.FC<SettingsSheetProps> = ({
             <div className="px-6 pb-4">
               {subscriptionTier === 'free' ? (
                 <button
-                  onClick={onOpenPricing}
+                  onClick={() => { setOpen(false); onOpenPricing?.(); }}
                   className="w-full flex items-center justify-between gap-3 p-4 rounded-xl bg-gradient-to-r from-amber-600/15 via-yellow-500/10 to-orange-500/15 border border-amber-500/25 hover:border-amber-400/40 transition-all text-left"
                 >
                   <div className="flex items-center gap-2">
                     <Sparkles size={16} className="text-amber-400 flex-shrink-0" />
                     <div>
-                      <p className="text-sm font-semibold text-amber-300">Planes de suscripción</p>
+                      <p className="text-sm font-semibold text-amber-300">{t('pricingTitle')}</p>
                       <p className="text-xs text-amber-300/50">Bronce · Plata · Oro</p>
                     </div>
                   </div>
@@ -183,7 +184,7 @@ const SettingsSheet: React.FC<SettingsSheetProps> = ({
               ) : (
                 <>
                   <button
-                    onClick={onOpenPricing}
+                    onClick={() => { setOpen(false); onOpenPricing?.(); }}
                     className="w-full flex items-center justify-between gap-3 p-4 rounded-xl bg-white/5 border border-white/10 hover:border-white/20 transition-all text-left"
                   >
                     <div className="flex items-center gap-3">
@@ -224,7 +225,7 @@ const SettingsSheet: React.FC<SettingsSheetProps> = ({
                   variant="outline"
                   size="sm"
                   className="w-full gap-2 justify-start"
-                  onClick={onOpenCompanySetup}
+                  onClick={() => { setOpen(false); onOpenCompanySetup?.(); }}
                 >
                   <Building2 size={15} />
                   {company ? company.name : t('setupCompany')}
@@ -235,7 +236,7 @@ const SettingsSheet: React.FC<SettingsSheetProps> = ({
                       variant="ghost"
                       size="sm"
                       className="w-full gap-2 justify-start"
-                      onClick={onOpenFleetManager}
+                      onClick={() => { setOpen(false); onOpenFleetManager?.(); }}
                     >
                       <Car size={15} /> {t('manageFleet')}
                     </Button>
@@ -243,7 +244,7 @@ const SettingsSheet: React.FC<SettingsSheetProps> = ({
                       variant="ghost"
                       size="sm"
                       className="w-full gap-2 justify-start"
-                      onClick={onOpenDriverManager}
+                      onClick={() => { setOpen(false); onOpenDriverManager?.(); }}
                     >
                       <Users size={15} /> {t('manageDrivers')}
                     </Button>
@@ -251,7 +252,7 @@ const SettingsSheet: React.FC<SettingsSheetProps> = ({
                       variant="ghost"
                       size="sm"
                       className="w-full gap-2 justify-start"
-                      onClick={onOpenMaintenanceScheduler}
+                      onClick={() => { setOpen(false); onOpenMaintenanceScheduler?.(); }}
                     >
                       <Wrench size={15} /> {t('manageMaintenance')}
                     </Button>
@@ -259,7 +260,7 @@ const SettingsSheet: React.FC<SettingsSheetProps> = ({
                       variant="ghost"
                       size="sm"
                       className="w-full gap-2 justify-start"
-                      onClick={onOpenDocumentsDashboard}
+                      onClick={() => { setOpen(false); onOpenDocumentsDashboard?.(); }}
                     >
                       <FileText size={15} /> {t('manageDocuments')}
                     </Button>
@@ -267,7 +268,7 @@ const SettingsSheet: React.FC<SettingsSheetProps> = ({
                       variant="ghost"
                       size="sm"
                       className="w-full gap-2 justify-start"
-                      onClick={onOpenFleetAnalytics}
+                      onClick={() => { setOpen(false); onOpenFleetAnalytics?.(); }}
                     >
                       <BarChart2 size={15} /> {t('fleetAnalytics')}
                     </Button>
