@@ -5,7 +5,7 @@
 [![Live Demo](https://img.shields.io/badge/Demo-Live-brightgreen)](https://urbandrive-1082b.web.app)
 [![Build Status](https://img.shields.io/badge/Build-Passing-brightgreen)](https://github.com/Mario24874/urban_drive_master)
 [![PWA Ready](https://img.shields.io/badge/PWA-Ready-blue)](https://web.dev/progressive-web-apps/)
-[![Version](https://img.shields.io/badge/Version-1.3.0-blue)](./CHANGELOG.md)
+[![Version](https://img.shields.io/badge/Version-1.4.0-blue)](./CHANGELOG.md)
 [![Bundle Size](https://img.shields.io/badge/Bundle-245KB-success)](./OPTIMIZATIONS.md)
 
 ## 📱 Features
@@ -20,14 +20,33 @@
 - **📊 Responsive Design** - Works on all devices (mobile-first)
 - **🔄 Real-time Sync** - Firebase Firestore integration
 
-### New in v1.3.0 ✨
-- **💳 Subscription payments** - Stripe integration with Bronce / Plata / Oro plans
+### New in v1.4.0 ✨
+- **🛡️ Admin Portal** — Full back-office at `/admin` (Phase 8)
+  - Firebase Auth + `admins/{uid}` Firestore collection guard
+  - Dashboard with KPI cards, plan distribution bars, recent companies
+  - Users table (all users + drivers) with search, filters, pagination, detail dialog
+  - Companies, Subscriptions, Fleet, Maintenance, Documents sections
+  - MRR estimation from active subscriptions
+  - Responsive: desktop sidebar + mobile hamburger Sheet
+  - Lazy-loaded chunk — zero impact on main app bundle
+- **🐛 Firestore security fixes**
+  - Subscriptions: rule now matches by doc ID (`isOwner(subscriptionId)`) instead of missing field
+  - Invitations: corrected field names (`fromId` / `toId` / `toIdentifier`) for all 4 operations
+- **🌐 Pricing i18n fix** — PricingPlans fully rewritten to use `t()` — no more hardcoded Spanish strings
+- **🎨 UX fixes**
+  - Settings sheet auto-closes before opening company/fleet/driver/maintenance/documents/analytics screens
+  - CompanySetup: stepper and footer centered (`max-w-lg mx-auto`) and responsive on all screen sizes
+
+### New in v1.3.0
+- **💳 Subscription payments** — Stripe integration with Bronce / Plata / Oro plans
   - Monthly and annual billing with 17% discount
   - Full pricing UI with same app background
   - Real-time subscription state via Firestore
-- **🏢 Enterprise layer** - Company, Fleet, Invoice and feature-gate types
-- **🌐 Full i18n** - All UI strings translated (ES/EN) via AppContext
-- **👤 Avatar markers** - Contact avatars on GPS map
+- **🏢 Enterprise layer (Phases 4–7)** — Company setup, Fleet manager, Driver manager,
+  Vehicle Maintenance log + scheduler + alerts, Document vault + expiration dashboard,
+  Fleet analytics dashboard (Plata/Oro gated)
+- **🌐 Full i18n** — All UI strings translated (ES/EN) via AppContext
+- **👤 Avatar markers** — Contact avatars on GPS map
 - **🔔 Persistent PWA install dialog**
 
 ### New in v1.1.0
@@ -115,26 +134,47 @@ npm run preview
 
 ```
 src/
-├── components/          # React components
+├── admin/              # Admin portal (NEW in v1.4.0) — lazy-loaded at /admin
+│   ├── AdminPortal.tsx            # Entry point (auth guard)
+│   ├── types/index.ts             # AdminUser, AdminSection types
+│   ├── hooks/
+│   │   ├── useAdminAuth.ts        # Firebase Auth + admins/{uid} check
+│   │   └── useAdminData.ts        # Parallel Firestore reads (7 collections)
+│   └── components/
+│       ├── AdminLayout.tsx        # Desktop sidebar + mobile header
+│       ├── AdminSidebar.tsx       # Nav items with lucide icons
+│       ├── AdminMobileSidebar.tsx # Sheet hamburger menu
+│       ├── AdminAccessDenied.tsx  # 403 screen for non-admins
+│       └── sections/
+│           ├── AdminDashboard.tsx     # KPI cards + plan distribution
+│           ├── AdminUsers.tsx         # Users + drivers table (search, filter, paginate)
+│           ├── AdminCompanies.tsx     # Companies table + detail dialog
+│           ├── AdminSubscriptions.tsx # MRR + status chips
+│           ├── AdminFleet.tsx         # Cross-company vehicles
+│           ├── AdminMaintenance.tsx   # Overdue/warning/ok alerts
+│           └── AdminDocuments.tsx     # Compliance bars per company
+├── components/         # Shared React components
 │   ├── GPSMapComponent.tsx        # GPS map with contact tracking
 │   ├── NavigationInterface.tsx    # Voice navigation UI
 │   ├── VisibilityToggle.tsx       # Location sharing controls
 │   ├── InviteContact.tsx          # Contact invitation system
 │   ├── ChatInterface.tsx          # Real-time messaging
 │   ├── PortableInterface.tsx      # Main app interface
-│   └── ...                        # Other components
-├── hooks/              # Custom React hooks
-│   ├── useContactTracking.ts     # Contact location tracking
 │   └── ...
-├── lib/                # Utilities (NEW in v1.1.0)
+├── features/enterprise/           # Enterprise layer (Phases 3–7)
+│   ├── components/                # CompanySetup, FleetManager, etc.
+│   ├── hooks/                     # useCompany, useFleet, useDrivers, etc.
+│   └── types/                     # Company, Vehicle, Subscription, etc.
+├── hooks/              # Custom React hooks
+│   └── useContactTracking.ts
+├── lib/                # Utilities
 │   └── utils.ts        # cn() utility for classNames
-├── pages/              # Page components
 ├── services/           # External service integrations
-│   ├── navigation.ts   # GPS voice navigation service (ENHANCED)
+│   ├── navigation.ts   # GPS voice navigation
 │   ├── invitations.ts  # Contact invitation service
 │   └── firebase.ts     # Firebase configuration
 ├── types/              # TypeScript type definitions
-└── utils/              # Utility functions
+└── contexts/           # React contexts (AppContext — auth, i18n, theme)
 
 public/
 ├── assets/             # Static assets
@@ -306,4 +346,4 @@ console.table(voices.filter(v => v.lang.startsWith('es')));
 
 **Made with ❤️ for modern urban mobility**
 
-**Version:** 1.3.0 | **Last Updated:** 2026-02-25
+**Version:** 1.4.0 | **Last Updated:** 2026-02-26

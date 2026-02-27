@@ -5,6 +5,140 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/),
 y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2026-02-26
+
+### 🛡️ Admin Portal — Phase 8
+
+#### Arquitectura
+- Nueva ruta `/admin` lazy-loaded desde `App.tsx` con `React.lazy + Suspense`
+- `useAdminAuth` hook: verifica `onAuthStateChanged` + `getDoc(db, 'admins', uid)`
+- `useAdminData` hook: lectura paralela de 7 colecciones Firestore con `Promise.all`
+- Cero impacto en bundle de la app principal (chunk separado `AdminPortal-*.js`)
+
+#### Nuevos archivos
+- `src/admin/AdminPortal.tsx` — Punto de entrada con guard de auth
+- `src/admin/types/index.ts` — `AdminUser`, `AdminSection`, `ADMIN_SIDEBAR_ITEMS`
+- `src/admin/hooks/useAdminAuth.ts` — Auth guard contra colección `admins/{uid}`
+- `src/admin/hooks/useAdminData.ts` — Fetch paralelo de users/drivers/companies/subscriptions/vehicles/maintenance/documents
+- `src/admin/components/AdminLayout.tsx` — Desktop sidebar w-64 + mobile header
+- `src/admin/components/AdminSidebar.tsx` — Navegación con iconos lucide-react
+- `src/admin/components/AdminMobileSidebar.tsx` — Sheet hamburger (shadcn `Sheet side="left"`)
+- `src/admin/components/AdminAccessDenied.tsx` — Pantalla 403 para no-admins
+- `src/admin/components/sections/AdminDashboard.tsx` — 4 KPI cards + barras de distribución por plan + tabla de empresas recientes + MRR estimado
+- `src/admin/components/sections/AdminUsers.tsx` — Tabla paginada (20/pág) de users+drivers con búsqueda, filtros tipo/plan y detail Dialog
+- `src/admin/components/sections/AdminCompanies.tsx` — Tabla de empresas con conteos de vehículos/conductores y filtro por tier
+- `src/admin/components/sections/AdminSubscriptions.tsx` — MRR en header, chips active/trialing/past_due/canceled, filtros tier+status
+- `src/admin/components/sections/AdminFleet.tsx` — Vehículos cross-company con filtros categoría/activo
+- `src/admin/components/sections/AdminMaintenance.tsx` — Alertas overdue/warning/ok reutilizando `getMaintenanceStatus()`
+- `src/admin/components/sections/AdminDocuments.tsx` — Barras de compliance por empresa reutilizando `getDocumentStatus()`
+
+#### Firestore
+- Nueva colección `admins/{uid}` → `{ email, role: 'superadmin', createdAt }`
+- Regla `isAdmin()`: `exists(/databases/.../admins/$(request.auth.uid))`
+- `companies`, `subscriptions`, `billingHistory`: `allow read: if isAdmin() || (... reglas existentes)`
+
+#### i18n — 20 nuevas claves (EN + ES)
+`adminPortal`, `adminDashboard`, `adminUsers`, `adminCompanies`, `adminSubscriptions`,
+`adminFleet`, `adminMaintenance`, `adminDocuments`, `adminTotalUsers`, `adminTotalCompanies`,
+`adminMRR`, `adminActiveSubs`, `adminAccessDenied`, `adminAccessDeniedDesc`,
+`adminSearch`, `adminFilterByType`, `adminFilterByPlan`, `adminFilterByStatus`,
+`adminRefresh`, `adminNoData`
+
+---
+
+### 🐛 Correcciones de Firestore Security Rules
+
+#### Suscripciones (`subscriptions/{subscriptionId}`)
+- **Bug**: Regla usaba `resource.data.ownerId` que no existe en los documentos escritos por el webhook de Stripe
+- **Fix**: Cambiado a `isOwner(subscriptionId)` — el ID del documento ES el UID del usuario
+- **Impacto**: Resuelve `permission-denied` en `useSubscription` onSnapshot al iniciar la app
+
+#### Invitaciones (`invitations/{invitationId}`)
+- **Bug**: Reglas usaban nombres de campo incorrectos (`fromUserId`, `toEmail`) que no coincidían con los escritos por `addDoc`
+- **Fix**: Corregidos a `fromId`, `toId`, `toIdentifier` en las 4 operaciones (read/create/update/delete)
+- **Impacto**: Resuelve `permission-denied` en las 3 queries de `useInvitations`
+
+---
+
+### 🌐 PricingPlans — i18n completo
+
+- **Bug**: Todos los textos de planes (taglines, features, botones, billing) estaban hardcodeados en español
+- **Fix**: Componente reescrito separando metadatos visuales (`PLAN_VISUAL`) de contenido localizado
+- **35 nuevas claves i18n** en `AppContext.tsx` (EN + ES):
+  `pricingTitle`, `pricingSubtitle`, `billingMonthly`, `billingYearly`, `billingPerMonth`,
+  `billingYearlySave`, `planRecommended`, `planTaglineBronce`, `planTaglinePlata`, `planTaglineOro`,
+  `planCurrentCta`, `planSubscribeTo`, `planProcessing`, `planNoCommitment`, `planSecurePayments`,
+  `planCancelNote`, `planStripeNotConfigured`, `featDrivers`, `adminFleet`, `featModalities`,
+  `featActiveTrips`, `featGPS`, `featChat`, `featStats`, `featAPI`, `featBranding`, `featSupport`,
+  `featUpTo`, `featUnlimited`, `featAll`, `featBasic`, `featAdvanced`, `featPriorityEmail`, `featPhoneEmail`
+
+---
+
+### 🎨 UI/UX Fixes
+
+#### SettingsSheet — cierre automático
+- **Bug**: Al hacer click en "Mi Empresa", "Gestionar Flota", etc., el Sheet permanecía abierto bloqueando la vista del formulario
+- **Fix**: Convertido a Sheet controlado (`open` / `onOpenChange`); todos los handlers llaman `setOpen(false)` antes de abrir el módulo correspondiente
+- Afecta: Pricing, CompanySetup, FleetManager, DriverManager, MaintenanceScheduler, DocumentsDashboard, FleetAnalytics
+
+#### CompanySetup — layout responsive
+- **Bug**: Stepper de pasos no estaba centrado; botones del footer demasiado anchos en pantallas grandes
+- **Fix**: Stepper y footer envueltos en `max-w-lg mx-auto`; botones Cancel/Anterior limitados a `max-w-[160px]`
+- La app sigue siendo 100% mobile-first y responsive en todos los tamaños de pantalla
+
+---
+
+### 📄 Archivos Modificados
+
+| Archivo | Cambio |
+|---|---|
+| `src/App.tsx` | Routes/Route/useLocation, lazy AdminPortal, split path /admin vs /* |
+| `firestore.rules` | isAdmin() helper, colección admins, fix invitaciones, fix suscripciones |
+| `src/contexts/AppContext.tsx` | +55 claves i18n (admin + pricing) |
+| `src/features/enterprise/components/PricingPlans.tsx` | Reescritura completa i18n |
+| `src/components/SettingsSheet.tsx` | Sheet controlado + setOpen(false) en todos los handlers |
+| `src/features/enterprise/components/CompanySetup.tsx` | max-w-lg mx-auto en stepper y footer |
+
+---
+
+## [1.3.0] - 2026-02-25
+
+### Agregado — Enterprise Transport Layer (Fases 3–7)
+
+#### Fase 3 — Capa de pagos completa
+- Stripe checkout session + webhook en Cloud Functions
+- Portal de gestión de suscripciones (Stripe Customer Portal)
+- Planes Bronce / Plata / Oro con billing mensual y anual (−17%)
+- `useSubscription` con estado en tiempo real desde Firestore
+- UX post-pago: banner de plan activo, badge en Home y Settings
+- Límites por plan: `maxContacts`, `maxDrivers`, `maxVehicles`, `maxModalities`
+
+#### Fase 4 — Empresa, Flota y Conductores
+- `CompanySetup`: wizard 3 pasos (datos básicos, modalidades, contacto)
+- `FleetManager`: inventario de vehículos con CRUD
+- `DriverManager`: gestión de conductores de empresa
+- 18 modalidades de transporte: taxi, rideshare, shuttle, charter, rental, escolar, turismo, médico, funerario, delivery, logística, carga general/refrigerada/hazmat/animales/valores/productos terminados/pesada
+
+#### Fase 5 — Mantenimiento de vehículos
+- `MaintenanceLog`: historial de mantenimiento por vehículo
+- `MaintenanceScheduler`: programación de mantenimientos futuros
+- 12 tipos de mantenimiento (aceite, frenos, llantas, correa distribución, etc.)
+- Sistema semáforo: ok / warning (próximo a vencer) / overdue (vencido)
+- Alertas en dashboard de flota
+
+#### Fase 6 — Bóveda de documentos
+- `DocumentVault`: subida y control de documentos empresariales, de vehículo y conductor
+- Tipos: cámara de comercio, habilitación transporte, SOAT, RTM, tarjeta de operación, licencia, certificado médico, antecedentes
+- Dashboard de vencimientos con semáforo verde/amarillo/rojo
+- Alertas de documentos próximos a vencer (30 días)
+
+#### Fase 7 — Analytics de flota (Plata/Oro)
+- `FleetAnalytics`: reportes de flota con métricas de mantenimiento y documentos
+- Restringido a planes Plata y Oro (`feature gate`)
+- KPIs: km promedio, costo promedio de mantenimiento, compliance de documentos
+
+---
+
 ## [1.1.0] - 2025-10-27
 
 ### 🚀 Optimizaciones Mayores
@@ -207,54 +341,63 @@ Variables CSS para tema claro/oscuro:
 
 ## Roadmap
 
-### v1.2.0 (Próxima versión)
+### ✅ Completado
+
+| Versión | Fase | Descripción |
+|---|---|---|
+| v1.1.0 | — | Optimizaciones de bundle (70%), GPS por voz, Shadcn/UI |
+| v1.3.0 | Fase 3 | Capa de pagos Stripe: Bronce/Plata/Oro, Cloud Functions |
+| v1.3.0 | Fase 4 | Empresa, Flota, Conductores, 18 modalidades de transporte |
+| v1.3.0 | Fase 5 | Mantenimiento de vehículos: log, scheduler, alertas, semáforo |
+| v1.3.0 | Fase 6 | Bóveda de documentos, dashboard de vencimientos |
+| v1.3.0 | Fase 7 | FleetAnalytics (Plata/Oro gated) |
+| v1.4.0 | Fase 8 | Portal Admin en /admin con 7 secciones |
+
+---
+
+### 🚨 Pendiente — Botón de Pánico (v1.5.0)
+
+**Descripción:** Botón de emergencia disponible en todos los planes de pago (Bronce, Plata, Oro).
+Al activarse, notifica a contactos de emergencia predefinidos y/o a un panel de monitoreo, registrando la ubicación GPS en tiempo real del conductor o usuario.
+
+**Eventos a cubrir:**
+
+| Evento | Descripción |
+|---|---|
+| 🚨 Accidente | Colisión o accidente vial — alerta con coordenadas |
+| 🔫 Robo | Asalto al vehículo o conductor — modo silencioso disponible |
+| 😰 Secuestro | Activación encubierta (código PIN falso) para no levantar sospechas |
+| 🔧 Avería de vehículo | Falla mecánica o eléctrica — solicita asistencia |
+| 🚦 Congestión vehicular | Reporta atasco para alertar a otros conductores de la flota |
+| ⚠️ Incidente / Accidente en vía | Advertencia a conductores de la flota de peligro en ruta |
+
+**Componentes a implementar:**
+- `PanicButton.tsx` — Botón flotante en la interfaz principal (hold 3s para activar, evita falsas alarmas)
+- `PanicEventSelector.tsx` — Selector del tipo de emergencia antes de enviar
+- `PanicAlertBanner.tsx` — Banner en tiempo real para conductores de la misma empresa (congestión/incidentes)
+- Cloud Function `sendPanicAlert` — Envía push notifications + registra evento en Firestore
+- Colección Firestore `panic_events/{eventId}` — Historial de alertas con coordenadas, tipo, timestamp
+- Sección en AdminPortal: `AdminPanicEvents.tsx` — Mapa de alertas activas en tiempo real
+- Feature gate: solo disponible en planes Bronce, Plata y Oro
+
+**Consideraciones de seguridad:**
+- Activación por long-press (3 segundos) para evitar activaciones accidentales
+- Modo silencioso para secuestros: activa alerta sin mostrar feedback visual obvio
+- Desactivación requiere PIN para evitar falsas alarmas continuas
+- Logs inmutables en Firestore (sin `allow delete`)
+
+---
+
+### Pendiente — Otras mejoras
+
 - [ ] Reactivar vite-plugin-pwa con workbox fixes
 - [ ] Comprimir background.jpg a ~500KB
-- [ ] Implementar lazy loading de rutas
 - [ ] Agregar bundle analyzer
 - [ ] Optimizar re-renders con React.memo
 - [ ] Virtualización de listas largas
 - [ ] Mejoras de accesibilidad (a11y)
-
-### v1.3.0 (Implementado — 2026-02)
-- [x] Capa de pagos Stripe: planes Bronce/Plata/Oro mensual y anual
-- [x] PricingPlans UI full-screen con toggle mensual/anual
-- [x] Cloud Functions: createCheckoutSession + stripeWebhook
-- [x] useSubscription: estado en tiempo real desde Firestore
-- [x] Plan badge en Home y Settings (Gratuito/Bronce/Plata/Oro)
-- [x] i18n completo en todos los componentes (ES/EN)
-- [x] Fix foto de perfil persistente (updateDoc atómico)
-- [x] Enterprise layer Phase 1: tipos Company, Vehicle, Invoice, FeatureGate
-- [x] Límites por plan: maxContacts, maxDrivers, maxVehicles, maxModalities
-
-### v2.0.0 — Enterprise Transport Layer (Planificado)
-Ver plan completo en DEPLOYMENT.md → "Capa empresarial de transporte — Hoja de ruta"
-
-#### Fase 2-A: Ampliar tipos de transporte
-- [ ] 15+ modalidades: pasajeros, escolar, turismo, médico, carga general,
-      refrigerada, hazmat/químicos, animales, valores, productos terminados, carga pesada
-- [ ] Especializaciones de vehículo: hazmat, temperaturas, ganado, blindado, médico
-
-#### Fase 2-B: Módulo de mantenimiento de vehículos
-- [ ] MaintenanceRecord: historial por vehículo (tipo, taller, km, costo, fotos)
-- [ ] Programación: alertas por km y por fecha
-- [ ] 12 tipos de mantenimiento (aceite, frenos, llantas, correa distribución, etc.)
-- [ ] Semáforo ok/warning/overdue
-
-#### Fase 2-C: Documentos, permisos y checklist
-- [ ] Documentos de empresa: cámara de comercio, habilitación transporte, SARLAFT
-- [ ] Documentos por vehículo: SOAT, revisión técnico-mecánica, tarjeta de operación
-- [ ] Documentos por conductor: licencia (categoría), certificado médico, antecedentes
-- [ ] Dashboard de vencimientos con semáforo verde/amarillo/rojo
-
-#### Fase 2-D: UI administrativa
-- [ ] CompanySetup: wizard de registro de empresa
-- [ ] FleetManager: inventario y asignación de vehículos
-- [ ] DriverManager: gestión de conductores
-- [ ] DocumentVault: subida y control de documentos
-- [ ] MaintenanceLog + MaintenanceScheduler
-- [ ] AlertsDashboard: panel centralizado de alertas
-- [ ] FleetAnalytics: reportes de flota (Plata+)
+- [ ] Exportación de reportes a PDF/Excel desde AdminPortal
+- [ ] Notificaciones push (FCM) para alertas de mantenimiento y vencimientos
 
 ---
 
