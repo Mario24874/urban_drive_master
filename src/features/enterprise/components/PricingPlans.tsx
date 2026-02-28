@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Check, Zap, Shield, Crown, Sparkles } from 'lucide-react';
+import { X, Check, Zap, Shield, Crown, Sparkles, Tag, Loader2 } from 'lucide-react';
 import { getFunctions, httpsCallable } from 'firebase/functions';
+import { doc, setDoc, updateDoc, Timestamp } from 'firebase/firestore';
+import { db } from '../../../services/firebase';
 import { toast } from 'sonner';
 import { useApp } from '../../../contexts/AppContext';
 import { STRIPE_PRICE_IDS } from '../config/stripe';
 import { SUBSCRIPTION_PLANS } from '../types/subscription';
 import type { SubscriptionTier, SubscriptionBilling } from '../types/subscription';
+import type { CouponType, DiscountCoupon } from '../../../admin/components/sections/AdminCoupons';
 
 interface PricingPlansProps {
   userId: string;
@@ -72,11 +75,13 @@ const PlanCard: React.FC<{
   label: string;
   tagline: string;
   badgeLabel: string | null;
-}> = ({ tier, billing, isCurrent, onSelect, loading, features, label, tagline, badgeLabel }) => {
+  discountPct?: number;
+}> = ({ tier, billing, isCurrent, onSelect, loading, features, label, tagline, badgeLabel, discountPct = 0 }) => {
   const { t } = useApp();
   const visual = PLAN_VISUAL[tier];
   const plan = SUBSCRIPTION_PLANS[tier];
-  const price = billing === 'monthly' ? plan.priceUsdPerMonth : Math.round(plan.priceUsdPerYear / 12);
+  const basePrice = billing === 'monthly' ? plan.priceUsdPerMonth : Math.round(plan.priceUsdPerYear / 12);
+  const price = discountPct > 0 ? Math.round(basePrice * (1 - discountPct)) : basePrice;
   const totalYear = plan.priceUsdPerYear;
   const saved = plan.priceUsdPerMonth * 12 - totalYear;
 
@@ -112,14 +117,26 @@ const PlanCard: React.FC<{
       <div className="mb-5">
         <div className="flex items-end gap-1">
           <span className="text-white/50 text-sm self-start mt-1">USD</span>
-          <span className={`text-4xl font-black ${visual.accentText}`}>${price}</span>
-          <span className="text-white/50 text-sm mb-1">{t('billingPerMonth')}</span>
+          {discountPct > 0 && discountPct < 1 && (
+            <span className="text-white/30 text-xl line-through self-center">${basePrice}</span>
+          )}
+          <span className={`text-4xl font-black ${visual.accentText}`}>
+            {discountPct >= 1 ? t('coupon100Label') : `$${price}`}
+          </span>
+          {discountPct < 1 && (
+            <span className="text-white/50 text-sm mb-1">{t('billingPerMonth')}</span>
+          )}
         </div>
-        {billing === 'yearly' && (
+        {billing === 'yearly' && discountPct === 0 && (
           <p className="text-white/40 text-xs mt-0.5">
             {t('billingYearlySave')
               .replace('{total}', `$${totalYear}`)
               .replace('{saved}', `$${saved}`)}
+          </p>
+        )}
+        {discountPct > 0 && (
+          <p className="text-green-400 text-xs mt-0.5 font-semibold">
+            ✓ {couponDescription(discountPct)}
           </p>
         )}
       </div>
@@ -160,10 +177,29 @@ const PlanCard: React.FC<{
   );
 };
 
+// ── Coupon discount % per type ───────────────────────────────────────────────
+const COUPON_DISCOUNT: Record<CouponType, number> = {
+  discount_10:  0.10,
+  discount_50:  0.50,
+  discount_100: 1.00,
+};
+
+function couponDescription(discountPct: number): string {
+  if (discountPct >= 1) return '100% free';
+  return `${Math.round(discountPct * 100)}% off applied`;
+}
+
 const PricingPlans: React.FC<PricingPlansProps> = ({ userId, currentTier = 'free', onClose }) => {
   const { t } = useApp();
   const [billing, setBilling] = useState<SubscriptionBilling>('monthly');
   const [loadingTier, setLoadingTier] = useState<string | null>(null);
+
+  // Coupon state
+  const [couponInput, setCouponInput] = useState('');
+  const [couponValidating, setCouponValidating] = useState(false);
+  const [couponData, setCouponData] = useState<DiscountCoupon | null>(null);
+  const [couponError, setCouponError] = useState('');
+  const [showCoupon, setShowCoupon] = useState(false);
 
   // Plan names are the same in both languages
   const PLAN_NAMES: Record<Exclude<SubscriptionTier, 'free'>, string> = {
@@ -191,7 +227,100 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ userId, currentTier = 'free
     { label: t('featSupport'),     bronce: 'Email',                              plata: t('featPriorityEmail'),              oro: t('featPhoneEmail') },
   ];
 
+  // ── Coupon validation ────────────────────────────────────────────────────
+
+  const handleApplyCoupon = async () => {
+    const code = couponInput.trim().toUpperCase();
+    if (!code) return;
+    setCouponValidating(true);
+    setCouponError('');
+    setCouponData(null);
+
+    try {
+      // Firestore uses addDoc so we need to query by code field
+      // We query the collection for a document with matching code field
+      const { collection: col, getDocs: gd, query: q, where } = await import('firebase/firestore');
+      const snap = await gd(q(col(db, 'discount_coupons'), where('code', '==', code)));
+
+      if (snap.empty) {
+        setCouponError(t('couponInvalid'));
+        return;
+      }
+
+      const docSnap = snap.docs[0];
+      const data = { id: docSnap.id, ...docSnap.data() } as DiscountCoupon;
+
+      if (data.status !== 'active') {
+        setCouponError(t('couponInvalid'));
+        return;
+      }
+      if (data.expiresAt.toDate() < new Date()) {
+        setCouponError(t('couponInvalid'));
+        return;
+      }
+
+      setCouponData(data);
+      toast.success(t('couponApplied'), { description: data.description });
+    } catch (err: any) {
+      setCouponError(err?.message ?? t('couponInvalid'));
+    } finally {
+      setCouponValidating(false);
+    }
+  };
+
+  const clearCoupon = () => {
+    setCouponData(null);
+    setCouponInput('');
+    setCouponError('');
+  };
+
+  // ── Plan selection (with coupon support) ─────────────────────────────────
+
   const handleSelectPlan = async (tier: Exclude<SubscriptionTier, 'free'>) => {
+    // ── 100% coupon: bypass Stripe, activate directly in Firestore ──────────
+    if (couponData?.type === 'discount_100') {
+      setLoadingTier(tier);
+      try {
+        const now = new Date();
+        const periodEnd = new Date(now);
+        periodEnd.setMonth(periodEnd.getMonth() + 1);
+
+        await setDoc(doc(db, 'subscriptions', userId), {
+          userId,
+          ownerId: userId,
+          ownerName: '',
+          adminIds: [userId],
+          tier,
+          billing,
+          status: 'active',
+          currentPeriodStart: Timestamp.fromDate(now),
+          currentPeriodEnd: Timestamp.fromDate(periodEnd),
+          cancelAtPeriodEnd: false,
+          createdAt: Timestamp.fromDate(now),
+          updatedAt: Timestamp.fromDate(now),
+          couponCode: couponData.code,
+          paymentMethod: 'coupon',
+        });
+
+        // Mark coupon as used
+        await updateDoc(doc(db, 'discount_coupons', couponData.id), {
+          status: 'used',
+          usedAt: Timestamp.fromDate(now),
+          usedBy: userId,
+        });
+
+        toast.success(t('couponActivated'));
+        onClose();
+      } catch (err: any) {
+        console.error('Coupon activation error:', err);
+        toast.error(t('couponActivateError'), { description: err?.message });
+      } finally {
+        setLoadingTier(null);
+      }
+      return;
+    }
+
+    // ── Regular Stripe checkout (with optional 10%/50% coupon) ──────────────
     const priceId = STRIPE_PRICE_IDS[tier][billing];
     if (!priceId.startsWith('price_') || priceId.includes('PLACEHOLDER')) {
       toast.error(t('planStripeNotConfigured'));
@@ -202,10 +331,15 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ userId, currentTier = 'free
     try {
       const functions = getFunctions();
       const createSession = httpsCallable<
-        { priceId: string; userId: string; billing: string },
+        { priceId: string; userId: string; billing: string; couponCode?: string; couponType?: CouponType },
         { url: string }
       >(functions, 'createCheckoutSession');
-      const result = await createSession({ priceId, userId, billing });
+      const result = await createSession({
+        priceId,
+        userId,
+        billing,
+        ...(couponData ? { couponCode: couponData.code, couponType: couponData.type } : {}),
+      });
       if (result.data?.url) {
         window.location.href = result.data.url;
       }
@@ -271,6 +405,65 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ userId, currentTier = 'free
         </div>
       </div>
 
+      {/* Coupon input */}
+      <div className="flex-shrink-0 px-4 pb-2">
+        {!showCoupon ? (
+          <button
+            onClick={() => setShowCoupon(true)}
+            className="flex items-center gap-1.5 text-xs text-white/40 hover:text-white/70 transition-colors mx-auto"
+          >
+            <Tag size={12} />
+            {t('couponHave')}
+          </button>
+        ) : (
+          <div className="bg-white/5 border border-white/10 rounded-xl p-3 space-y-2">
+            <div className="flex items-center gap-2">
+              <Tag size={14} className="text-amber-400 flex-shrink-0" />
+              <span className="text-xs font-semibold text-white/70">{t('couponHave')}</span>
+              <button
+                onClick={() => { setShowCoupon(false); clearCoupon(); }}
+                className="ml-auto text-white/30 hover:text-white/60 text-xs"
+              >✕</button>
+            </div>
+
+            {!couponData ? (
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={couponInput}
+                  onChange={(e) => { setCouponInput(e.target.value.toUpperCase()); setCouponError(''); }}
+                  onKeyDown={(e) => e.key === 'Enter' && handleApplyCoupon()}
+                  placeholder="URBAN10-XXXXXXXX"
+                  className="flex-1 bg-white/10 border border-white/15 rounded-lg px-3 py-2 text-sm text-white placeholder:text-white/25 font-mono focus:outline-none focus:border-amber-500/60"
+                />
+                <button
+                  onClick={handleApplyCoupon}
+                  disabled={couponValidating || !couponInput.trim()}
+                  className="px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white text-sm font-semibold transition-colors flex items-center gap-1.5"
+                >
+                  {couponValidating
+                    ? <Loader2 size={14} className="animate-spin" />
+                    : t('couponApply')}
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between bg-green-500/10 border border-green-500/25 rounded-lg px-3 py-2">
+                <div className="flex items-center gap-2">
+                  <Check size={14} className="text-green-400" />
+                  <span className="text-xs font-mono text-white/80">{couponData.code}</span>
+                  <span className="text-xs text-green-400">{couponData.description}</span>
+                </div>
+                <button onClick={clearCoupon} className="text-white/30 hover:text-white/60 text-xs ml-2">✕</button>
+              </div>
+            )}
+
+            {couponError && (
+              <p className="text-xs text-red-400">{couponError}</p>
+            )}
+          </div>
+        )}
+      </div>
+
       {/* Plan cards — scrollable */}
       <div className="flex-1 overflow-y-auto px-4 pb-4">
         <AnimatePresence mode="wait">
@@ -294,6 +487,7 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ userId, currentTier = 'free
                 label={PLAN_NAMES[tier]}
                 tagline={PLAN_TAGLINES[tier]}
                 badgeLabel={tier === 'plata' ? t('planRecommended') : null}
+                discountPct={couponData ? COUPON_DISCOUNT[couponData.type] : 0}
               />
             ))}
           </motion.div>

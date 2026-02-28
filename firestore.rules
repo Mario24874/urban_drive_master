@@ -102,7 +102,29 @@ service cloud.firestore {
     // Document ID == userId (written by Stripe webhook / Cloud Functions)
     match /subscriptions/{subscriptionId} {
       allow read: if isAdmin() || isOwner(subscriptionId);
-      allow write: if false; // managed exclusively by backend
+      // Allow 100% coupon activation from client; all other writes via backend
+      allow create: if isOwner(subscriptionId)
+        && request.resource.data.paymentMethod == 'coupon'
+        && request.resource.data.couponCode != null
+        && get(/databases/$(database)/documents/discount_coupons/$(request.resource.data.couponCode)).data.status == 'active'
+        && get(/databases/$(database)/documents/discount_coupons/$(request.resource.data.couponCode)).data.type == 'discount_100';
+      allow update, delete: if false; // managed exclusively by backend
+    }
+
+    // ── Discount Coupons ─────────────────────────────────────────────────────
+    // Document ID is auto-generated; code field is the human-readable token
+    match /discount_coupons/{couponId} {
+      // Any signed-in user can read (needed for validation at checkout)
+      allow read: if isSignedIn();
+      // Only admins can create or cancel
+      allow create: if isAdmin();
+      allow delete: if isAdmin();
+      // Admins can update freely; users can only mark as used (after paying)
+      allow update: if isAdmin()
+        || (isSignedIn()
+            && resource.data.status == 'active'
+            && request.resource.data.status == 'used'
+            && request.resource.data.usedBy == request.auth.uid);
     }
 
     // ── Vehicles ────────────────────────────────────────────────────────────

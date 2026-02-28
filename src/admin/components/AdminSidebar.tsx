@@ -1,6 +1,6 @@
 import {
   LayoutDashboard, Users, Building2, CreditCard,
-  Car, Wrench, FileText, LogOut,
+  Car, Wrench, FileText, LogOut, Ticket,
 } from 'lucide-react';
 import { signOut } from 'firebase/auth';
 import { auth } from '../../services/firebase';
@@ -17,6 +17,7 @@ const ICON_MAP: Record<string, React.ElementType> = {
   Car,
   Wrench,
   FileText,
+  Ticket,
 };
 
 interface Props {

@@ -13,6 +13,7 @@ import AdminSubscriptions from './sections/AdminSubscriptions';
 import AdminFleet from './sections/AdminFleet';
 import AdminMaintenance from './sections/AdminMaintenance';
 import AdminDocuments from './sections/AdminDocuments';
+import AdminCoupons from './sections/AdminCoupons';
 
 interface Props {
   adminUser: AdminUser;
@@ -27,6 +28,7 @@ function SectionContent({ section }: { section: AdminSection }) {
     case 'fleet':         return <AdminFleet />;
     case 'maintenance':   return <AdminMaintenance />;
     case 'documents':     return <AdminDocuments />;
+    case 'coupons':       return <AdminCoupons />;
     default:              return <AdminDashboard />;
   }
 }
