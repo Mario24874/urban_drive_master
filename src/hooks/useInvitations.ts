@@ -189,6 +189,15 @@ export function useInvitations(
     }
   };
 
+  const deleteInvitation = async (invitationId: string) => {
+    try {
+      await deleteDoc(doc(db, 'invitations', invitationId));
+      toast.info('Invitation deleted');
+    } catch (err: any) {
+      toast.error('Failed to delete invitation', { description: err.message });
+    }
+  };
+
   return {
     received,
     sent,
@@ -198,5 +207,6 @@ export function useInvitations(
     acceptInvitation,
     rejectInvitation,
     cancelInvitation,
+    deleteInvitation,
   };
 }

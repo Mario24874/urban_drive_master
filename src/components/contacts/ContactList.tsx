@@ -44,6 +44,7 @@ export interface InvitationsData {
   acceptInvitation: (invitation: Invitation, userType: 'user' | 'driver') => Promise<void>;
   rejectInvitation: (invitationId: string) => Promise<void>;
   cancelInvitation: (invitationId: string) => Promise<void>;
+  deleteInvitation: (invitationId: string) => Promise<void>;
 }
 
 interface ContactListProps {
@@ -217,7 +218,8 @@ const InvitationItem: React.FC<{
   onAccept?: () => void;
   onReject?: () => void;
   onCancel?: () => void;
-}> = ({ invitation, type, onAccept, onReject, onCancel }) => {
+  onDelete?: () => void;
+}> = ({ invitation, type, onAccept, onReject, onCancel, onDelete }) => {
   const { t } = useApp();
   return (
   <motion.div
@@ -268,26 +270,42 @@ const InvitationItem: React.FC<{
       </p>
     </div>
 
+    {/* Received pending: accept / reject / delete */}
     {type === 'received' && (
       <div className="flex gap-1 flex-shrink-0">
-        <Button size="icon" variant="ghost" className="h-7 w-7 text-green-400 hover:text-green-300" onClick={onAccept}>
+        <Button size="icon" variant="ghost" className="h-7 w-7 text-green-400 hover:text-green-300" onClick={onAccept} title={t('accept')}>
           <Check size={14} />
         </Button>
-        <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive hover:text-destructive" onClick={onReject}>
+        <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive hover:text-destructive" onClick={onReject} title={t('reject')}>
           <X size={14} />
+        </Button>
+        <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={onDelete} title={t('deleteInvitation')}>
+          <Trash2 size={14} />
         </Button>
       </div>
     )}
 
+    {/* Sent: show cancel (X) for pending, trash for accepted/rejected */}
     {type === 'sent' && invitation.status === 'pending' && onCancel && (
       <Button
         size="icon"
         variant="ghost"
         className="h-7 w-7 text-muted-foreground hover:text-destructive flex-shrink-0"
-        title="Cancel invitation"
+        title={t('cancelInvitation')}
         onClick={onCancel}
       >
         <X size={14} />
+      </Button>
+    )}
+    {type === 'sent' && invitation.status !== 'pending' && onDelete && (
+      <Button
+        size="icon"
+        variant="ghost"
+        className="h-7 w-7 text-muted-foreground hover:text-destructive flex-shrink-0"
+        title={t('deleteInvitation')}
+        onClick={onDelete}
+      >
+        <Trash2 size={14} />
       </Button>
     )}
   </motion.div>
@@ -333,6 +351,7 @@ const ContactList: React.FC<ContactListProps> = ({
     acceptInvitation,
     rejectInvitation,
     cancelInvitation,
+    deleteInvitation,
   } = invitationsData;
 
   const filtered = contacts.filter((c) => {
@@ -514,6 +533,7 @@ const ContactList: React.FC<ContactListProps> = ({
                       type="received"
                       onAccept={() => acceptInvitation(inv, userType)}
                       onReject={() => rejectInvitation(inv.id)}
+                      onDelete={() => deleteInvitation(inv.id)}
                     />
                   ))}
                 </AnimatePresence>
@@ -532,6 +552,7 @@ const ContactList: React.FC<ContactListProps> = ({
                       invitation={inv}
                       type="sent"
                       onCancel={() => cancelInvitation(inv.id)}
+                      onDelete={() => deleteInvitation(inv.id)}
                     />
                   ))}
                 </AnimatePresence>

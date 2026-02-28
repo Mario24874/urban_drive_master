@@ -404,6 +404,12 @@ const translations: Record<Lang, Record<string, string>> = {
     voiceNoteSending: 'Sending…',
     voiceNoteError: 'Error sending voice note',
     voiceNoteUnsupported: 'Voice notes not supported in this browser',
+
+    // Push notifications
+    notificationsEnabled: 'Notifications enabled',
+    notificationsDenied: 'Notifications blocked. Enable them in your browser settings.',
+    newMessage: 'New message',
+    deleteInvitation: 'Delete invitation',
   },
   es: {
     // Navigation tabs
@@ -797,6 +803,12 @@ const translations: Record<Lang, Record<string, string>> = {
     voiceNoteSending: 'Enviando…',
     voiceNoteError: 'Error al enviar nota de voz',
     voiceNoteUnsupported: 'Notas de voz no soportadas en este navegador',
+
+    // Notificaciones push
+    notificationsEnabled: 'Notificaciones activadas',
+    notificationsDenied: 'Notificaciones bloqueadas. Actívalas en la configuración del navegador.',
+    newMessage: 'Nuevo mensaje',
+    deleteInvitation: 'Eliminar invitación',
   },
 };
 

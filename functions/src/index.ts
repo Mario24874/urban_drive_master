@@ -7,3 +7,6 @@ if (!admin.apps.length) {
 
 // ── Stripe Cloud Functions ────────────────────────────────────────────────────
 export { createCheckoutSession, stripeWebhook, createPortalSession } from './stripe';
+
+// ── Notification Cloud Functions ──────────────────────────────────────────────
+export { sendMessageNotification } from './notifications';

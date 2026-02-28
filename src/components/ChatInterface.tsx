@@ -9,7 +9,7 @@ import { useApp } from '../contexts/AppContext';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 // Voice
 import VoiceNoteRecorder from './VoiceNoteRecorder';
@@ -196,6 +196,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
             <div className="flex items-center space-x-3">
               <Avatar>
+                <AvatarImage src={selectedContact.photoURL || ''} alt={selectedContact.displayName} />
                 <AvatarFallback className="bg-gradient-to-br from-amber-500 to-amber-700 text-white">
                   {selectedContact.displayName.charAt(0).toUpperCase()}
                 </AvatarFallback>
@@ -280,8 +281,18 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                       stiffness: 300,
                       damping: 30,
                     }}
-                    className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}
+                    className={`flex items-end gap-2 ${isOwn ? 'justify-end' : 'justify-start'}`}
                   >
+                    {/* Contact avatar — shown only for received messages */}
+                    {!isOwn && (
+                      <Avatar className="h-6 w-6 flex-shrink-0 mb-0.5">
+                        <AvatarImage src={selectedContact.photoURL || ''} alt={selectedContact.displayName} />
+                        <AvatarFallback className="bg-gradient-to-br from-amber-500 to-amber-700 text-white text-[10px]">
+                          {selectedContact.displayName.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                    )}
+
                     <div
                       className={`max-w-[75%] md:max-w-[55%] ${
                         isOwn

@@ -1,8 +1,9 @@
-import { useState, useEffect, lazy, Suspense } from 'react';
+import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { auth, db } from './services/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
+import { fcmService } from './services/fcmService';
 import { Loader2 } from 'lucide-react';
 import SplashScreen from './components/SplashScreen';
 import { AppProvider } from './contexts/AppContext';
@@ -31,6 +32,7 @@ function AppContent() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
   const [showSplash, setShowSplash] = useState<boolean>(!isAdminRoute);
+  const authUidRef = useRef<string | null>(null);
 
   // Monitor authentication state
   useEffect(() => {
@@ -58,6 +60,10 @@ function AppContent() {
 
           setUser(completeUser);
           setIsAuthenticated(true);
+
+          // Initialize FCM push notifications
+          authUidRef.current = firebaseUser.uid;
+          fcmService.initialize(firebaseUser.uid).catch(() => {});
         } catch (error) {
           console.error('Error getting user data:', error);
           // Fallback to basic Firebase auth data
@@ -68,8 +74,14 @@ function AppContent() {
             photoURL: firebaseUser.photoURL,
           });
           setIsAuthenticated(true);
+          authUidRef.current = firebaseUser.uid;
+          fcmService.initialize(firebaseUser.uid).catch(() => {});
         }
       } else {
+        if (authUidRef.current) {
+          fcmService.cleanup(authUidRef.current).catch(() => {});
+          authUidRef.current = null;
+        }
         setUser(null);
         setIsAuthenticated(false);
       }
