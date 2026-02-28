@@ -38,7 +38,7 @@ function NavAvatar({ photoURL, displayName, userType, size = 40 }: {
   const initials = displayName
     ? displayName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
     : '?';
-  const bg = userType === 'driver' ? 'bg-emerald-500' : 'bg-blue-500';
+  const bg = userType === 'driver' ? 'bg-emerald-500' : 'bg-amber-500';
   const sizeClass = size === 40 ? 'w-10 h-10 text-sm' : 'w-9 h-9 text-xs';
 
   if (photoURL) {
@@ -189,7 +189,7 @@ const NavigationInterface: React.FC<NavigationInterfaceProps> = ({
             type: 'line',
             source: 'nav-route',
             layout: { 'line-join': 'round', 'line-cap': 'round' },
-            paint: { 'line-color': '#3b82f6', 'line-width': 7, 'line-opacity': 0.9 },
+            paint: { 'line-color': '#f59e0b', 'line-width': 7, 'line-opacity': 0.9 },
           });
         }
 
@@ -210,8 +210,8 @@ const NavigationInterface: React.FC<NavigationInterfaceProps> = ({
         const markerDiv = document.createElement('div');
         markerDiv.style.cssText = 'position:relative;display:inline-block;';
         markerDiv.innerHTML = `
-          <div style="width:36px;height:36px;border-radius:50%;background:#3b82f6;border:3px solid white;display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 3px 10px rgba(0,0,0,0.4);">${_inner}</div>
-          <div style="position:absolute;bottom:-8px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:8px solid #3b82f6;"></div>
+          <div style="width:36px;height:36px;border-radius:50%;background:#f59e0b;border:3px solid white;display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 3px 10px rgba(0,0,0,0.4);">${_inner}</div>
+          <div style="position:absolute;bottom:-8px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:8px solid #f59e0b;"></div>
         `;
         userEl.appendChild(markerDiv);
         const userLoc = navigationService.getState().userLocation;
@@ -275,7 +275,7 @@ const NavigationInterface: React.FC<NavigationInterfaceProps> = ({
       />
       <div className="absolute inset-0 -z-10 bg-black/65" />
       {/* Header */}
-      <div className="bg-blue-600 dark:bg-blue-700 text-white px-4 py-3 shadow-lg flex-shrink-0">
+      <div className="bg-amber-500 dark:bg-amber-600 text-white px-4 py-3 shadow-lg flex-shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <Navigation size={22} />
@@ -284,7 +284,7 @@ const NavigationInterface: React.FC<NavigationInterfaceProps> = ({
                 {navState.isNavigating ? t('navigating') : 'Urban Drive GPS'}
               </h2>
               {effectiveName && !navState.isNavigating && (
-                <p className="text-blue-200 text-xs">{t('toDestination')}{effectiveName}</p>
+                <p className="text-amber-100 text-xs">{t('toDestination')}{effectiveName}</p>
               )}
             </div>
           </div>
@@ -294,14 +294,14 @@ const NavigationInterface: React.FC<NavigationInterfaceProps> = ({
               <>
                 <button
                   onClick={toggleVoice}
-                  className="p-2 rounded-full bg-blue-700 dark:bg-blue-800 hover:bg-blue-800 transition-colors"
+                  className="p-2 rounded-full bg-amber-600 dark:bg-amber-700 hover:bg-amber-700 transition-colors"
                   title={navState.voiceEnabled ? t('muteVoice') : t('unmuteVoice')}
                 >
                   {navState.voiceEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
                 </button>
                 <button
                   onClick={repeatInstruction}
-                  className="p-2 rounded-full bg-blue-700 dark:bg-blue-800 hover:bg-blue-800 transition-colors"
+                  className="p-2 rounded-full bg-amber-600 dark:bg-amber-700 hover:bg-amber-700 transition-colors"
                   title={t('repeatInstruction')}
                 >
                   <RotateCcw size={18} />
@@ -346,8 +346,8 @@ const NavigationInterface: React.FC<NavigationInterfaceProps> = ({
 
           <div className="bg-muted/50 p-3 rounded-lg border border-border">
             <div className="flex items-center space-x-3">
-              <div className="w-9 h-9 bg-blue-100 dark:bg-blue-900/40 rounded-full flex items-center justify-center flex-shrink-0">
-                <Navigation size={18} className="text-blue-600 dark:text-blue-400" />
+              <div className="w-9 h-9 bg-amber-100 dark:bg-amber-900/40 rounded-full flex items-center justify-center flex-shrink-0">
+                <Navigation size={18} className="text-amber-500 dark:text-amber-400" />
               </div>
               <p className="text-sm font-medium text-foreground leading-snug">
                 {navState.nextInstruction || t('calculating')}
@@ -399,7 +399,7 @@ const NavigationInterface: React.FC<NavigationInterfaceProps> = ({
                           }}
                           className="w-full flex items-start gap-3 px-4 py-3 hover:bg-accent transition-colors text-left border-b border-border last:border-0"
                         >
-                          <MapPin size={15} className="text-blue-500 flex-shrink-0 mt-0.5" />
+                          <MapPin size={15} className="text-amber-500 flex-shrink-0 mt-0.5" />
                           <span className="text-sm text-foreground leading-snug">{r.name}</span>
                         </button>
                       ))}
@@ -412,7 +412,7 @@ const NavigationInterface: React.FC<NavigationInterfaceProps> = ({
               {effectiveDestination ? (
                 <>
                   <div className="text-center pt-1">
-                    <div className="w-14 h-14 bg-blue-600 dark:bg-blue-700 rounded-full flex items-center justify-center mx-auto mb-2">
+                    <div className="w-14 h-14 bg-amber-500 dark:bg-amber-600 rounded-full flex items-center justify-center mx-auto mb-2">
                       <MapPin size={28} className="text-white" />
                     </div>
                     <h3 className="text-lg font-bold text-foreground">
@@ -422,7 +422,7 @@ const NavigationInterface: React.FC<NavigationInterfaceProps> = ({
 
                   <div className="bg-card border border-border p-4 rounded-xl shadow-sm">
                     <div className="flex items-start gap-3">
-                      <MapPin size={18} className="text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+                      <MapPin size={18} className="text-amber-500 dark:text-amber-400 flex-shrink-0 mt-0.5" />
                       <div className="min-w-0">
                         <p className="font-medium text-foreground truncate">{effectiveName || 'Destino'}</p>
                         <p className="text-xs text-muted-foreground mt-0.5">
@@ -443,7 +443,7 @@ const NavigationInterface: React.FC<NavigationInterfaceProps> = ({
                   <button
                     onClick={handleStartNavigation}
                     disabled={isStarting}
-                    className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 dark:bg-blue-700 dark:hover:bg-blue-600 text-white py-4 px-6 rounded-xl font-semibold text-base transition-colors flex items-center justify-center gap-2"
+                    className="w-full bg-amber-500 hover:bg-amber-600 disabled:bg-amber-300 text-white py-4 px-6 rounded-xl font-semibold text-base transition-colors flex items-center justify-center gap-2"
                   >
                     {isStarting ? (
                       <><Clock size={20} className="animate-spin" /><span>{t('calculating')}</span></>
@@ -483,7 +483,7 @@ const NavigationInterface: React.FC<NavigationInterfaceProps> = ({
                                   {c.phone ? ` · ${c.phone}` : ''}
                                 </p>
                               </div>
-                              <Navigation size={16} className="text-blue-500 flex-shrink-0" />
+                              <Navigation size={16} className="text-amber-500 flex-shrink-0" />
                             </button>
                           ))}
                         </div>

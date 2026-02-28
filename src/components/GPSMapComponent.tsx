@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState, memo } from 'react';
 import { Navigation } from 'lucide-react';
 import useContactTracking from '../hooks/useContactTracking';
 import NavigationInterface from './NavigationInterface';
+import VoicePushToTalk from './VoicePushToTalk';
 import { useApp } from '../contexts/AppContext';
 
 function createAvatarMarkerEl(
@@ -13,13 +14,13 @@ function createAvatarMarkerEl(
 ): HTMLElement {
   const size = isCurrentUser ? 36 : 30;
   const borderColor = isCurrentUser
-    ? '#3b82f6'
+    ? '#f59e0b'
     : markerUserType === 'driver'
     ? '#10b981'
     : '#6b7280';
   const borderWidth = isCurrentUser ? 3 : 2;
   const bgColor = isCurrentUser
-    ? '#3b82f6'
+    ? '#f59e0b'
     : markerUserType === 'driver'
     ? '#10b981'
     : '#6b7280';
@@ -431,7 +432,7 @@ const GPSMapComponent: React.FC<GPSMapComponentProps> = ({
           </div>
           <div className="flex items-center gap-4 text-xs">
             <div className="text-center">
-              <div className="font-semibold text-blue-600 dark:text-blue-400">{totalContacts}</div>
+              <div className="font-semibold text-amber-500 dark:text-amber-400">{totalContacts}</div>
               <div className="text-muted-foreground">{t('inMap')}</div>
             </div>
             <div className="text-center">
@@ -458,11 +459,17 @@ const GPSMapComponent: React.FC<GPSMapComponentProps> = ({
       {/* Botón flotante de navegación */}
       <button
         onClick={() => setShowNavigation(true)}
-        className="absolute bottom-4 right-4 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-400 text-white p-4 rounded-full shadow-xl transition-colors z-10"
+        className="absolute bottom-4 right-4 bg-amber-500 hover:bg-amber-600 text-white p-4 rounded-full shadow-xl transition-colors z-10"
         title={t('openGpsNav')}
       >
         <Navigation size={24} />
       </button>
+
+      {/* Botón flotante de voz (PTT) */}
+      <VoicePushToTalk
+        contacts={visibleContacts.filter((c) => c.location) as any}
+        onNavigateTo={(contact) => handleNavigateToContact(contact)}
+      />
 
       {/* Interfaz de navegación */}
       <NavigationInterface

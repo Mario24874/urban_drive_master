@@ -26,6 +26,9 @@ export interface Message {
   timestamp: Timestamp | null;
   read: boolean;
   conversationId: string;
+  messageType?: 'text' | 'voice';
+  voiceUrl?: string;
+  voiceDuration?: number; // seconds
 }
 
 export interface Conversation {
@@ -377,6 +380,52 @@ class MessagingService {
     } catch (error) {
       console.error('Error obteniendo mensajes no leídos:', error);
       return 0;
+    }
+  }
+
+  /**
+   * Enviar nota de voz a otro usuario
+   */
+  async sendVoiceMessage(
+    senderId: string,
+    senderName: string,
+    receiverId: string,
+    receiverName: string,
+    voiceUrl: string,
+    voiceDuration: number
+  ): Promise<boolean> {
+    try {
+      const conversationId = this.generateConversationId(senderId, receiverId);
+      const placeholder = '[voice_note]';
+
+      const message: Omit<Message, 'id'> = {
+        senderId,
+        senderName,
+        receiverId,
+        receiverName,
+        content: placeholder,
+        timestamp: serverTimestamp() as Timestamp,
+        read: false,
+        conversationId,
+        messageType: 'voice',
+        voiceUrl,
+        voiceDuration,
+      };
+
+      await addDoc(collection(db, 'messages'), message);
+      await this.updateConversation(
+        conversationId,
+        senderId,
+        senderName,
+        receiverId,
+        receiverName,
+        placeholder
+      );
+
+      return true;
+    } catch (error) {
+      console.error('Error enviando nota de voz:', error);
+      return false;
     }
   }
 

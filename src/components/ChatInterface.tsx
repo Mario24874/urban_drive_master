@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, memo } from 'react';
+import React, { useState, useEffect, useRef, memo, useCallback } from 'react';
 import { Send, ArrowLeft, Check, CheckCheck, Search, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import messagingService, { Message } from '../services/messaging';
@@ -10,6 +10,10 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+
+// Voice
+import VoiceNoteRecorder from './VoiceNoteRecorder';
+import VoiceNotePlayer from './VoiceNotePlayer';
 
 interface ChatInterfaceProps {
   currentUserId: string;
@@ -34,6 +38,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const [isTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const conversationId = selectedContact
+    ? [currentUserId, selectedContact.id].sort().join('_')
+    : '';
 
   // Scroll to bottom when new messages arrive
   const scrollToBottom = () => {
@@ -73,7 +81,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     };
   }, [selectedContact, currentUserId]);
 
-  // Send message
+  // Send text message
   const handleSendMessage = async () => {
     if (!selectedContact || !newMessage.trim() || sending) return;
 
@@ -97,6 +105,22 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     setSending(false);
     inputRef.current?.focus();
   };
+
+  // Send voice note
+  const handleSendVoiceNote = useCallback(
+    async (url: string, duration: number) => {
+      if (!selectedContact) return;
+      await messagingService.sendVoiceMessage(
+        currentUserId,
+        currentUserName,
+        selectedContact.id,
+        selectedContact.displayName,
+        url,
+        duration
+      );
+    },
+    [selectedContact, currentUserId, currentUserName]
+  );
 
   // Handle Enter key
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -172,7 +196,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
             <div className="flex items-center space-x-3">
               <Avatar>
-                <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+                <AvatarFallback className="bg-gradient-to-br from-amber-500 to-amber-700 text-white">
                   {selectedContact.displayName.charAt(0).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
@@ -243,6 +267,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
             <AnimatePresence mode="popLayout">
               {messages.map((message) => {
                 const isOwn = message.senderId === currentUserId;
+                const isVoice = message.messageType === 'voice';
 
                 return (
                   <motion.div
@@ -258,29 +283,38 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                     className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}
                   >
                     <div
-                      className={`max-w-[70%] md:max-w-[50%] ${
+                      className={`max-w-[75%] md:max-w-[55%] ${
                         isOwn
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-card border border-border'
-                      } rounded-2xl px-4 py-2 shadow-sm`}
+                          ? isVoice ? '' : 'bg-primary text-primary-foreground'
+                          : isVoice ? '' : 'bg-card border border-border'
+                      } ${isVoice ? '' : 'rounded-2xl px-4 py-2 shadow-sm'}`}
                     >
-                      {!isOwn && (
-                        <p className="text-xs font-semibold mb-1 text-blue-600">
+                      {!isOwn && !isVoice && (
+                        <p className="text-xs font-semibold mb-1 text-amber-500 dark:text-amber-400">
                           {message.senderName}
                         </p>
                       )}
 
-                      <p className="text-sm break-words">{message.content}</p>
+                      {isVoice && message.voiceUrl ? (
+                        <VoiceNotePlayer
+                          url={message.voiceUrl}
+                          duration={message.voiceDuration ?? 0}
+                        />
+                      ) : (
+                        <p className="text-sm break-words">{message.content}</p>
+                      )}
 
-                      <div
-                        className={`flex items-center justify-end space-x-1 mt-1 text-xs ${
-                          isOwn ? 'text-primary-foreground/70' : 'text-muted-foreground'
-                        }`}
-                      >
-                        <span>{formatTime(message.timestamp)}</span>
-                        {isOwn &&
-                          (message.read ? <CheckCheck size={14} /> : <Check size={14} />)}
-                      </div>
+                      {!isVoice && (
+                        <div
+                          className={`flex items-center justify-end space-x-1 mt-1 text-xs ${
+                            isOwn ? 'text-primary-foreground/70' : 'text-muted-foreground'
+                          }`}
+                        >
+                          <span>{formatTime(message.timestamp)}</span>
+                          {isOwn &&
+                            (message.read ? <CheckCheck size={14} /> : <Check size={14} />)}
+                        </div>
+                      )}
                     </div>
                   </motion.div>
                 );
@@ -323,7 +357,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
       {/* Input */}
       <div className="bg-card border-t p-4">
-        <div className="flex space-x-2">
+        <div className="flex items-center space-x-2">
           <Input
             ref={inputRef}
             type="text"
@@ -335,27 +369,39 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
             className="flex-1 rounded-full"
           />
 
-          <motion.div
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <Button
-              onClick={handleSendMessage}
-              disabled={!newMessage.trim() || sending}
-              size="icon"
-              className="rounded-full"
+          {/* Voice note recorder — shown only when no text is typed */}
+          {!newMessage.trim() && (
+            <VoiceNoteRecorder
+              conversationId={conversationId}
+              onSendVoiceNote={handleSendVoiceNote}
+              disabled={sending}
+            />
+          )}
+
+          {/* Send button — shown only when text is present */}
+          {newMessage.trim() && (
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
-              {sending ? (
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                  className="w-5 h-5 border-2 border-current border-t-transparent rounded-full"
-                />
-              ) : (
-                <Send size={20} />
-              )}
-            </Button>
-          </motion.div>
+              <Button
+                onClick={handleSendMessage}
+                disabled={!newMessage.trim() || sending}
+                size="icon"
+                className="rounded-full"
+              >
+                {sending ? (
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                    className="w-5 h-5 border-2 border-current border-t-transparent rounded-full"
+                  />
+                ) : (
+                  <Send size={20} />
+                )}
+              </Button>
+            </motion.div>
+          )}
         </div>
       </div>
     </div>

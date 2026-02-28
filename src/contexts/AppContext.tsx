@@ -353,6 +353,28 @@ const translations: Record<Lang, Record<string, string>> = {
     adminFilterByStatus: 'Filter by status',
     adminRefresh: 'Refresh',
     adminNoData: 'No data available',
+
+    // Voice commands (Push-to-Talk)
+    holdToTalk: 'Hold to talk',
+    voiceListening: 'Listening…',
+    voiceProcessing: 'Processing…',
+    voiceError: 'Voice error. Try again.',
+    voiceNotSupported: 'Voice commands not supported in this browser',
+    voiceMicDenied: 'Microphone access denied',
+    voiceNavigatingTo: 'Navigating to {name}',
+    voiceContactNotFound: 'Contact not found',
+    voiceSearching: 'Searching {name}',
+    voiceOpeningChat: 'Opening chat with {name}',
+    voiceStatusOnWay: 'On my way',
+    voiceStatusArrived: 'I have arrived',
+
+    // Voice notes (chat)
+    voiceNoteLabel: 'Voice note',
+    holdToRecord: 'Hold to record',
+    voiceRecording: 'Recording…',
+    voiceNoteSending: 'Sending…',
+    voiceNoteError: 'Error sending voice note',
+    voiceNoteUnsupported: 'Voice notes not supported in this browser',
   },
   es: {
     // Navigation tabs
@@ -695,6 +717,28 @@ const translations: Record<Lang, Record<string, string>> = {
     adminFilterByStatus: 'Filtrar por estado',
     adminRefresh: 'Actualizar',
     adminNoData: 'Sin datos disponibles',
+
+    // Comandos de voz (Push-to-Talk)
+    holdToTalk: 'Mantén para hablar',
+    voiceListening: 'Escuchando…',
+    voiceProcessing: 'Procesando…',
+    voiceError: 'Error de voz. Intenta de nuevo.',
+    voiceNotSupported: 'Comandos de voz no soportados en este navegador',
+    voiceMicDenied: 'Acceso al micrófono denegado',
+    voiceNavigatingTo: 'Navegando hacia {name}',
+    voiceContactNotFound: 'Contacto no encontrado',
+    voiceSearching: 'Buscando {name}',
+    voiceOpeningChat: 'Abriendo chat con {name}',
+    voiceStatusOnWay: 'En camino',
+    voiceStatusArrived: 'He llegado',
+
+    // Notas de voz (chat)
+    voiceNoteLabel: 'Nota de voz',
+    holdToRecord: 'Mantén para grabar',
+    voiceRecording: 'Grabando…',
+    voiceNoteSending: 'Enviando…',
+    voiceNoteError: 'Error al enviar nota de voz',
+    voiceNoteUnsupported: 'Notas de voz no soportadas en este navegador',
   },
 };
 
