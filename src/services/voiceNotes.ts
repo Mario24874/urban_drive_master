@@ -1,11 +1,7 @@
 /**
- * VoiceNotesService — MediaRecorder + Firebase Storage upload/download
- * Storage path: voice_notes/{conversationId}/{timestamp}_{uid}.webm
+ * VoiceNotesService — MediaRecorder + base64 encoding for voice notes.
+ * Audio is stored as a data URL directly in the Firestore message document.
  */
-
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { storage } from './firebase';
-import { auth } from './firebase';
 
 export interface VoiceNoteUploadResult {
   url: string;
@@ -78,17 +74,17 @@ class VoiceNotesService {
 
   async uploadVoiceNote(
     blob: Blob,
-    conversationId: string,
+    _conversationId: string,
     durationMs: number
   ): Promise<VoiceNoteUploadResult> {
-    const uid = auth.currentUser?.uid ?? 'anonymous';
-    const timestamp = Date.now();
-    const ext = blob.type.includes('webm') ? 'webm' : 'ogg';
-    const path = `voice_notes/${conversationId}/${timestamp}_${uid}.${ext}`;
-
-    const storageRef = ref(storage, path);
-    await uploadBytes(storageRef, blob, { contentType: blob.type || 'audio/webm' });
-    const url = await getDownloadURL(storageRef);
+    // Encode as base64 data URL stored in Firestore to avoid Firebase Storage CORS issues.
+    // webm/opus at ~16kbps: 30s ≈ 80KB base64 — well within Firestore's 1MB document limit.
+    const url = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = () => reject(new Error('Failed to encode audio'));
+      reader.readAsDataURL(blob);
+    });
 
     return {
       url,
