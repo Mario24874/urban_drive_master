@@ -2,19 +2,26 @@
  * Servicio de mensajería en tiempo real para Urban Drive
  */
 
-import { 
-  collection, 
-  addDoc, 
-  query, 
-  where, 
-  orderBy, 
-  onSnapshot, 
+import {
+  collection,
+  addDoc,
+  query,
+  where,
+  orderBy,
+  onSnapshot,
   serverTimestamp,
   updateDoc,
   getDocs,
   Timestamp
 } from 'firebase/firestore';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 import { db } from '../firebase';
+import app from '../firebase';
+
+// Firebase callable function for push notifications
+function getNotifyFn() {
+  return httpsCallable(getFunctions(app), 'sendMessageNotification');
+}
 
 export interface Message {
   id?: string;
@@ -92,6 +99,10 @@ class MessagingService {
         receiverName,
         content
       );
+
+      // Trigger push notification (fire-and-forget)
+      getNotifyFn()({ receiverId, senderId, senderName, content: content.trim(), messageType: 'text' })
+        .catch(() => {});
 
       console.log('Mensaje enviado exitosamente');
       return true;
@@ -421,6 +432,10 @@ class MessagingService {
         receiverName,
         placeholder
       );
+
+      // Trigger push notification (fire-and-forget)
+      getNotifyFn()({ receiverId, senderId, senderName, content: '🎤 Voice message', messageType: 'voice' })
+        .catch(() => {});
 
       return true;
     } catch (error) {
