@@ -69,7 +69,7 @@ service cloud.firestore {
     match /conversations/{conversationId} {
       allow read, write: if isSignedIn() && (
         resource == null ||
-        request.auth.uid in resource.data.participants
+        request.auth.uid in resource.data.get('participants', [])
       );
     }
 
