@@ -8,7 +8,6 @@ import { Camera, RefreshCw } from 'lucide-react';
 import { updateProfile } from 'firebase/auth';
 import { doc, updateDoc } from 'firebase/firestore';
 import { auth, db } from '../../services/firebase';
-import { writeData } from '../../services/database-sync';
 import { useApp } from '../../contexts/AppContext';
 import type { UserData } from '../../types';
 
@@ -129,32 +128,26 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({ user, onUpdate }) => {
 
   const onSubmit = async (data: ProfileFormValues) => {
     try {
-      // Update Firebase Auth profile
+      // Update Firebase Auth display name
       if (auth.currentUser && data.displayName) {
-        await updateProfile(auth.currentUser, {
-          displayName: data.displayName,
-        });
+        await updateProfile(auth.currentUser, { displayName: data.displayName });
       }
 
-      // Update Firestore user document
-      const updatedUser: UserData = {
-        ...user,
+      // Update ONLY the form fields in Firestore — never touch contacts, photoURL, etc.
+      const collName = user.userType === 'driver' ? 'drivers' : 'users';
+      await updateDoc(doc(db, collName, user.id), {
         displayName: data.displayName,
         username: data.username || '',
         phone: data.phone || '',
         bio: data.bio || '',
         userType: data.userType,
         isVisible: data.isVisible,
-      };
-
-      const collection = user.userType === 'driver' ? 'drivers' : 'users';
-      await writeData(collection, user.id, updatedUser);
+      });
 
       toast.success(t('profileUpdated'));
 
-      // Callback to parent component
       if (onUpdate) {
-        onUpdate(updatedUser);
+        onUpdate({ ...user, ...data });
       }
     } catch (error: any) {
       console.error('Error updating profile:', error);

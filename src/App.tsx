@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { auth, db } from './services/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, onSnapshot } from 'firebase/firestore';
 import { fcmService } from './services/fcmService';
 import { Loader2 } from 'lucide-react';
 import SplashScreen from './components/SplashScreen';
@@ -33,50 +33,53 @@ function AppContent() {
   const [loading, setLoading] = useState<boolean>(true);
   const [showSplash, setShowSplash] = useState<boolean>(!isAdminRoute);
   const authUidRef = useRef<string | null>(null);
+  const docUnsubRef = useRef<(() => void) | null>(null);
 
-  // Monitor authentication state
+  // Monitor authentication state and keep user doc reactive via onSnapshot
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+    const authUnsub = onAuthStateChanged(auth, async (firebaseUser) => {
+      // Cancel previous user-doc subscription on auth change
+      if (docUnsubRef.current) {
+        docUnsubRef.current();
+        docUnsubRef.current = null;
+      }
+
       if (firebaseUser) {
-        // User authenticated, get complete data from Firestore
-        try {
-          // Try users collection first
-          let userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
-          let userData = userDoc.exists() ? userDoc.data() : null;
+        // Determine which collection this user belongs to
+        const firstSnap = await getDoc(doc(db, 'users', firebaseUser.uid));
+        const collName = firstSnap.exists() ? 'users' : 'drivers';
 
-          // If not found in users, try drivers collection
-          if (!userData) {
-            userDoc = await getDoc(doc(db, 'drivers', firebaseUser.uid));
-            userData = userDoc.exists() ? userDoc.data() : null;
-          }
+        authUidRef.current = firebaseUser.uid;
+        fcmService.initialize(firebaseUser.uid).catch(() => {});
 
-          const completeUser = {
-            ...userData,
-            id: firebaseUser.uid,
-            email: firebaseUser.email,
-            displayName: firebaseUser.displayName || userData?.displayName || '',
-            photoURL: firebaseUser.photoURL || userData?.photoURL || '',
-          };
-
-          setUser(completeUser);
-          setIsAuthenticated(true);
-
-          // Initialize FCM push notifications
-          authUidRef.current = firebaseUser.uid;
-          fcmService.initialize(firebaseUser.uid).catch(() => {});
-        } catch (error) {
-          console.error('Error getting user data:', error);
-          // Fallback to basic Firebase auth data
-          setUser({
-            id: firebaseUser.uid,
-            email: firebaseUser.email,
-            displayName: firebaseUser.displayName,
-            photoURL: firebaseUser.photoURL,
-          });
-          setIsAuthenticated(true);
-          authUidRef.current = firebaseUser.uid;
-          fcmService.initialize(firebaseUser.uid).catch(() => {});
-        }
+        // Subscribe to live updates so user state (contacts, photoURL…) stays current
+        docUnsubRef.current = onSnapshot(
+          doc(db, collName, firebaseUser.uid),
+          (snap) => {
+            const data = snap.data() ?? {};
+            setUser({
+              ...data,
+              id: firebaseUser.uid,
+              email: firebaseUser.email,
+              displayName: firebaseUser.displayName || data.displayName || '',
+              // Prefer Firestore photoURL (our data URL) over Firebase Auth URL
+              photoURL: data.photoURL || firebaseUser.photoURL || '',
+            });
+            setIsAuthenticated(true);
+            setLoading(false);
+          },
+          (error) => {
+            console.error('Error watching user doc:', error);
+            setUser({
+              id: firebaseUser.uid,
+              email: firebaseUser.email,
+              displayName: firebaseUser.displayName,
+              photoURL: firebaseUser.photoURL,
+            });
+            setIsAuthenticated(true);
+            setLoading(false);
+          },
+        );
       } else {
         if (authUidRef.current) {
           fcmService.cleanup(authUidRef.current).catch(() => {});
@@ -84,11 +87,14 @@ function AppContent() {
         }
         setUser(null);
         setIsAuthenticated(false);
+        setLoading(false);
       }
-      setLoading(false);
     });
 
-    return () => unsubscribe();
+    return () => {
+      authUnsub();
+      if (docUnsubRef.current) docUnsubRef.current();
+    };
   }, []);
 
   // Admin route — clean background, no splash
