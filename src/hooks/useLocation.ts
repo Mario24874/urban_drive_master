@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
+import { doc, updateDoc } from 'firebase/firestore';
+import { db } from '../services/firebase';
 import { toast } from 'sonner';
-import { writeData } from '../services/database-sync';
 import type { Location, UserData } from '../types';
 
 interface UseLocationReturn {
@@ -14,6 +15,12 @@ export function useLocation(user: UserData | null): UseLocationReturn {
   const [location, setLocation] = useState<Location | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Use stable primitive IDs as deps — not the whole user object.
+  // This prevents re-triggering getLocation every time onSnapshot fires
+  // and updates the user reference without changing the actual user ID.
+  const userId = user?.id ?? null;
+  const userType = user?.userType ?? null;
 
   const getLocation = useCallback(async () => {
     if (!navigator.geolocation) {
@@ -48,11 +55,12 @@ export function useLocation(user: UserData | null): UseLocationReturn {
 
       setLocation(newLocation);
 
-      // Save to database if user is authenticated
-      if (user) {
-        const coll = user.userType === 'driver' ? 'drivers' : 'users';
-        await writeData(coll, user.id, {
-          ...user,
+      // Write ONLY location fields — never the full user object.
+      // Using setDoc/writeData would overwrite contacts, photoURL, etc.
+      // and would trigger onSnapshot → infinite loop.
+      if (userId) {
+        const coll = userType === 'driver' ? 'drivers' : 'users';
+        await updateDoc(doc(db, coll, userId), {
           location: newLocation,
           lastLocationUpdate: new Date().toISOString(),
         });
@@ -82,10 +90,9 @@ export function useLocation(user: UserData | null): UseLocationReturn {
 
           setLocation(fallbackLocation);
 
-          if (user) {
-            const coll = user.userType === 'driver' ? 'drivers' : 'users';
-            await writeData(coll, user.id, {
-              ...user,
+          if (userId) {
+            const coll = userType === 'driver' ? 'drivers' : 'users';
+            await updateDoc(doc(db, coll, userId), {
               location: fallbackLocation,
               lastLocationUpdate: new Date().toISOString(),
             });
@@ -105,14 +112,15 @@ export function useLocation(user: UserData | null): UseLocationReturn {
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [userId, userType]); // stable deps — only change on login/logout
 
-  // Get location on mount if user is authenticated
+  // Only re-run when the user logs in or out (userId changes),
+  // not on every Firestore snapshot update to the user document.
   useEffect(() => {
-    if (user) {
+    if (userId) {
       getLocation();
     }
-  }, [user, getLocation]);
+  }, [userId, getLocation]);
 
   return {
     location,
