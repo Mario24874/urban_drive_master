@@ -3,18 +3,28 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-    
-    <!-- PWA and Mobile Optimization Meta Tags -->
+
+    <!-- PWA manifest — required for install prompt -->
+    <link rel="manifest" href="/manifest.json" />
+
+    <!-- Mobile / PWA meta -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
     <meta name="description" content="Urban Drive - Modern ride sharing application for urban mobility" />
     <meta name="keywords" content="ride sharing, urban mobility, transport, driver, passenger" />
     <meta name="author" content="Urban Drive Team" />
-    
+    <meta name="mobile-web-app-capable" content="yes" />
+
+    <!-- iOS / Safari PWA support -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Urban Drive" />
+    <link rel="apple-touch-icon" href="/assets/UrbanDrive.png" />
+
     <!-- Theme Colors -->
     <meta name="theme-color" content="#000000" />
     <meta name="msapplication-TileColor" content="#000000" />
-    
-    <title>Urban Drive - Ride Sharing App (Dev)</title>
+
+    <title>Urban Drive</title>
     
     <!-- Mapbox CSS -->
     <link href="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.css" rel="stylesheet">

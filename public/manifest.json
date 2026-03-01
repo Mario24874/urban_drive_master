@@ -26,9 +26,9 @@
   ],
   "screenshots": [
     {
-      "src": "/assets/background.png",
+      "src": "/assets/background.jpg",
       "sizes": "1280x720",
-      "type": "image/png",
+      "type": "image/jpeg",
       "form_factor": "wide",
       "label": "Urban Drive Dashboard"
     }
