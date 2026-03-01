@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, memo, useCallback } from 'react';
-import { Send, ArrowLeft, Check, CheckCheck, Search, X } from 'lucide-react';
+import { Send, ArrowLeft, Check, CheckCheck, Search, X, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import messagingService, { Message } from '../services/messaging';
 import { Contact } from '../types';
@@ -36,8 +36,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const [searchMode, setSearchMode] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [isTyping] = useState(false);
+  const [selectedMsgId, setSelectedMsgId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const conversationId = selectedContact
     ? [currentUserId, selectedContact.id].sort().join('_')
@@ -121,6 +123,22 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     },
     [selectedContact, currentUserId, currentUserName]
   );
+
+  // Long-press handlers (mobile) — select own message to show delete button
+  const startLongPress = (msgId: string) => {
+    longPressTimer.current = setTimeout(() => setSelectedMsgId(msgId), 500);
+  };
+  const cancelLongPress = () => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  };
+
+  const handleDeleteMessage = async (msgId: string) => {
+    setSelectedMsgId(null);
+    await messagingService.deleteMessage(msgId);
+  };
 
   // Handle Enter key
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -264,11 +282,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
             </div>
           </motion.div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-3" onClick={() => setSelectedMsgId(null)}>
             <AnimatePresence mode="popLayout">
               {messages.map((message) => {
                 const isOwn = message.senderId === currentUserId;
                 const isVoice = message.messageType === 'voice';
+                const isSelected = selectedMsgId === message.id;
 
                 return (
                   <motion.div
@@ -276,12 +295,11 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                     initial={{ opacity: 0, y: 20, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.9 }}
-                    transition={{
-                      type: 'spring',
-                      stiffness: 300,
-                      damping: 30,
-                    }}
-                    className={`flex items-end gap-2 ${isOwn ? 'justify-end' : 'justify-start'}`}
+                    transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                    className={`group flex items-end gap-2 ${isOwn ? 'justify-end' : 'justify-start'}`}
+                    onTouchStart={() => isOwn && startLongPress(message.id!)}
+                    onTouchEnd={cancelLongPress}
+                    onTouchMove={cancelLongPress}
                   >
                     {/* Contact avatar — shown only for received messages */}
                     {!isOwn && (
@@ -293,12 +311,27 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                       </Avatar>
                     )}
 
+                    {/* Delete button — appears left of own bubbles on hover (desktop) or long press (mobile) */}
+                    {isOwn && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleDeleteMessage(message.id!); }}
+                        className={`shrink-0 p-1.5 rounded-full text-destructive/50 hover:text-destructive hover:bg-destructive/10 transition-all ${
+                          isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+                        }`}
+                        title="Eliminar mensaje"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    )}
+
                     <div
                       className={`max-w-[75%] md:max-w-[55%] ${
                         isOwn
                           ? isVoice ? '' : 'bg-primary text-primary-foreground'
                           : isVoice ? '' : 'bg-card border border-border'
-                      } ${isVoice ? '' : 'rounded-2xl px-4 py-2 shadow-sm'}`}
+                      } ${isVoice ? '' : 'rounded-2xl px-4 py-2 shadow-sm'} ${
+                        isSelected ? 'ring-2 ring-destructive/40' : ''
+                      }`}
                     >
                       {!isOwn && !isVoice && (
                         <p className="text-xs font-semibold mb-1 text-amber-500 dark:text-amber-400">

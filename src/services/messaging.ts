@@ -15,6 +15,7 @@ import {
   serverTimestamp,
   updateDoc,
   getDocs,
+  deleteDoc,
   Timestamp
 } from 'firebase/firestore';
 import { getFunctions, httpsCallable } from 'firebase/functions';
@@ -432,6 +433,19 @@ class MessagingService {
       return true;
     } catch (error) {
       console.error('Error enviando nota de voz:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Borrar un mensaje (solo el remitente puede borrar el suyo)
+   */
+  async deleteMessage(messageId: string): Promise<boolean> {
+    try {
+      await deleteDoc(doc(db, 'messages', messageId));
+      return true;
+    } catch (error) {
+      console.error('Error borrando mensaje:', error);
       return false;
     }
   }
