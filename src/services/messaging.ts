@@ -5,6 +5,9 @@
 import {
   collection,
   addDoc,
+  doc,
+  getDoc,
+  setDoc,
   query,
   where,
   orderBy,
@@ -102,7 +105,8 @@ class MessagingService {
 
       // Trigger push notification (fire-and-forget)
       getNotifyFn()({ receiverId, senderId, senderName, content: content.trim(), messageType: 'text' })
-        .catch(() => {});
+        .then((r: any) => { if (!r?.data?.sent) console.warn('[FCM] notify skipped:', r?.data?.reason); })
+        .catch((e: any) => console.error('[FCM] notify error:', e?.code ?? e?.message));
 
       console.log('Mensaje enviado exitosamente');
       return true;
@@ -124,17 +128,12 @@ class MessagingService {
     lastMessage: string
   ): Promise<void> {
     try {
-      // Verificar si la conversación existe
-      const conversationQuery = query(
-        collection(db, 'conversations'),
-        where('__name__', '==', conversationId)
-      );
-      
-      const snapshot = await getDocs(conversationQuery);
+      // Use conversationId as the document ID so getDoc/setDoc are O(1)
+      const convRef = doc(db, 'conversations', conversationId);
+      const snapshot = await getDoc(convRef);
 
-      if (snapshot.empty) {
-        // Crear nueva conversación
-        await addDoc(collection(db, 'conversations'), {
+      if (!snapshot.exists()) {
+        await setDoc(convRef, {
           id: conversationId,
           participants: [senderId, receiverId],
           participantNames: {
@@ -149,13 +148,12 @@ class MessagingService {
           }
         });
       } else {
-        // Actualizar conversación existente
-        const doc = snapshot.docs[0];
-        const currentData = doc.data();
-        
-        await updateDoc(doc.ref, {
+        const currentData = snapshot.data();
+        await updateDoc(convRef, {
           lastMessage,
           lastMessageTime: serverTimestamp(),
+          [`participantNames.${senderId}`]: senderName,
+          [`participantNames.${receiverId}`]: receiverName,
           unreadCount: {
             ...currentData.unreadCount,
             [receiverId]: (currentData.unreadCount?.[receiverId] || 0) + 1
@@ -265,18 +263,11 @@ class MessagingService {
 
       await Promise.all(updatePromises);
 
-      // Actualizar contador de no leídos en la conversación
-      const conversationQuery = query(
-        collection(db, 'conversations'),
-        where('id', '==', conversationId)
-      );
-      
-      const convSnapshot = await getDocs(conversationQuery);
-      if (!convSnapshot.empty) {
-        const convDoc = convSnapshot.docs[0];
-        await updateDoc(convDoc.ref, {
-          [`unreadCount.${userId}`]: 0
-        });
+      // Actualizar contador de no leídos en la conversación (O(1) lookup by doc ID)
+      const convRef = doc(db, 'conversations', conversationId);
+      const convSnap = await getDoc(convRef);
+      if (convSnap.exists()) {
+        await updateDoc(convRef, { [`unreadCount.${userId}`]: 0 });
       }
 
       console.log('Mensajes marcados como leídos');
@@ -435,7 +426,8 @@ class MessagingService {
 
       // Trigger push notification (fire-and-forget)
       getNotifyFn()({ receiverId, senderId, senderName, content: '🎤 Voice message', messageType: 'voice' })
-        .catch(() => {});
+        .then((r: any) => { if (!r?.data?.sent) console.warn('[FCM] notify skipped:', r?.data?.reason); })
+        .catch((e: any) => console.error('[FCM] notify error:', e?.code ?? e?.message));
 
       return true;
     } catch (error) {

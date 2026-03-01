@@ -11,6 +11,7 @@ import type { UserData, Contact } from '../types';
 // Components
 import GPSMapComponent from './GPSMapComponent';
 import ChatInterface from './ChatInterface';
+import ConversationsList from './ConversationsList';
 import ProfileEditor from './profile/ProfileEditor';
 import ContactList from './contacts/ContactList';
 import SettingsSheet from './SettingsSheet';
@@ -414,12 +415,19 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
 
           {/* Messages Tab */}
           <TabsContent value="messages" className="h-full m-0">
-            <ChatInterface
-              currentUserId={user.id}
-              currentUserName={user.displayName || user.email || 'User'}
-              selectedContact={selectedContact}
-              onBack={() => setActiveTab('contacts')}
-            />
+            {selectedContact ? (
+              <ChatInterface
+                currentUserId={user.id}
+                currentUserName={user.displayName || user.email || 'User'}
+                selectedContact={selectedContact}
+                onBack={() => setSelectedContact(null)}
+              />
+            ) : (
+              <ConversationsList
+                currentUserId={user.id}
+                onSelectConversation={(contact) => setSelectedContact(contact)}
+              />
+            )}
           </TabsContent>
 
           {/* Profile Tab */}
