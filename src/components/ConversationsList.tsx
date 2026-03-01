@@ -1,8 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../firebase';
 import { messagingService } from '../services/messaging';
 import type { Conversation } from '../services/messaging';
 import type { Contact } from '../types';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { MessageSquare, UserPlus } from 'lucide-react';
 import { useApp } from '../contexts/AppContext';
@@ -23,6 +25,13 @@ function formatTime(ts: any): string {
   return date.toLocaleDateString([], { day: '2-digit', month: '2-digit' });
 }
 
+/** Try /users/{uid} then /drivers/{uid} — returns photoURL or undefined */
+async function fetchContactPhoto(uid: string): Promise<string | undefined> {
+  let snap = await getDoc(doc(db, 'users', uid));
+  if (!snap.exists()) snap = await getDoc(doc(db, 'drivers', uid));
+  return snap.data()?.photoURL as string | undefined;
+}
+
 const ConversationsList: React.FC<ConversationsListProps> = ({
   currentUserId,
   onSelectConversation,
@@ -30,12 +39,14 @@ const ConversationsList: React.FC<ConversationsListProps> = ({
 }) => {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
+  const [photos, setPhotos] = useState<Record<string, string>>({});
+  /** Track which UIDs we've already fetched to avoid duplicate reads */
+  const fetchedIds = useRef<Set<string>>(new Set());
   const { t } = useApp();
 
   useEffect(() => {
     const unsub = messagingService.subscribeToUserConversations(currentUserId, (convs) => {
-      // Deduplicate: convs are sorted newest-first, so the first entry
-      // per otherId is always the most recent conversation.
+      // Deduplicate: convs sorted newest-first → keep first entry per otherId
       const seen = new Set<string>();
       const deduped = convs.filter((conv) => {
         const otherId = conv.participants.find((p) => p !== currentUserId) ?? '';
@@ -45,6 +56,23 @@ const ConversationsList: React.FC<ConversationsListProps> = ({
       });
       setConversations(deduped);
       setLoading(false);
+
+      // Fetch photos for any new otherIds
+      const newIds = [...seen].filter((id) => !fetchedIds.current.has(id));
+      if (newIds.length === 0) return;
+      newIds.forEach((id) => fetchedIds.current.add(id));
+
+      Promise.all(
+        newIds.map(async (uid) => [uid, await fetchContactPhoto(uid)] as [string, string | undefined])
+      ).then((entries) => {
+        setPhotos((prev) => {
+          const next = { ...prev };
+          for (const [uid, url] of entries) {
+            if (url) next[uid] = url;
+          }
+          return next;
+        });
+      });
     });
     return unsub;
   }, [currentUserId]);
@@ -94,7 +122,7 @@ const ConversationsList: React.FC<ConversationsListProps> = ({
               ? '🎤 Nota de voz'
               : conv.lastMessage || '…';
 
-          const contact: Contact = { id: otherId, displayName: otherName };
+          const contact: Contact = { id: otherId, displayName: otherName, photoURL: photos[otherId] };
 
           return (
             <button
@@ -103,6 +131,7 @@ const ConversationsList: React.FC<ConversationsListProps> = ({
               className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/50 active:bg-muted transition-colors text-left"
             >
               <Avatar className="h-11 w-11 shrink-0">
+                <AvatarImage src={photos[otherId]} alt={otherName} />
                 <AvatarFallback className="bg-amber-500 text-white font-semibold text-base">
                   {otherName.charAt(0).toUpperCase()}
                 </AvatarFallback>
