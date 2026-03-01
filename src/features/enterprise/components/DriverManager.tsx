@@ -67,7 +67,7 @@ const DriverManager: React.FC<DriverManagerProps> = ({
 
   const openAdd = () => {
     if (isAtLimit) {
-      toast.error(`Límite de ${maxDrivers} conductores alcanzado. Actualiza tu plan.`);
+      toast.error(t('limitReachedDrivers').replace('{max}', String(maxDrivers)));
       return;
     }
     setEditingId(null);
@@ -90,7 +90,7 @@ const DriverManager: React.FC<DriverManagerProps> = ({
 
   const handleSave = async () => {
     if (!form.name.trim()) {
-      toast.error(t('displayName') + ' es requerido');
+      toast.error(t('fieldRequired').replace('{field}', t('displayName')));
       return;
     }
     setSaving(true);
@@ -113,7 +113,7 @@ const DriverManager: React.FC<DriverManagerProps> = ({
         if (prevDriver?.assignedVehicleId !== (newVehicleId ?? undefined)) {
           await assignVehicle(editingId, newVehicleId);
         }
-        toast.success('Conductor actualizado');
+        toast.success(t('driverUpdated'));
       } else {
         await addDriver(payload);
         toast.success(t('driverAdded'));
@@ -121,7 +121,7 @@ const DriverManager: React.FC<DriverManagerProps> = ({
       setSheetOpen(false);
     } catch (err) {
       console.error(err);
-      toast.error('Error al guardar el conductor');
+      toast.error(t('errorSaving'));
     } finally {
       setSaving(false);
     }
@@ -133,7 +133,7 @@ const DriverManager: React.FC<DriverManagerProps> = ({
       toast.success(t('driverRemoved'));
       setConfirmDeleteId(null);
     } catch {
-      toast.error('Error al eliminar');
+      toast.error(t('errorDeleting'));
     }
   };
 
@@ -165,11 +165,11 @@ const DriverManager: React.FC<DriverManagerProps> = ({
               <Users size={22} className="text-amber-400" />
               <div>
                 <h1 className="text-white font-bold text-lg leading-tight">
-                  Conductores
+                  {t('driversLabel')}
                 </h1>
                 <p className="text-white/50 text-xs">
                   {drivers.length}
-                  {maxDrivers !== -1 ? ` / ${maxDrivers}` : ''} conductores
+                  {maxDrivers !== -1 ? ` / ${maxDrivers}` : ''} {t('driversLabel').toLowerCase()}
                 </p>
               </div>
             </div>
@@ -181,7 +181,7 @@ const DriverManager: React.FC<DriverManagerProps> = ({
                     ? 'bg-white/5 text-white/30 cursor-default'
                     : 'bg-amber-500 hover:bg-amber-600 text-white'
                 }`}
-                title={isAtLimit ? 'Límite alcanzado' : t('addDriver')}
+                title={isAtLimit ? t('limitReached') : t('addDriver')}
               >
                 {isAtLimit ? <Lock size={16} /> : <Plus size={18} />}
               </button>
@@ -253,7 +253,7 @@ const DriverManager: React.FC<DriverManagerProps> = ({
                       <button
                         onClick={() => setDocumentDriver({ id: d.id, name: d.name })}
                         className="w-8 h-8 rounded-lg bg-white/5 hover:bg-blue-500/20 flex items-center justify-center text-white/50 hover:text-blue-400 transition-colors"
-                        title="Documentos"
+                        title={t('documentVault')}
                       >
                         <FileText size={14} />
                       </button>
@@ -349,7 +349,7 @@ const DriverManager: React.FC<DriverManagerProps> = ({
               <Label>{t('assignedVehicle')}</Label>
               {availableVehicles.length === 0 ? (
                 <p className="text-xs text-muted-foreground py-2">
-                  Sin vehículos disponibles para asignar
+                  {t('noVehiclesAvailable')}
                 </p>
               ) : (
                 <div className="grid grid-cols-2 gap-2">
@@ -384,7 +384,7 @@ const DriverManager: React.FC<DriverManagerProps> = ({
                 {t('cancel')}
               </Button>
               <Button className="flex-1" onClick={handleSave} disabled={saving}>
-                {saving ? 'Guardando...' : t('saveChanges')}
+                {saving ? t('saving') : t('saveChanges')}
               </Button>
             </div>
           </div>

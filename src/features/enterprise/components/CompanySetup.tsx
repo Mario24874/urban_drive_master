@@ -74,7 +74,7 @@ const CompanySetup: React.FC<CompanySetupProps> = ({
     setModalities((prev) => {
       if (prev.includes(m)) return prev.filter((x) => x !== m);
       if (maxModalities !== -1 && prev.length >= maxModalities) {
-        toast.error(`Límite de ${maxModalities} modalidad(es) para tu plan`);
+        toast.error(t('limitReachedModalities').replace('{max}', String(maxModalities)));
         return prev;
       }
       return [...prev, m];
@@ -83,7 +83,7 @@ const CompanySetup: React.FC<CompanySetupProps> = ({
 
   const handleFinish = async () => {
     if (!name.trim()) {
-      toast.error(t('companyName') + ' es requerido');
+      toast.error(t('fieldRequired').replace('{field}', t('companyName')));
       return;
     }
     setSaving(true);
@@ -108,7 +108,7 @@ const CompanySetup: React.FC<CompanySetupProps> = ({
       onSaved();
     } catch (err) {
       console.error(err);
-      toast.error('Error al guardar la empresa');
+      toast.error(t('errorSaving'));
     } finally {
       setSaving(false);
     }
@@ -231,9 +231,9 @@ const CompanySetup: React.FC<CompanySetupProps> = ({
                 <p className="text-white/70 text-xs">
                   {t('transportModalities')} ·{' '}
                   {maxModalities === -1
-                    ? 'Ilimitadas'
-                    : `máx. ${maxModalities}`}{' '}
-                  ({modalities.length} seleccionada{modalities.length !== 1 ? 's' : ''})
+                    ? t('unlimitedModalities')
+                    : t('maxN').replace('{max}', String(maxModalities))}{' '}
+                  ({t('nSelected').replace('{n}', String(modalities.length))})
                 </p>
               </div>
               {maxModalities === 0 ? (
@@ -332,7 +332,7 @@ const CompanySetup: React.FC<CompanySetupProps> = ({
               className="flex-1 bg-amber-500 hover:bg-amber-600 text-white"
               onClick={() => {
                 if (step === 1 && !name.trim()) {
-                  toast.error(t('companyName') + ' es requerido');
+                  toast.error(t('fieldRequired').replace('{field}', t('companyName')));
                   return;
                 }
                 setStep((s) => s + 1);

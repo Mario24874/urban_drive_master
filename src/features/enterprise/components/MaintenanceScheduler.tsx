@@ -150,11 +150,11 @@ const MaintenanceScheduler: React.FC<MaintenanceSchedulerProps> = ({
               </h1>
               <p className="text-white/50 text-xs">
                 {overdue.length > 0 && (
-                  <span className="text-red-400">{overdue.length} vencido{overdue.length !== 1 ? 's' : ''}</span>
+                  <span className="text-red-400">{t('statusOverdue')} ({overdue.length})</span>
                 )}
                 {overdue.length > 0 && warning.length > 0 && ' · '}
                 {warning.length > 0 && (
-                  <span className="text-yellow-400">{warning.length} próximo{warning.length !== 1 ? 's' : ''}</span>
+                  <span className="text-yellow-400">{t('statusWarning')} ({warning.length})</span>
                 )}
                 {overdue.length === 0 && warning.length === 0 && (
                   <span className="text-green-400">{t('allUpToDate')}</span>
@@ -175,14 +175,14 @@ const MaintenanceScheduler: React.FC<MaintenanceSchedulerProps> = ({
       <div className="flex-1 overflow-y-auto px-4 pb-4">
         {loading ? (
           <div className="flex items-center justify-center h-32 text-white/40">
-            <span className="text-sm">Cargando…</span>
+            <span className="text-sm">{t('loading')}</span>
           </div>
         ) : alerts.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-white/40 gap-3 text-center">
             <CheckCircle size={48} className="text-green-400/50" />
             <p className="text-sm">{t('allUpToDate')}</p>
             <p className="text-xs text-white/30">
-              Registra mantenimientos desde la Flota para activar alertas.
+              {t('maintenanceHint')}
             </p>
           </div>
         ) : (

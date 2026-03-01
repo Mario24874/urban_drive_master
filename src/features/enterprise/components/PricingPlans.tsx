@@ -136,7 +136,7 @@ const PlanCard: React.FC<{
         )}
         {discountPct > 0 && (
           <p className="text-green-400 text-xs mt-0.5 font-semibold">
-            ✓ {couponDescription(discountPct)}
+            ✓ {couponDescription(discountPct, t)}
           </p>
         )}
       </div>
@@ -184,9 +184,9 @@ const COUPON_DISCOUNT: Record<CouponType, number> = {
   discount_100: 1.00,
 };
 
-function couponDescription(discountPct: number): string {
-  if (discountPct >= 1) return '100% free';
-  return `${Math.round(discountPct * 100)}% off applied`;
+function couponDescription(discountPct: number, t: (key: string) => string): string {
+  if (discountPct >= 1) return t('coupon100Label');
+  return t('couponDiscApplied').replace('{pct}', String(Math.round(discountPct * 100)));
 }
 
 const PricingPlans: React.FC<PricingPlansProps> = ({ userId, currentTier = 'free', onClose }) => {

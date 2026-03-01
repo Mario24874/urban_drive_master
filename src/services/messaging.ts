@@ -467,8 +467,20 @@ class MessagingService {
       );
       await Promise.all(snapshot.docs.map((d) => deleteDoc(d.ref)));
 
-      // Delete conversation document (try provided ID, then computed ID)
-      const docIds = new Set([conversationDocId, msgConvId].filter(Boolean) as string[]);
+      // Find ALL conversation documents for this pair (handles legacy addDoc random IDs)
+      const convSnap = await getDocs(
+        query(collection(db, 'conversations'), where('participants', 'array-contains', userId)),
+      );
+      const pairConvIds = convSnap.docs
+        .filter((d) => (d.data().participants as string[]).includes(contactId))
+        .map((d) => d.id);
+
+      // Collect all doc IDs: found in query + explicitly provided + computed
+      const docIds = new Set<string>([
+        ...pairConvIds,
+        ...[conversationDocId, msgConvId].filter(Boolean) as string[],
+      ]);
+
       await Promise.all(
         [...docIds].map((id) => deleteDoc(doc(db, 'conversations', id)).catch(() => {})),
       );

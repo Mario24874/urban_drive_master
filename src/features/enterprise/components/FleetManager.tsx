@@ -95,7 +95,7 @@ const FleetManager: React.FC<FleetManagerProps> = ({
 
   const openAdd = () => {
     if (isAtLimit) {
-      toast.error(`Límite de ${maxVehicles} vehículos alcanzado. Actualiza tu plan.`);
+      toast.error(t('limitReachedVehicles').replace('{max}', String(maxVehicles)));
       return;
     }
     setEditingId(null);
@@ -120,7 +120,7 @@ const FleetManager: React.FC<FleetManagerProps> = ({
 
   const handleSave = async () => {
     if (!form.plate.trim()) {
-      toast.error(t('plate') + ' es requerida');
+      toast.error(t('fieldRequired').replace('{field}', t('plate')));
       return;
     }
     setSaving(true);
@@ -158,7 +158,7 @@ const FleetManager: React.FC<FleetManagerProps> = ({
       setSheetOpen(false);
     } catch (err) {
       console.error(err);
-      toast.error('Error al guardar el vehículo');
+      toast.error(t('errorSaving'));
     } finally {
       setSaving(false);
     }
@@ -170,7 +170,7 @@ const FleetManager: React.FC<FleetManagerProps> = ({
       toast.success(t('vehicleRemoved'));
       setConfirmDeleteId(null);
     } catch {
-      toast.error('Error al eliminar');
+      toast.error(t('errorDeleting'));
     }
   };
 
@@ -198,11 +198,11 @@ const FleetManager: React.FC<FleetManagerProps> = ({
               <Car size={22} className="text-amber-400" />
               <div>
                 <h1 className="text-white font-bold text-lg leading-tight">
-                  Mi Flota
+                  {t('manageFleet')}
                 </h1>
                 <p className="text-white/50 text-xs">
                   {vehicles.length}
-                  {maxVehicles !== -1 ? ` / ${maxVehicles}` : ''} vehículos
+                  {maxVehicles !== -1 ? ` / ${maxVehicles}` : ''} {t('vehiclesLabel')}
                 </p>
               </div>
             </div>
@@ -214,7 +214,7 @@ const FleetManager: React.FC<FleetManagerProps> = ({
                     ? 'bg-white/5 text-white/30 cursor-default'
                     : 'bg-amber-500 hover:bg-amber-600 text-white'
                 }`}
-                title={isAtLimit ? 'Límite alcanzado' : t('addVehicle')}
+                title={isAtLimit ? t('limitReached') : t('addVehicle')}
               >
                 {isAtLimit ? <Lock size={16} /> : <Plus size={18} />}
               </button>
@@ -275,7 +275,7 @@ const FleetManager: React.FC<FleetManagerProps> = ({
                     <button
                       onClick={() => handleToggleActive(v)}
                       className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/50 hover:text-white/80 transition-colors"
-                      title={v.isActive ? 'Desactivar' : 'Activar'}
+                      title={v.isActive ? t('deactivate') : t('activate')}
                     >
                       <span className="text-xs">{v.isActive ? '●' : '○'}</span>
                     </button>
@@ -284,14 +284,14 @@ const FleetManager: React.FC<FleetManagerProps> = ({
                         setMaintenanceVehicle({ id: v.id, plate: v.plate, mileageKm: v.mileageKm ?? 0 })
                       }
                       className="w-8 h-8 rounded-lg bg-white/5 hover:bg-amber-500/20 flex items-center justify-center text-white/50 hover:text-amber-400 transition-colors"
-                      title="Mantenimiento"
+                      title={t('maintenance')}
                     >
                       <Wrench size={14} />
                     </button>
                     <button
                       onClick={() => setDocumentVehicle({ id: v.id, plate: v.plate })}
                       className="w-8 h-8 rounded-lg bg-white/5 hover:bg-blue-500/20 flex items-center justify-center text-white/50 hover:text-blue-400 transition-colors"
-                      title="Documentos"
+                      title={t('documentVault')}
                     >
                       <FileText size={14} />
                     </button>
@@ -413,7 +413,7 @@ const FleetManager: React.FC<FleetManagerProps> = ({
                 {t('cancel')}
               </Button>
               <Button className="flex-1" onClick={handleSave} disabled={saving}>
-                {saving ? 'Guardando...' : t('saveChanges')}
+                {saving ? t('saving') : t('saveChanges')}
               </Button>
             </div>
           </div>

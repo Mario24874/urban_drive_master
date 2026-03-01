@@ -318,7 +318,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                         className={`shrink-0 p-1.5 rounded-full text-destructive/50 hover:text-destructive hover:bg-destructive/10 transition-all ${
                           isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
                         }`}
-                        title="Eliminar mensaje"
+                        title={t('deleteMessage')}
                       >
                         <Trash2 size={14} />
                       </button>
@@ -368,7 +368,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                         className={`shrink-0 p-1.5 rounded-full text-destructive/50 hover:text-destructive hover:bg-destructive/10 transition-all ${
                           isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
                         }`}
-                        title="Eliminar mensaje"
+                        title={t('deleteMessage')}
                       >
                         <Trash2 size={14} />
                       </button>

@@ -67,7 +67,7 @@ const FleetAnalytics: React.FC<FleetAnalyticsProps> = ({
       <div className="flex-shrink-0 px-4 pt-safe-top">
         <div className="flex items-center justify-between py-4">
           <div className="flex items-center gap-3">
-            <BarChart2 size={22} className="text-blue-400" />
+            <BarChart2 size={22} className="text-amber-400" />
             <div>
               <h1 className="text-white font-bold text-lg leading-tight">{t('fleetAnalytics')}</h1>
               {analyticsLevel !== 'none' && (
@@ -112,7 +112,7 @@ const FleetAnalytics: React.FC<FleetAnalyticsProps> = ({
           <>
             {loading ? (
               <div className="flex items-center justify-center h-32 text-white/40">
-                <span className="text-sm">Cargando…</span>
+                <span className="text-sm">{t('loading')}</span>
               </div>
             ) : (
               <div className="max-w-lg mx-auto pt-2 space-y-6">
@@ -162,7 +162,7 @@ const FleetAnalytics: React.FC<FleetAnalyticsProps> = ({
                   <div className="flex gap-2 flex-wrap">
                     <span className="flex items-center gap-1.5 text-xs px-3 py-1 rounded-full bg-green-400/10 border border-green-400/20 text-green-400">
                       <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
-                      OK ({maintenanceStats.okCount})
+                      {t('statusOk')} ({maintenanceStats.okCount})
                     </span>
                     <span className="flex items-center gap-1.5 text-xs px-3 py-1 rounded-full bg-yellow-400/10 border border-yellow-400/20 text-yellow-400">
                       <span className="w-1.5 h-1.5 rounded-full bg-yellow-400" />
@@ -223,13 +223,13 @@ const FleetAnalytics: React.FC<FleetAnalyticsProps> = ({
                   {/* Stat chips */}
                   <div className="flex gap-2 flex-wrap">
                     <span className="text-xs px-3 py-1 rounded-full bg-green-400/10 border border-green-400/20 text-green-400">
-                      {documentStats.validCount} válidos
+                      {documentStats.validCount} {t('docsValid')}
                     </span>
                     <span className="text-xs px-3 py-1 rounded-full bg-yellow-400/10 border border-yellow-400/20 text-yellow-400">
-                      {documentStats.expiringSoonCount} por vencer
+                      {documentStats.expiringSoonCount} {t('docsExpiring')}
                     </span>
                     <span className="text-xs px-3 py-1 rounded-full bg-red-400/10 border border-red-400/20 text-red-400">
-                      {documentStats.expiredCount} vencidos
+                      {documentStats.expiredCount} {t('docsExpired')}
                     </span>
                   </div>
 
@@ -246,7 +246,7 @@ const FleetAnalytics: React.FC<FleetAnalyticsProps> = ({
                           <div key={e.entityType} className="space-y-0.5">
                             <div className="flex justify-between text-xs">
                               <span className="text-white/60">{ENTITY_LABELS[e.entityType]}</span>
-                              <span className="text-white/40">{total} docs</span>
+                              <span className="text-white/40">{total} {t('docsLabel')}</span>
                             </div>
                             <div className="h-2 bg-white/10 rounded-full overflow-hidden flex">
                               <div className="h-full bg-green-500/70" style={{ width: `${validPct}%` }} />

@@ -410,6 +410,44 @@ const translations: Record<Lang, Record<string, string>> = {
     notificationsDenied: 'Notifications blocked. Enable them in your browser settings.',
     newMessage: 'New message',
     deleteInvitation: 'Delete invitation',
+
+    // General UI (enterprise)
+    loading: 'Loading…',
+    limitReached: 'Limit reached',
+    fieldRequired: '{field} is required',
+    errorSaving: 'Error saving',
+    errorDeleting: 'Error deleting',
+    activate: 'Activate',
+    deactivate: 'Deactivate',
+    delete: 'Delete',
+
+    // Fleet / vehicles
+    vehiclesLabel: 'vehicles',
+    limitReachedVehicles: 'Vehicle limit of {max} reached. Upgrade your plan.',
+    driverUpdated: 'Driver updated',
+    limitReachedDrivers: 'Driver limit of {max} reached. Upgrade your plan.',
+    noVehiclesAvailable: 'No vehicles available to assign',
+    limitReachedModalities: 'Modality limit of {max} for your plan.',
+    unlimitedModalities: 'Unlimited',
+    maxN: 'max. {max}',
+    nSelected: '{n} selected',
+    maintenanceHint: 'Log maintenance from Fleet to activate alerts.',
+    docsLabel: 'docs',
+    docsValid: 'valid',
+    docsExpiring: 'expiring soon',
+    docsExpired: 'expired',
+
+    // Conversations
+    noConversations: 'No conversations',
+    startChatFromContacts: 'Select a contact to start a chat',
+    newChat: 'New chat',
+    deleteConversation: 'Delete conversation',
+    deleteConversationWith: 'Delete conversation with {name}?',
+    deleteConversationDesc: 'All messages will be deleted',
+    deleteMessage: 'Delete message',
+
+    // Coupon
+    couponDiscApplied: '{pct}% off applied',
   },
   es: {
     // Navigation tabs
@@ -809,6 +847,44 @@ const translations: Record<Lang, Record<string, string>> = {
     notificationsDenied: 'Notificaciones bloqueadas. Actívalas en la configuración del navegador.',
     newMessage: 'Nuevo mensaje',
     deleteInvitation: 'Eliminar invitación',
+
+    // General UI (empresa)
+    loading: 'Cargando…',
+    limitReached: 'Límite alcanzado',
+    fieldRequired: '{field} es requerido',
+    errorSaving: 'Error al guardar',
+    errorDeleting: 'Error al eliminar',
+    activate: 'Activar',
+    deactivate: 'Desactivar',
+    delete: 'Eliminar',
+
+    // Flota / vehículos
+    vehiclesLabel: 'vehículos',
+    limitReachedVehicles: 'Límite de {max} vehículos alcanzado. Actualiza tu plan.',
+    driverUpdated: 'Conductor actualizado',
+    limitReachedDrivers: 'Límite de {max} conductores alcanzado. Actualiza tu plan.',
+    noVehiclesAvailable: 'Sin vehículos disponibles para asignar',
+    limitReachedModalities: 'Límite de {max} modalidad(es) para tu plan.',
+    unlimitedModalities: 'Ilimitadas',
+    maxN: 'máx. {max}',
+    nSelected: '{n} seleccionadas',
+    maintenanceHint: 'Registra mantenimientos desde la Flota para activar alertas.',
+    docsLabel: 'docs',
+    docsValid: 'válidos',
+    docsExpiring: 'por vencer',
+    docsExpired: 'vencidos',
+
+    // Conversaciones
+    noConversations: 'Sin conversaciones',
+    startChatFromContacts: 'Selecciona un contacto para iniciar un chat',
+    newChat: 'Nuevo chat',
+    deleteConversation: 'Eliminar conversación',
+    deleteConversationWith: '¿Eliminar conversación con {name}?',
+    deleteConversationDesc: 'Se borrarán todos los mensajes',
+    deleteMessage: 'Eliminar mensaje',
+
+    // Cupón
+    couponDiscApplied: '{pct}% de descuento aplicado',
   },
 };
 

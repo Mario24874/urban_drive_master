@@ -108,13 +108,13 @@ const ConversationsList: React.FC<ConversationsListProps> = ({
     return (
       <div className="flex flex-col items-center justify-center h-full gap-4 px-6 text-center text-muted-foreground">
         <MessageSquare size={52} className="opacity-20" />
-        <p className="font-medium">{t('noConversations') || 'Sin conversaciones'}</p>
+        <p className="font-medium">{t('noConversations')}</p>
         <p className="text-sm opacity-70">
-          {t('startChatFromContacts') || 'Selecciona un contacto para iniciar un chat'}
+          {t('startChatFromContacts')}
         </p>
         <Button variant="outline" size="sm" onClick={onNewChat} className="mt-2">
           <UserPlus size={15} className="mr-2" />
-          {t('newChat') || 'Nuevo chat'}
+          {t('newChat')}
         </Button>
       </div>
     );
@@ -124,8 +124,8 @@ const ConversationsList: React.FC<ConversationsListProps> = ({
     <div className="flex flex-col h-full overflow-hidden" onClick={() => setConfirmDeleteId(null)}>
       {/* Header */}
       <div className="px-4 py-3 border-b bg-background/80 backdrop-blur-sm shrink-0 flex items-center justify-between">
-        <h2 className="font-semibold text-base">{t('messages') || 'Mensajes'}</h2>
-        <Button variant="ghost" size="icon" onClick={onNewChat} title={t('newChat') || 'Nuevo chat'}>
+        <h2 className="font-semibold text-base">{t('messages')}</h2>
+        <Button variant="ghost" size="icon" onClick={onNewChat} title={t('newChat')}>
           <UserPlus size={18} />
         </Button>
       </div>
@@ -170,10 +170,10 @@ const ConversationsList: React.FC<ConversationsListProps> = ({
                 /* ── Confirmation row ── */
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-destructive">
-                    ¿Eliminar conversación con {otherName}?
+                    {t('deleteConversationWith').replace('{name}', otherName)}
                   </p>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Se borrarán todos los mensajes
+                    {t('deleteConversationDesc')}
                   </p>
                   <div className="flex gap-2 mt-2">
                     <Button
@@ -183,7 +183,7 @@ const ConversationsList: React.FC<ConversationsListProps> = ({
                       onClick={(e) => { e.stopPropagation(); handleDeleteConversation(conv, otherId); }}
                       className="h-7 px-3 text-xs"
                     >
-                      {deleting ? '…' : <><Check size={12} className="mr-1" />Eliminar</>}
+                      {deleting ? '…' : <><Check size={12} className="mr-1" />{t('delete')}</>}
                     </Button>
                     <Button
                       size="sm"
@@ -192,7 +192,7 @@ const ConversationsList: React.FC<ConversationsListProps> = ({
                       onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(null); }}
                       className="h-7 px-3 text-xs"
                     >
-                      <X size={12} className="mr-1" />Cancelar
+                      <X size={12} className="mr-1" />{t('cancel')}
                     </Button>
                   </div>
                 </div>
@@ -226,7 +226,7 @@ const ConversationsList: React.FC<ConversationsListProps> = ({
                 <button
                   onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(conv.id); }}
                   className="shrink-0 p-1.5 rounded-full text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10 transition-all opacity-0 group-hover:opacity-100"
-                  title="Eliminar conversación"
+                  title={t('deleteConversation')}
                 >
                   <Trash2 size={16} />
                 </button>
