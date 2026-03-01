@@ -438,7 +438,7 @@ class MessagingService {
   }
 
   /**
-   * Borrar un mensaje (solo el remitente puede borrar el suyo)
+   * Borrar un mensaje individual (remitente o destinatario)
    */
   async deleteMessage(messageId: string): Promise<boolean> {
     try {
@@ -446,6 +446,36 @@ class MessagingService {
       return true;
     } catch (error) {
       console.error('Error borrando mensaje:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Borrar una conversación completa: todos sus mensajes + documento de conversación
+   */
+  async deleteConversation(
+    userId: string,
+    contactId: string,
+    conversationDocId?: string,
+  ): Promise<boolean> {
+    try {
+      const msgConvId = this.generateConversationId(userId, contactId);
+
+      // Delete all messages in the conversation
+      const snapshot = await getDocs(
+        query(collection(db, 'messages'), where('conversationId', '==', msgConvId)),
+      );
+      await Promise.all(snapshot.docs.map((d) => deleteDoc(d.ref)));
+
+      // Delete conversation document (try provided ID, then computed ID)
+      const docIds = new Set([conversationDocId, msgConvId].filter(Boolean) as string[]);
+      await Promise.all(
+        [...docIds].map((id) => deleteDoc(doc(db, 'conversations', id)).catch(() => {})),
+      );
+
+      return true;
+    } catch (error) {
+      console.error('Error borrando conversación:', error);
       return false;
     }
   }

@@ -6,7 +6,7 @@ import type { Conversation } from '../services/messaging';
 import type { Contact } from '../types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { MessageSquare, UserPlus } from 'lucide-react';
+import { MessageSquare, UserPlus, Trash2, Check, X } from 'lucide-react';
 import { useApp } from '../contexts/AppContext';
 
 interface ConversationsListProps {
@@ -40,13 +40,16 @@ const ConversationsList: React.FC<ConversationsListProps> = ({
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
   const [photos, setPhotos] = useState<Record<string, string>>({});
+  /** conv.id pending delete confirmation */
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
   /** Track which UIDs we've already fetched to avoid duplicate reads */
   const fetchedIds = useRef<Set<string>>(new Set());
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { t } = useApp();
 
   useEffect(() => {
     const unsub = messagingService.subscribeToUserConversations(currentUserId, (convs) => {
-      // Deduplicate: convs sorted newest-first → keep first entry per otherId
       const seen = new Set<string>();
       const deduped = convs.filter((conv) => {
         const otherId = conv.participants.find((p) => p !== currentUserId) ?? '';
@@ -57,7 +60,6 @@ const ConversationsList: React.FC<ConversationsListProps> = ({
       setConversations(deduped);
       setLoading(false);
 
-      // Fetch photos for any new otherIds
       const newIds = [...seen].filter((id) => !fetchedIds.current.has(id));
       if (newIds.length === 0) return;
       newIds.forEach((id) => fetchedIds.current.add(id));
@@ -76,6 +78,23 @@ const ConversationsList: React.FC<ConversationsListProps> = ({
     });
     return unsub;
   }, [currentUserId]);
+
+  const startLongPress = (convId: string) => {
+    longPressTimer.current = setTimeout(() => setConfirmDeleteId(convId), 500);
+  };
+  const cancelLongPress = () => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  };
+
+  const handleDeleteConversation = async (conv: Conversation, otherId: string) => {
+    setDeleting(true);
+    await messagingService.deleteConversation(currentUserId, otherId, conv.id);
+    setDeleting(false);
+    setConfirmDeleteId(null);
+  };
 
   if (loading) {
     return (
@@ -102,7 +121,7 @@ const ConversationsList: React.FC<ConversationsListProps> = ({
   }
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
+    <div className="flex flex-col h-full overflow-hidden" onClick={() => setConfirmDeleteId(null)}>
       {/* Header */}
       <div className="px-4 py-3 border-b bg-background/80 backdrop-blur-sm shrink-0 flex items-center justify-between">
         <h2 className="font-semibold text-base">{t('messages') || 'Mensajes'}</h2>
@@ -121,45 +140,98 @@ const ConversationsList: React.FC<ConversationsListProps> = ({
             conv.lastMessage === '[voice_note]'
               ? '🎤 Nota de voz'
               : conv.lastMessage || '…';
-
           const contact: Contact = { id: otherId, displayName: otherName, photoURL: photos[otherId] };
+          const isPendingDelete = confirmDeleteId === conv.id;
 
           return (
-            <button
+            <div
               key={conv.id}
-              onClick={() => onSelectConversation(contact)}
-              className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/50 active:bg-muted transition-colors text-left"
+              className={`group relative flex items-center gap-3 px-4 py-3 transition-colors ${
+                isPendingDelete ? 'bg-destructive/10' : 'hover:bg-muted/50 active:bg-muted'
+              }`}
+              onTouchStart={() => !isPendingDelete && startLongPress(conv.id)}
+              onTouchEnd={cancelLongPress}
+              onTouchMove={cancelLongPress}
             >
-              <Avatar className="h-11 w-11 shrink-0">
-                <AvatarImage src={photos[otherId]} alt={otherName} />
-                <AvatarFallback className="bg-amber-500 text-white font-semibold text-base">
-                  {otherName.charAt(0).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
+              {/* Avatar */}
+              <button
+                className="shrink-0"
+                onClick={(e) => { e.stopPropagation(); if (!isPendingDelete) onSelectConversation(contact); }}
+              >
+                <Avatar className="h-11 w-11">
+                  <AvatarImage src={photos[otherId]} alt={otherName} />
+                  <AvatarFallback className="bg-amber-500 text-white font-semibold text-base">
+                    {otherName.charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+              </button>
 
-              <div className="flex-1 min-w-0">
-                <div className="flex items-baseline justify-between gap-2">
-                  <span className="font-medium truncate text-sm">{otherName}</span>
-                  <span className="text-[11px] text-muted-foreground shrink-0">
-                    {formatTime(conv.lastMessageTime)}
-                  </span>
+              {isPendingDelete ? (
+                /* ── Confirmation row ── */
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-destructive">
+                    ¿Eliminar conversación con {otherName}?
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Se borrarán todos los mensajes
+                  </p>
+                  <div className="flex gap-2 mt-2">
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      disabled={deleting}
+                      onClick={(e) => { e.stopPropagation(); handleDeleteConversation(conv, otherId); }}
+                      className="h-7 px-3 text-xs"
+                    >
+                      {deleting ? '…' : <><Check size={12} className="mr-1" />Eliminar</>}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={deleting}
+                      onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(null); }}
+                      className="h-7 px-3 text-xs"
+                    >
+                      <X size={12} className="mr-1" />Cancelar
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex items-center justify-between gap-2 mt-0.5">
-                  <p
-                    className={`text-sm truncate ${
-                      unread > 0 ? 'text-foreground font-medium' : 'text-muted-foreground'
-                    }`}
-                  >
+              ) : (
+                /* ── Normal row ── */
+                <button
+                  className="flex-1 min-w-0 text-left"
+                  onClick={(e) => { e.stopPropagation(); onSelectConversation(contact); }}
+                >
+                  <div className="flex items-baseline justify-between gap-2">
+                    <span className="font-medium truncate text-sm">{otherName}</span>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <span className="text-[11px] text-muted-foreground">
+                        {formatTime(conv.lastMessageTime)}
+                      </span>
+                      {unread > 0 && (
+                        <span className="min-w-[20px] h-5 px-1 rounded-full bg-amber-500 text-white text-[11px] flex items-center justify-center font-bold">
+                          {unread > 99 ? '99+' : unread}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <p className={`text-sm truncate mt-0.5 ${unread > 0 ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
                     {lastMsg}
                   </p>
-                  {unread > 0 && (
-                    <span className="shrink-0 min-w-[20px] h-5 px-1 rounded-full bg-amber-500 text-white text-[11px] flex items-center justify-center font-bold">
-                      {unread > 99 ? '99+' : unread}
-                    </span>
-                  )}
-                </div>
-              </div>
-            </button>
+                </button>
+              )}
+
+              {/* Trash icon — desktop hover or shown when selected via long press */}
+              {!isPendingDelete && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(conv.id); }}
+                  className="shrink-0 p-1.5 rounded-full text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10 transition-all opacity-0 group-hover:opacity-100"
+                  title="Eliminar conversación"
+                >
+                  <Trash2 size={16} />
+                </button>
+              )}
+            </div>
           );
         })}
       </div>

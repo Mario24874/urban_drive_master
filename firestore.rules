@@ -72,8 +72,11 @@ service cloud.firestore {
       allow update: if isSignedIn() &&
         resource.data.receiverId == request.auth.uid &&
         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
-      // Only the sender can delete their own messages
-      allow delete: if isSignedIn() && resource.data.senderId == request.auth.uid;
+      // Both sender and receiver can delete messages (removes for everyone)
+      allow delete: if isSignedIn() && (
+        resource.data.senderId == request.auth.uid ||
+        resource.data.receiverId == request.auth.uid
+      );
     }
 
     // ── Conversations ───────────────────────────────────────────────────────

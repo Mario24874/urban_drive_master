@@ -297,7 +297,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                     exit={{ opacity: 0, scale: 0.9 }}
                     transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                     className={`group flex items-end gap-2 ${isOwn ? 'justify-end' : 'justify-start'}`}
-                    onTouchStart={() => isOwn && startLongPress(message.id!)}
+                    onTouchStart={() => startLongPress(message.id!)}
                     onTouchEnd={cancelLongPress}
                     onTouchMove={cancelLongPress}
                   >
@@ -311,7 +311,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                       </Avatar>
                     )}
 
-                    {/* Delete button — appears left of own bubbles on hover (desktop) or long press (mobile) */}
+                    {/* Trash — left of own bubble */}
                     {isOwn && (
                       <button
                         onClick={(e) => { e.stopPropagation(); handleDeleteMessage(message.id!); }}
@@ -360,6 +360,19 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                         </div>
                       )}
                     </div>
+
+                    {/* Trash — right of received bubble */}
+                    {!isOwn && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleDeleteMessage(message.id!); }}
+                        className={`shrink-0 p-1.5 rounded-full text-destructive/50 hover:text-destructive hover:bg-destructive/10 transition-all ${
+                          isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+                        }`}
+                        title="Eliminar mensaje"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    )}
                   </motion.div>
                 );
               })}
