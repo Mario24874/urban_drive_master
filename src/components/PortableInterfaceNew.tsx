@@ -426,6 +426,7 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
               <ConversationsList
                 currentUserId={user.id}
                 onSelectConversation={(contact) => setSelectedContact(contact)}
+                onNewChat={() => setActiveTab('contacts')}
               />
             )}
           </TabsContent>

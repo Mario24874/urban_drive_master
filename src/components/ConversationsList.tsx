@@ -3,12 +3,14 @@ import { messagingService } from '../services/messaging';
 import type { Conversation } from '../services/messaging';
 import type { Contact } from '../types';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { MessageSquare } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { MessageSquare, UserPlus } from 'lucide-react';
 import { useApp } from '../contexts/AppContext';
 
 interface ConversationsListProps {
   currentUserId: string;
   onSelectConversation: (contact: Contact) => void;
+  onNewChat: () => void;
 }
 
 function formatTime(ts: any): string {
@@ -24,6 +26,7 @@ function formatTime(ts: any): string {
 const ConversationsList: React.FC<ConversationsListProps> = ({
   currentUserId,
   onSelectConversation,
+  onNewChat,
 }) => {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -31,7 +34,16 @@ const ConversationsList: React.FC<ConversationsListProps> = ({
 
   useEffect(() => {
     const unsub = messagingService.subscribeToUserConversations(currentUserId, (convs) => {
-      setConversations(convs);
+      // Deduplicate: convs are sorted newest-first, so the first entry
+      // per otherId is always the most recent conversation.
+      const seen = new Set<string>();
+      const deduped = convs.filter((conv) => {
+        const otherId = conv.participants.find((p) => p !== currentUserId) ?? '';
+        if (!otherId || seen.has(otherId)) return false;
+        seen.add(otherId);
+        return true;
+      });
+      setConversations(deduped);
       setLoading(false);
     });
     return unsub;
@@ -53,6 +65,10 @@ const ConversationsList: React.FC<ConversationsListProps> = ({
         <p className="text-sm opacity-70">
           {t('startChatFromContacts') || 'Selecciona un contacto para iniciar un chat'}
         </p>
+        <Button variant="outline" size="sm" onClick={onNewChat} className="mt-2">
+          <UserPlus size={15} className="mr-2" />
+          {t('newChat') || 'Nuevo chat'}
+        </Button>
       </div>
     );
   }
@@ -60,8 +76,11 @@ const ConversationsList: React.FC<ConversationsListProps> = ({
   return (
     <div className="flex flex-col h-full overflow-hidden">
       {/* Header */}
-      <div className="px-4 py-3 border-b bg-background/80 backdrop-blur-sm shrink-0">
+      <div className="px-4 py-3 border-b bg-background/80 backdrop-blur-sm shrink-0 flex items-center justify-between">
         <h2 className="font-semibold text-base">{t('messages') || 'Mensajes'}</h2>
+        <Button variant="ghost" size="icon" onClick={onNewChat} title={t('newChat') || 'Nuevo chat'}>
+          <UserPlus size={18} />
+        </Button>
       </div>
 
       {/* List */}
