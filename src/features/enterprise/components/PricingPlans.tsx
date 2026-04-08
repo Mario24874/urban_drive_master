@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Check, Zap, Shield, Crown, Sparkles, Tag, Loader2 } from 'lucide-react';
+import {
+  X, Check, Zap, Shield, Crown, Sparkles, Tag, Loader2,
+  CreditCard, Building2,
+} from 'lucide-react';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { doc, setDoc, updateDoc, Timestamp } from 'firebase/firestore';
 import { db } from '../../../services/firebase';
@@ -10,6 +13,9 @@ import { STRIPE_PRICE_IDS } from '../config/stripe';
 import { SUBSCRIPTION_PLANS } from '../types/subscription';
 import type { SubscriptionTier, SubscriptionBilling } from '../types/subscription';
 import type { CouponType, DiscountCoupon } from '../../../admin/components/sections/AdminCoupons';
+import BankTransferDialog from './BankTransferDialog';
+
+type PaymentMethodOption = 'stripe' | 'transfer';
 
 interface PricingPlansProps {
   userId: string;
@@ -193,6 +199,10 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ userId, currentTier = 'free
   const { t } = useApp();
   const [billing, setBilling] = useState<SubscriptionBilling>('monthly');
   const [loadingTier, setLoadingTier] = useState<string | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethodOption>('stripe');
+
+  // Bank transfer state
+  const [transferTier, setTransferTier] = useState<Exclude<SubscriptionTier, 'free'> | null>(null);
 
   // Coupon state
   const [couponInput, setCouponInput] = useState('');
@@ -277,6 +287,12 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ userId, currentTier = 'free
   // ── Plan selection (with coupon support) ─────────────────────────────────
 
   const handleSelectPlan = async (tier: Exclude<SubscriptionTier, 'free'>) => {
+    // ── Bank transfer ────────────────────────────────────────────────────────
+    if (paymentMethod === 'transfer') {
+      setTransferTier(tier);
+      return;
+    }
+
     // ── 100% coupon: bypass Stripe, activate directly in Firestore ──────────
     if (couponData?.type === 'discount_100') {
       setLoadingTier(tier);
@@ -405,6 +421,30 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ userId, currentTier = 'free
         </div>
       </div>
 
+      {/* Payment method selector */}
+      <div className="flex-shrink-0 px-4 pb-2">
+        <div className="flex items-center justify-center gap-2">
+          {(
+            [
+              { key: 'stripe',   label: 'Stripe',              icon: <CreditCard size={13} /> },
+              { key: 'transfer', label: t('bankTransferShort'), icon: <Building2 size={13} /> },
+            ] as { key: PaymentMethodOption; label: string; icon: React.ReactNode }[]
+          ).map(({ key, label, icon }) => (
+            <button
+              key={key}
+              onClick={() => { setPaymentMethod(key); setTransferTier(null); }}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                paymentMethod === key
+                  ? 'bg-white text-gray-900 shadow-md'
+                  : 'text-white/50 hover:text-white border border-white/10 hover:border-white/30'
+              }`}
+            >
+              {icon} {label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Coupon input */}
       <div className="flex-shrink-0 px-4 pb-2">
         {!showCoupon ? (
@@ -502,6 +542,17 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ userId, currentTier = 'free
           )}
         </div>
       </div>
+
+      {/* Bank transfer dialog */}
+      {transferTier && (
+        <BankTransferDialog
+          open={!!transferTier}
+          onClose={() => setTransferTier(null)}
+          userId={userId}
+          tier={transferTier}
+          billing={billing}
+        />
+      )}
     </div>
   );
 };

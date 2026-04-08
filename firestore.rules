@@ -165,38 +165,99 @@ service cloud.firestore {
             && request.resource.data.usedBy == request.auth.uid);
     }
 
+    // ── Helper: check if user is a company admin or owner ───────────────────
+    function isCompanyAdminOrOwner(companyId) {
+      let company = get(/databases/$(database)/documents/companies/$(companyId)).data;
+      return company.ownerId == request.auth.uid ||
+             request.auth.uid in company.get('adminIds', []);
+    }
+
+    function isCompanyMember(companyId) {
+      let company = get(/databases/$(database)/documents/companies/$(companyId)).data;
+      return company.ownerId == request.auth.uid ||
+             request.auth.uid in company.get('adminIds', []) ||
+             request.auth.uid in company.get('memberIds', []);
+    }
+
     // ── Vehicles ────────────────────────────────────────────────────────────
     match /vehicles/{vehicleId} {
-      // Read: any member of the company can read
-      allow read: if isSignedIn();
-      // Write: only company admins (checked via company doc would require get())
-      // For Phase 1, allow authenticated writes; tighten in Phase 2
-      allow write: if isSignedIn();
+      // Personal vehicles (no companyId) are private; company vehicles readable by members
+      allow read: if isSignedIn() && (
+        isAdmin() ||
+        resource.data.ownerId == request.auth.uid ||
+        (resource.data.companyId != null && isCompanyMember(resource.data.companyId))
+      );
+      allow create: if isSignedIn();
+      allow update, delete: if isSignedIn() && (
+        isAdmin() ||
+        resource.data.ownerId == request.auth.uid ||
+        (resource.data.companyId != null && isCompanyAdminOrOwner(resource.data.companyId))
+      );
     }
 
     // ── Company Drivers ──────────────────────────────────────────────────────
     match /company_drivers/{driverId} {
-      allow read, write: if isSignedIn();
+      allow read: if isSignedIn() && (
+        isAdmin() ||
+        resource.data.userId == request.auth.uid ||
+        (resource.data.companyId != null && isCompanyMember(resource.data.companyId))
+      );
+      allow create: if isSignedIn() && (
+        isAdmin() ||
+        (request.resource.data.companyId != null &&
+         isCompanyAdminOrOwner(request.resource.data.companyId))
+      );
+      allow update, delete: if isSignedIn() && (
+        isAdmin() ||
+        resource.data.userId == request.auth.uid ||
+        (resource.data.companyId != null && isCompanyAdminOrOwner(resource.data.companyId))
+      );
     }
 
     // ── Company Documents ────────────────────────────────────────────────────
     match /company_documents/{documentId} {
-      allow read, write: if isSignedIn();
+      allow read: if isSignedIn() && (
+        isAdmin() ||
+        (resource.data.companyId != null && isCompanyMember(resource.data.companyId))
+      );
+      allow create: if isSignedIn() && (
+        isAdmin() ||
+        (request.resource.data.companyId != null &&
+         isCompanyAdminOrOwner(request.resource.data.companyId))
+      );
+      allow update, delete: if isSignedIn() && (
+        isAdmin() ||
+        (resource.data.companyId != null && isCompanyAdminOrOwner(resource.data.companyId))
+      );
     }
 
     // ── Vehicle Maintenance ──────────────────────────────────────────────────
     match /vehicle_maintenance/{recordId} {
-      allow read, write: if isSignedIn();
+      allow read: if isSignedIn() && (
+        isAdmin() ||
+        (resource.data.companyId != null && isCompanyMember(resource.data.companyId))
+      );
+      allow create: if isSignedIn() && (
+        isAdmin() ||
+        (request.resource.data.companyId != null &&
+         isCompanyAdminOrOwner(request.resource.data.companyId))
+      );
+      allow update, delete: if isSignedIn() && (
+        isAdmin() ||
+        (resource.data.companyId != null && isCompanyAdminOrOwner(resource.data.companyId))
+      );
     }
 
     // ── Billing history (invoices) ──────────────────────────────────────────
     match /billingHistory/{invoiceId} {
       allow read: if isAdmin() || (isSignedIn() && (
         resource.data.ownerId == request.auth.uid ||
-        isMember(resource.data.adminIds)
+        (resource.data.companyId != null && isMember(
+          get(/databases/$(database)/documents/companies/$(resource.data.companyId)).data.get('adminIds', [])
+        ))
       ));
-      allow write: if isSignedIn() &&
-        resource.data.ownerId == request.auth.uid;
+      // Billing is written exclusively by Cloud Functions (Stripe/MercadoPago webhooks)
+      allow write: if false;
     }
 
   }

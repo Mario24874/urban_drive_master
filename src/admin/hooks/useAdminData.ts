@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
-import { collection, getDocs, query, orderBy } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy, limit } from 'firebase/firestore';
 import { db } from '../../services/firebase';
+
+const ADMIN_PAGE_SIZE = 100; // Fetch at most 100 docs per collection
 
 export interface AdminUserRow {
   id: string;
@@ -31,6 +33,10 @@ export interface AdminSubscriptionRow {
   tier: string;
   billing: string;
   status: string;
+  paymentMethod?: string;
+  transferReference?: string;
+  transferAmount?: number;
+  transferCurrency?: string;
   currentPeriodStart?: Date;
   currentPeriodEnd?: Date;
   createdAt?: Date;
@@ -114,13 +120,13 @@ export function useAdminData(): AdminData {
           companiesSnap, subsSnap,
           vehiclesSnap, maintenanceSnap, docsSnap,
         ] = await Promise.all([
-          getDocs(query(collection(db, 'users'), orderBy('createdAt', 'desc'))).catch(() => null),
-          getDocs(query(collection(db, 'drivers'), orderBy('createdAt', 'desc'))).catch(() => null),
-          getDocs(collection(db, 'companies')).catch(() => null),
-          getDocs(collection(db, 'subscriptions')).catch(() => null),
-          getDocs(collection(db, 'vehicles')).catch(() => null),
-          getDocs(collection(db, 'vehicle_maintenance')).catch(() => null),
-          getDocs(collection(db, 'company_documents')).catch(() => null),
+          getDocs(query(collection(db, 'users'), orderBy('createdAt', 'desc'), limit(ADMIN_PAGE_SIZE))).catch(() => null),
+          getDocs(query(collection(db, 'drivers'), orderBy('createdAt', 'desc'), limit(ADMIN_PAGE_SIZE))).catch(() => null),
+          getDocs(query(collection(db, 'companies'), orderBy('createdAt', 'desc'), limit(ADMIN_PAGE_SIZE))).catch(() => null),
+          getDocs(query(collection(db, 'subscriptions'), limit(ADMIN_PAGE_SIZE))).catch(() => null),
+          getDocs(query(collection(db, 'vehicles'), limit(ADMIN_PAGE_SIZE))).catch(() => null),
+          getDocs(query(collection(db, 'vehicle_maintenance'), limit(ADMIN_PAGE_SIZE))).catch(() => null),
+          getDocs(query(collection(db, 'company_documents'), limit(ADMIN_PAGE_SIZE))).catch(() => null),
         ]);
 
         if (cancelled) return;
@@ -189,6 +195,10 @@ export function useAdminData(): AdminData {
             tier: data.tier ?? 'free',
             billing: data.billing ?? 'monthly',
             status: data.status ?? 'active',
+            paymentMethod: data.paymentMethod,
+            transferReference: data.transferReference,
+            transferAmount: data.transferAmount,
+            transferCurrency: data.transferCurrency,
             currentPeriodStart: toDate(data.currentPeriodStart),
             currentPeriodEnd: toDate(data.currentPeriodEnd),
             createdAt: toDate(data.createdAt),

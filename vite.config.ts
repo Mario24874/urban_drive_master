@@ -94,6 +94,12 @@ export default defineConfig({
     chunkSizeWarningLimit: 1500, // Increase limit to 1.5 MB
     target: 'esnext', // Modern build for better performance
     minify: 'terser', // Better compression
+    terserOptions: {
+      compress: {
+        drop_console: true,   // Remove all console.* in production
+        drop_debugger: true,  // Remove all debugger statements
+      },
+    },
     rollupOptions: {
       output: {
         manualChunks: {
@@ -101,10 +107,9 @@ export default defineConfig({
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
           // Firebase en su propio chunk
           'firebase-vendor': ['firebase/app', 'firebase/auth', 'firebase/firestore', 'firebase/storage'],
-          // Mapbox en su propio chunk (es grande)
-          'mapbox-vendor': ['mapbox-gl'],
           // UI components
           'ui-vendor': ['lucide-react', 'clsx', 'tailwind-merge'],
+          // mapbox-gl is lazy-loaded via GPSMapComponent — no manual chunk needed
         },
       },
     },

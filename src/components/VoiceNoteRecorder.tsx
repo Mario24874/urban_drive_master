@@ -1,10 +1,13 @@
 /**
  * VoiceNoteRecorder — inline mic button for chat input area
  * Hold → record; release → upload and call onSendVoiceNote
+ *
+ * When `voiceAllowed` is false (free-tier users), a single tap
+ * calls `onFeatureBlocked` instead of starting a recording.
  */
 
 import React from 'react';
-import { Mic, MicOff } from 'lucide-react';
+import { Mic, MicOff, Lock } from 'lucide-react';
 import { useVoiceNote } from '../hooks/useVoiceNote';
 import { useApp } from '../contexts/AppContext';
 
@@ -12,6 +15,10 @@ interface VoiceNoteRecorderProps {
   conversationId: string;
   onSendVoiceNote: (url: string, duration: number) => void;
   disabled?: boolean;
+  /** Whether the current plan allows voice notes. Default: true */
+  voiceAllowed?: boolean;
+  /** Called when user taps the mic but voice notes are not allowed on their plan */
+  onFeatureBlocked?: () => void;
 }
 
 function formatSecs(s: number): string {
@@ -24,6 +31,8 @@ const VoiceNoteRecorder: React.FC<VoiceNoteRecorderProps> = ({
   conversationId,
   onSendVoiceNote,
   disabled = false,
+  voiceAllowed = true,
+  onFeatureBlocked,
 }) => {
   const { t } = useApp();
   const { state, duration, isSupported, startRecording, stopAndSend, cancelRecording } =
@@ -34,6 +43,21 @@ const VoiceNoteRecorder: React.FC<VoiceNoteRecorderProps> = ({
   const isRecording = state === 'recording';
   const isSending = state === 'sending';
 
+  // ── Blocked (free tier) ───────────────────────────────────────────────────
+  if (!voiceAllowed) {
+    return (
+      <button
+        onClick={onFeatureBlocked}
+        title={t('voiceNotesLockedTitle')}
+        className="w-11 h-11 rounded-full flex items-center justify-center bg-gray-700 hover:bg-gray-600 transition-colors relative"
+      >
+        <Mic size={20} className="text-gray-400" />
+        <Lock size={10} className="text-amber-400 absolute bottom-1.5 right-1.5" />
+      </button>
+    );
+  }
+
+  // ── Normal recording ──────────────────────────────────────────────────────
   const handlePointerDown = async (e: React.PointerEvent) => {
     e.preventDefault();
     if (disabled || isSending) return;

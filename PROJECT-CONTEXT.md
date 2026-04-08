@@ -773,6 +773,115 @@ npx eas build:list --limit 5
 
 ---
 
+## 📋 TAREAS PENDIENTES — PRE-PRODUCCIÓN OFICIAL
+
+> Lista de mejoras a implementar antes del lanzamiento oficial. Ordenadas por prioridad.
+
+---
+
+### 📦 TAREA #1 — Distribución APK + Banner de instalación nativa
+
+**Estado:** ⏳ Pendiente de implementar
+**Fecha de registro:** 2026-03-05
+**Prioridad:** Alta — requerida para publicar en Amazon Appstore
+
+#### Contexto y diagnóstico
+
+La app actualmente solo funciona como PWA. El sistema de distribución APK existe en el código (`DownloadAPK.tsx`, `ShareAPK.tsx`, `useShareAPK.ts`, `shareAPK.ts`) pero está incompleto:
+
+- La URL del APK apunta a `http://localhost:3001/download-apk` (servidor de desarrollo, no producción)
+- Los archivos en `public/downloads/` son placeholders vacíos (16KB y 2.5KB — no son APKs reales)
+- `DownloadAPK.tsx` no está integrado en `PortableInterfaceNew` (la UI principal)
+- El proyecto Expo (`urban-drive-expo-standalone/`) tiene el código fuente nativo pero **nunca se compiló a APK real** con EAS Build
+- No hay rastreo GPS en segundo plano en la PWA (limitación de la Web API): la versión nativa sí puede hacerlo con `expo-location` + `TaskManager`
+
+#### Solución recomendada (multi-opción para el usuario)
+
+Implementar las tres modalidades de instalación de forma que el usuario elija libremente:
+
+```
+┌─────────────────────────────────────────────────────┐
+│  Al abrir la app en móvil (Android):                │
+│                                                     │
+│  📲 Banner superior (smart app banner):             │
+│     "Instala Urban Drive para mejor experiencia"    │
+│     [Instalar APK]  [Usar en navegador]             │
+│                                                     │
+│  Si el usuario cierra el banner → se guarda en      │
+│  localStorage y no vuelve a aparecer (30 días)      │
+└─────────────────────────────────────────────────────┘
+```
+
+**Opción A — PWA (actual, funciona hoy):**
+- Instalable desde el navegador con "Agregar a pantalla de inicio"
+- No requiere tienda
+- Sin GPS en segundo plano
+
+**Opción B — APK directo (link de descarga):**
+- APK firmado alojado en URL pública (Firebase Storage o CDN)
+- Descarga directa desde la app web
+- Ideal para distribución informal y sideload
+
+**Opción C — Amazon Appstore (meta final):**
+- Requiere APK firmado + cuenta de desarrollador Amazon ($0 costo)
+- Permite actualizaciones OTA a través de la tienda
+- GPS en segundo plano habilitado (permiso `ACCESS_BACKGROUND_LOCATION`)
+- Notificaciones push nativas
+
+#### Plan de implementación (fases)
+
+**Fase 1 — Compilar APK real con EAS Build**
+```bash
+cd /mnt/c/Proyectos/urban-drive-expo-standalone/
+npm install
+eas login
+eas build -p android --profile preview   # APK sin firma para pruebas
+eas build -p android --profile production # AAB firmado para tiendas
+```
+- Verificar `app.json`: `package: "com.urbandrive.app"`, permisos de ubicación, íconos
+- Habilitar `expo-location` con `taskName: "background-location"` en el proyecto Expo
+- Subir el APK resultante a Firebase Storage (carpeta `/apks/`)
+
+**Fase 2 — Actualizar URL en la PWA**
+```ts
+// src/utils/shareAPK.ts
+private static readonly APK_URL = 'https://firebasestorage.googleapis.com/.../urban-drive-latest.apk';
+```
+
+**Fase 3 — Banner de instalación nativa en móvil**
+- Nuevo componente `NativeAppBanner.tsx` — aparece en la parte superior solo en Android móvil
+- Detecta si ya es PWA instalada → no muestra el banner
+- Detecta si el usuario ya lo cerró → respeta localStorage por 30 días
+- Botones: [Descargar APK] y [Continuar en navegador]
+- Integrarlo en `PortableInterfaceNew.tsx` sobre el header
+
+**Fase 4 — Publicar en Amazon Appstore**
+- Crear cuenta en Amazon Developer Console
+- Subir el AAB/APK de producción firmado
+- Configurar ficha de la app: íconos, capturas, descripción
+- Verificar política de privacidad (requerida — puede ser la misma URL ya existente)
+
+#### Archivos a modificar/crear
+
+| Archivo | Acción |
+|---|---|
+| `src/utils/shareAPK.ts` | Actualizar `APK_URL` a URL real de Firebase Storage |
+| `src/components/NativeAppBanner.tsx` | Crear — banner de instalación para móvil Android |
+| `src/components/PortableInterfaceNew.tsx` | Integrar `NativeAppBanner` en el layout principal |
+| `urban-drive-expo-standalone/app.json` | Revisar permisos, bundle ID, íconos, versión |
+| `urban-drive-expo-standalone/eas.json` | Configurar perfiles `preview` y `production` |
+
+#### Criterios de éxito
+
+- [ ] APK real compilado con EAS Build (> 20MB, instala y abre en Android)
+- [ ] APK descargable desde la app web con URL pública funcional
+- [ ] Banner de instalación visible en Android móvil (no en iOS, no en desktop)
+- [ ] Banner no reaparece al cerrarlo (localStorage 30 días)
+- [ ] PWA sigue funcionando exactamente igual para quienes la prefieran
+- [ ] APK publicado y disponible en Amazon Appstore
+
+---
+
 ## 💼 CAPA DE SUSCRIPCIONES EMPRESARIALES (ROADMAP)
 
 > **Estado:** Diseñada y documentada. **No implementada aún.**

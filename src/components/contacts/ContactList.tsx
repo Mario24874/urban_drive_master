@@ -7,6 +7,7 @@ import {
   MoreVertical, Navigation, Car, UserRound,
   Lock, Sparkles,
 } from 'lucide-react';
+import ActiveContactSlotModal from '../ActiveContactSlotModal';
 import type { Contact, Invitation } from '../../types';
 import { useContacts } from '../../hooks/useContacts';
 
@@ -58,6 +59,8 @@ interface ContactListProps {
   maxContacts?: number;    // -1 = unlimited; default -1
   planName?: string;       // human-readable plan name for upgrade dialog
   onUpgrade?: () => void;  // callback to open PricingPlans
+  /** When true, shows the single-slot modal on accept instead of the standard limit dialog */
+  isFreeSlotPlan?: boolean;
 }
 
 const getInitials = (name: string, email?: string) =>
@@ -324,6 +327,7 @@ const ContactList: React.FC<ContactListProps> = ({
   maxContacts = -1,
   planName,
   onUpgrade,
+  isFreeSlotPlan = false,
 }) => {
   const { t } = useApp();
   const [searchTerm, setSearchTerm] = useState('');
@@ -331,6 +335,7 @@ const ContactList: React.FC<ContactListProps> = ({
   const [addSheetOpen, setAddSheetOpen] = useState(false);
   const [removeTarget, setRemoveTarget] = useState<Contact | null>(null);
   const [upgradeDialogOpen, setUpgradeDialogOpen] = useState(false);
+  const [slotModal, setSlotModal] = useState<{ invitation: Invitation } | null>(null);
 
   const {
     contacts,
@@ -353,6 +358,24 @@ const ContactList: React.FC<ContactListProps> = ({
     cancelInvitation,
     deleteInvitation,
   } = invitationsData;
+
+  // Intercept acceptInvitation when the free slot is occupied
+  const handleAcceptInvitation = (invitation: Invitation) => {
+    if (isFreeSlotPlan && isAtLimit) {
+      setSlotModal({ invitation });
+    } else {
+      acceptInvitation(invitation, userType);
+    }
+  };
+
+  // Replace: remove current contact, then accept new invitation
+  const handleReplaceContact = async (invitation: Invitation) => {
+    const current = contacts[0];
+    if (current) {
+      await removeContact(current.id, current.userType as 'user' | 'driver');
+    }
+    await acceptInvitation(invitation, userType);
+  };
 
   const filtered = contacts.filter((c) => {
     const q = searchTerm.toLowerCase();
@@ -531,7 +554,7 @@ const ContactList: React.FC<ContactListProps> = ({
                       key={inv.id}
                       invitation={inv}
                       type="received"
-                      onAccept={() => acceptInvitation(inv, userType)}
+                      onAccept={() => handleAcceptInvitation(inv)}
                       onReject={() => rejectInvitation(inv.id)}
                       onDelete={() => deleteInvitation(inv.id)}
                     />
@@ -617,6 +640,17 @@ const ContactList: React.FC<ContactListProps> = ({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Active contact slot modal — shown when free user gets 2nd invitation */}
+      <ActiveContactSlotModal
+        open={!!slotModal}
+        onClose={() => setSlotModal(null)}
+        pendingInvitation={slotModal?.invitation ?? null}
+        currentContact={contacts[0] ?? null}
+        onUpgrade={() => { setSlotModal(null); onUpgrade?.(); }}
+        onReplace={(inv) => { setSlotModal(null); handleReplaceContact(inv); }}
+        onDecline={(id) => { setSlotModal(null); rejectInvitation(id); }}
+      />
     </div>
   );
 };

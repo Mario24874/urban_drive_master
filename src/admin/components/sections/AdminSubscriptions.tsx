@@ -3,16 +3,28 @@ import { useApp } from '../../../contexts/AppContext';
 import { useAdminData } from '../../hooks/useAdminData';
 import { Input } from '../../../components/ui/input';
 import { Button } from '../../../components/ui/button';
-import { RefreshCw, Search } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '../../../components/ui/dialog';
+import { RefreshCw, Search, CheckCircle, Loader2 } from 'lucide-react';
 import { SUBSCRIPTION_PLANS } from '../../../features/enterprise/types/subscription';
+import { doc, updateDoc, Timestamp } from 'firebase/firestore';
+import { db } from '../../../services/firebase';
+import { toast } from 'sonner';
 
 const STATUS_STYLES: Record<string, string> = {
-  active:    'bg-emerald-500/15 text-emerald-600 border-emerald-500/30',
-  trialing:  'bg-blue-500/15 text-blue-600 border-blue-500/30',
-  past_due:  'bg-yellow-500/15 text-yellow-600 border-yellow-500/30',
-  canceled:  'bg-muted text-muted-foreground border-border',
-  unpaid:    'bg-red-500/15 text-red-600 border-red-500/30',
-  paused:    'bg-orange-500/15 text-orange-600 border-orange-500/30',
+  active:           'bg-emerald-500/15 text-emerald-600 border-emerald-500/30',
+  trialing:         'bg-blue-500/15 text-blue-600 border-blue-500/30',
+  past_due:         'bg-yellow-500/15 text-yellow-600 border-yellow-500/30',
+  canceled:         'bg-muted text-muted-foreground border-border',
+  unpaid:           'bg-red-500/15 text-red-600 border-red-500/30',
+  paused:           'bg-orange-500/15 text-orange-600 border-orange-500/30',
+  pending_transfer: 'bg-amber-500/15 text-amber-600 border-amber-500/30',
 };
 
 const PLAN_PRICES: Record<string, number> = {
@@ -29,6 +41,37 @@ export default function AdminSubscriptions() {
   const [search, setSearch] = useState('');
   const [tierFilter, setTierFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [activatingId, setActivatingId] = useState<string | null>(null);
+  const [activateTarget, setActivateTarget] = useState<typeof subscriptions[0] | null>(null);
+
+  const handleActivateTransfer = async () => {
+    if (!activateTarget) return;
+    setActivatingId(activateTarget.id);
+    try {
+      const now = new Date();
+      const periodEnd = new Date(now);
+      periodEnd.setMonth(
+        periodEnd.getMonth() + (activateTarget.billing === 'yearly' ? 12 : 1)
+      );
+
+      await updateDoc(doc(db, 'subscriptions', activateTarget.id), {
+        status: 'active',
+        currentPeriodStart: Timestamp.fromDate(now),
+        currentPeriodEnd: Timestamp.fromDate(periodEnd),
+        updatedAt: Timestamp.fromDate(now),
+        activatedByAdmin: true,
+      });
+
+      toast.success(t('adminActivateTransferSuccess'));
+      setActivateTarget(null);
+      refresh();
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      toast.error(t('adminActivateTransferError'), { description: message });
+    } finally {
+      setActivatingId(null);
+    }
+  };
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
@@ -90,6 +133,7 @@ export default function AdminSubscriptions() {
           <option value="trialing">Trialing</option>
           <option value="past_due">Past due</option>
           <option value="canceled">Canceled</option>
+          <option value="pending_transfer">Pending transfer</option>
         </select>
       </div>
 
@@ -103,13 +147,14 @@ export default function AdminSubscriptions() {
               <th className="text-left px-3 py-2 font-medium">Status</th>
               <th className="text-right px-3 py-2 font-medium hidden md:table-cell">Est. $</th>
               <th className="text-left px-3 py-2 font-medium hidden lg:table-cell">Period end</th>
+              <th className="text-center px-3 py-2 font-medium">Actions</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={6} className="px-3 py-8 text-center text-muted-foreground">Loading...</td></tr>
+              <tr><td colSpan={7} className="px-3 py-8 text-center text-muted-foreground">Loading...</td></tr>
             ) : filtered.length === 0 ? (
-              <tr><td colSpan={6} className="px-3 py-8 text-center text-muted-foreground">{t('adminNoData')}</td></tr>
+              <tr><td colSpan={7} className="px-3 py-8 text-center text-muted-foreground">{t('adminNoData')}</td></tr>
             ) : filtered.map((s) => (
               <tr key={s.id} className="border-t hover:bg-muted/20 transition-colors">
                 <td className="px-3 py-2 font-medium truncate max-w-[160px]">{s.ownerName || '—'}</td>
@@ -126,6 +171,22 @@ export default function AdminSubscriptions() {
                 <td className="px-3 py-2 text-muted-foreground hidden lg:table-cell">
                   {s.currentPeriodEnd ? s.currentPeriodEnd.toLocaleDateString() : '—'}
                 </td>
+                <td className="px-3 py-2 text-center">
+                  {s.status === 'pending_transfer' && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 px-2 text-xs text-emerald-600 border-emerald-500/40 hover:bg-emerald-500/10"
+                      onClick={() => setActivateTarget(s)}
+                      disabled={activatingId === s.id}
+                    >
+                      {activatingId === s.id
+                        ? <Loader2 className="h-3 w-3 animate-spin" />
+                        : <><CheckCircle className="h-3 w-3 mr-1" />{t('adminActivateTransfer')}</>
+                      }
+                    </Button>
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -133,6 +194,55 @@ export default function AdminSubscriptions() {
       </div>
 
       <p className="text-xs text-muted-foreground">{filtered.length} subscriptions shown</p>
+
+      {/* Bank transfer activation dialog */}
+      <Dialog open={!!activateTarget} onOpenChange={(v) => { if (!v) setActivateTarget(null); }}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{t('adminActivateTransferTitle')}</DialogTitle>
+            <DialogDescription>{t('adminActivateTransferDesc')}</DialogDescription>
+          </DialogHeader>
+          {activateTarget && (
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between py-1.5 border-b">
+                <span className="text-muted-foreground">Subscriber</span>
+                <span className="font-medium">{activateTarget.ownerName || activateTarget.id}</span>
+              </div>
+              <div className="flex justify-between py-1.5 border-b">
+                <span className="text-muted-foreground">Plan</span>
+                <span className="font-medium capitalize">{activateTarget.tier} — {activateTarget.billing}</span>
+              </div>
+              {activateTarget.transferReference && (
+                <div className="flex justify-between py-1.5 border-b">
+                  <span className="text-muted-foreground">{t('adminActivateTransferRef')}</span>
+                  <span className="font-mono text-xs">{activateTarget.transferReference}</span>
+                </div>
+              )}
+              {activateTarget.transferAmount != null && (
+                <div className="flex justify-between py-1.5 border-b">
+                  <span className="text-muted-foreground">{t('adminActivateTransferAmount')}</span>
+                  <span className="font-medium">
+                    ${activateTarget.transferAmount.toFixed(2)} {activateTarget.transferCurrency ?? 'USD'}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+          <DialogFooter className="gap-2 flex-col sm:flex-row">
+            <Button variant="ghost" onClick={() => setActivateTarget(null)} className="w-full sm:w-auto">
+              {t('cancel')}
+            </Button>
+            <Button
+              onClick={handleActivateTransfer}
+              disabled={!!activatingId}
+              className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-500 text-white"
+            >
+              {activatingId ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <CheckCircle className="h-4 w-4 mr-2" />}
+              {t('adminActivateTransferConfirm')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

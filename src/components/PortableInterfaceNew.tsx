@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { signOut } from 'firebase/auth';
 import { auth } from '../services/firebase';
@@ -6,10 +6,11 @@ import { useLocation } from '../hooks/useLocation';
 import { useInvitations } from '../hooks/useInvitations';
 import { useApp } from '../contexts/AppContext';
 import { useSubscription } from '../features/enterprise/hooks/useSubscription';
+import { useFreePlanLimits } from '../hooks/useFreePlanLimits';
 import type { UserData, Contact } from '../types';
 
-// Components
-import GPSMapComponent from './GPSMapComponent';
+// Components — GPSMapComponent is lazy to defer mapbox-gl loading until map tab opens
+const GPSMapComponent = lazy(() => import('./GPSMapComponent'));
 import ChatInterface from './ChatInterface';
 import ConversationsList from './ConversationsList';
 import ProfileEditor from './profile/ProfileEditor';
@@ -88,8 +89,10 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
   const { t } = useApp();
   const { tier: subscriptionTier, isActive: hasActiveSub } = useSubscription(user?.id ?? null);
   const { company } = useCompany(user?.id ?? null);
+  const planLimits = useFreePlanLimits(user?.id ?? null, subscriptionTier);
 
   const maxContacts = SUBSCRIPTION_PLANS[subscriptionTier].maxContacts;
+  const isFreeSlotPlan = subscriptionTier === 'free';
 
   // Detect post-payment redirect params (?subscription=success|canceled)
   useEffect(() => {
@@ -380,16 +383,22 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
             </motion.div>
           </TabsContent>
 
-          {/* Map Tab */}
+          {/* Map Tab — GPSMapComponent is lazy so mapbox-gl loads only on first visit */}
           <TabsContent value="map" className="h-full m-0">
-            <GPSMapComponent
-              userLocation={location}
-              user={user}
-              userId={user.id}
-              userType={user.userType}
-              isActive={activeTab === 'map'}
-              navTarget={navTarget}
-            />
+            <Suspense fallback={
+              <div className="flex h-full items-center justify-center">
+                <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              </div>
+            }>
+              <GPSMapComponent
+                userLocation={location}
+                user={user}
+                userId={user.id}
+                userType={user.userType}
+                isActive={activeTab === 'map'}
+                navTarget={navTarget}
+              />
+            </Suspense>
           </TabsContent>
 
           {/* Contacts Tab */}
@@ -409,6 +418,7 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
                 maxContacts={maxContacts}
                 planName={PLAN_LABELS[subscriptionTier]}
                 onUpgrade={() => setShowPricing(true)}
+                isFreeSlotPlan={isFreeSlotPlan}
               />
             </div>
           </TabsContent>
@@ -421,6 +431,8 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
                 currentUserName={user.displayName || user.email || 'User'}
                 selectedContact={selectedContact}
                 onBack={() => setSelectedContact(null)}
+                planLimits={planLimits}
+                onUpgrade={() => setShowPricing(true)}
               />
             ) : (
               <ConversationsList

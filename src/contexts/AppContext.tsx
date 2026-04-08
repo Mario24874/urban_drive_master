@@ -167,6 +167,36 @@ const translations: Record<Lang, Record<string, string>> = {
     contactLimitTitle: 'Contact Limit Reached',
     contactLimitDesc: 'You have reached the limit of {max} contacts on the {plan} plan. Upgrade to add more.',
     upgradePlan: 'Upgrade Plan',
+
+    // Free-tier message limits
+    msgLimitReached: 'Daily message limit reached. Upgrade to chat freely.',
+    msgLimitRemaining: '{n} messages left today',
+
+    // Free-tier active contact slot modal
+    slotModalTitle: 'Your contact slot is full',
+    slotModalDesc: '{name} wants to connect with you, but you already have an active contact.',
+    slotCurrent: 'current',
+    slotNew: 'new',
+    slotHint: 'Paid contacts can always see you on the map, even if your slot is full.',
+    slotUpgrade: 'Upgrade — see everyone',
+    slotReplace: 'Replace with {name}',
+    slotDecline: 'Decline new invitation',
+    yourContact: 'Your contact',
+
+    // Upgrade modal
+    upgradeMsgLimitTitle: 'Daily limit reached',
+    upgradeMsgLimitDesc: 'Free plan allows 2 messages per day per contact. Upgrade for unlimited messaging.',
+    upgradeVoiceTitle: 'Voice notes — paid feature',
+    upgradeVoiceDesc: 'Voice notes are available on the Bronce plan and above. Upgrade now.',
+    upgradePlanBronce: 'What you get with Bronce',
+    upgradeFeatureContacts: 'Up to 15 contacts',
+    upgradeFeatureMsgs: 'Unlimited messages',
+    upgradeFeatureVoice: 'Voice notes',
+    upgradeFeatureMap: 'See all contacts on the map',
+
+    // Voice notes plan gate
+    voiceNotesLockedTitle: 'Voice notes require a paid plan',
+
     // Portal
     manageSubscription: 'Manage Subscription',
     openingPortal: 'Opening portal...',
@@ -312,7 +342,36 @@ const translations: Record<Lang, Record<string, string>> = {
     planSubscribeTo: 'Subscribe to {plan}',
     planProcessing: 'Processing...',
     planNoCommitment: 'No commitments · Cancel anytime',
-    planSecurePayments: 'Secure payments powered by Stripe',
+    planSecurePayments: 'Secure payments — Stripe · Bank transfer',
+
+    // Payment methods
+    bankTransferShort: 'Transfer',
+    bankTransferTitle: 'Bank Transfer',
+    bankTransferDesc: 'Transfer the exact amount and include the reference.',
+    transferAmount: 'Amount to transfer',
+    bankName: 'Bank',
+    bankAccountName: 'Account name',
+    bankAccountNumber: 'Account number',
+    bankAccountType: 'Account type',
+    bankRoutingCode: 'Routing / ABA',
+    bankTransferRef: 'Reference (include in transfer)',
+    bankTransferRefHint: 'You must include this reference so we can identify your payment.',
+    transferDone: 'I already made the transfer',
+    transferring: 'Confirming…',
+    transferConfirmedTitle: 'Transfer registered!',
+    transferConfirmedDesc: 'We received your notice with reference {ref}. We will activate your plan within 1 business day.',
+    transferError: 'Could not register transfer',
+
+    // Admin bank transfer activation
+    adminActivateTransfer: 'Activate',
+    adminActivateTransferTitle: 'Activate subscription',
+    adminActivateTransferDesc: 'Confirm that the bank transfer was received and activate the subscription for this user.',
+    adminActivateTransferRef: 'Reference',
+    adminActivateTransferAmount: 'Amount',
+    adminActivateTransferConfirm: 'Confirm and activate',
+    adminActivateTransferSuccess: 'Subscription activated successfully',
+    adminActivateTransferError: 'Error activating subscription',
+
     planCancelNote: 'To cancel or change plan, contact support.',
     planStripeNotConfigured: 'Stripe Price IDs are not yet configured.',
     featDrivers: 'Drivers',
@@ -604,6 +663,36 @@ const translations: Record<Lang, Record<string, string>> = {
     contactLimitTitle: 'Límite de contactos alcanzado',
     contactLimitDesc: 'Has alcanzado el límite de {max} contactos del plan {plan}. Actualiza tu plan para agregar más.',
     upgradePlan: 'Actualizar plan',
+
+    // Free-tier message limits
+    msgLimitReached: 'Límite diario alcanzado. Actualiza tu plan para chatear sin límites.',
+    msgLimitRemaining: '{n} mensajes restantes hoy',
+
+    // Free-tier active contact slot modal
+    slotModalTitle: 'Tu espacio de contacto está ocupado',
+    slotModalDesc: '{name} quiere conectarse contigo, pero ya tienes un contacto activo.',
+    slotCurrent: 'actual',
+    slotNew: 'nuevo',
+    slotHint: 'Los contactos con plan pago siempre pueden verte en el mapa, aunque tu espacio esté lleno.',
+    slotUpgrade: 'Actualizar — ver a todos',
+    slotReplace: 'Reemplazar por {name}',
+    slotDecline: 'Rechazar nueva invitación',
+    yourContact: 'Tu contacto',
+
+    // Upgrade modal
+    upgradeMsgLimitTitle: 'Límite diario alcanzado',
+    upgradeMsgLimitDesc: 'El plan gratuito permite 2 mensajes por día por contacto. Actualiza para mensajes ilimitados.',
+    upgradeVoiceTitle: 'Notas de voz — función de pago',
+    upgradeVoiceDesc: 'Las notas de voz están disponibles en el plan Bronce y superiores.',
+    upgradePlanBronce: 'Qué obtienes con Bronce',
+    upgradeFeatureContacts: 'Hasta 15 contactos',
+    upgradeFeatureMsgs: 'Mensajes ilimitados',
+    upgradeFeatureVoice: 'Notas de voz',
+    upgradeFeatureMap: 'Ver todos tus contactos en el mapa',
+
+    // Voice notes plan gate
+    voiceNotesLockedTitle: 'Las notas de voz requieren un plan de pago',
+
     // Portal
     manageSubscription: 'Gestionar suscripción',
     openingPortal: 'Abriendo portal...',
@@ -749,7 +838,36 @@ const translations: Record<Lang, Record<string, string>> = {
     planSubscribeTo: 'Suscribirse a {plan}',
     planProcessing: 'Procesando...',
     planNoCommitment: 'Sin compromisos · Cancela cuando quieras',
-    planSecurePayments: 'Pagos seguros procesados por Stripe',
+    planSecurePayments: 'Pagos seguros — Stripe · Transferencia bancaria',
+
+    // Payment methods
+    bankTransferShort: 'Transferencia',
+    bankTransferTitle: 'Transferencia Bancaria',
+    bankTransferDesc: 'Transfiere el monto exacto e incluye la referencia en el concepto.',
+    transferAmount: 'Monto a transferir',
+    bankName: 'Banco',
+    bankAccountName: 'Titular de la cuenta',
+    bankAccountNumber: 'Número de cuenta',
+    bankAccountType: 'Tipo de cuenta',
+    bankRoutingCode: 'Código de ruta / ABA',
+    bankTransferRef: 'Referencia (incluir en la transferencia)',
+    bankTransferRefHint: 'Debes incluir esta referencia para que podamos identificar tu pago.',
+    transferDone: 'Ya realicé la transferencia',
+    transferring: 'Confirmando…',
+    transferConfirmedTitle: '¡Transferencia registrada!',
+    transferConfirmedDesc: 'Recibimos tu aviso con la referencia {ref}. Activaremos tu plan en máximo 1 día hábil.',
+    transferError: 'No se pudo registrar la transferencia',
+
+    // Admin activación de transferencia bancaria
+    adminActivateTransfer: 'Activar',
+    adminActivateTransferTitle: 'Activar suscripción',
+    adminActivateTransferDesc: 'Confirma que la transferencia bancaria fue recibida y activa la suscripción para este usuario.',
+    adminActivateTransferRef: 'Referencia',
+    adminActivateTransferAmount: 'Monto',
+    adminActivateTransferConfirm: 'Confirmar y activar',
+    adminActivateTransferSuccess: 'Suscripción activada exitosamente',
+    adminActivateTransferError: 'Error al activar la suscripción',
+
     planCancelNote: 'Para cancelar o cambiar de plan, contacta soporte.',
     planStripeNotConfigured: 'Los Price IDs de Stripe aún no han sido configurados.',
     featDrivers: 'Conductores',

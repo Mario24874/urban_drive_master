@@ -7,6 +7,7 @@ import { fcmService } from './services/fcmService';
 import { Loader2 } from 'lucide-react';
 import SplashScreen from './components/SplashScreen';
 import { AppProvider } from './contexts/AppContext';
+import ErrorBoundary from './components/ErrorBoundary';
 
 // Lazy load heavy components for code splitting
 const PortableInterface = lazy(() => import('./components/PortableInterfaceNew'));
@@ -100,9 +101,11 @@ function AppContent() {
   // Admin route — clean background, no splash
   if (isAdminRoute) {
     return (
-      <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-background"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>}>
-        <AdminPortal />
-      </Suspense>
+      <ErrorBoundary>
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-background"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>}>
+          <AdminPortal />
+        </Suspense>
+      </ErrorBoundary>
     );
   }
 
@@ -124,20 +127,24 @@ function AppContent() {
         <LoadingSpinner />
       ) : (
         <div className="relative z-10 flex-1">
-          <Suspense fallback={<LoadingSpinner />}>
-            <PortableInterface
-              user={user}
-              isAuthenticated={isAuthenticated}
-              onUserUpdate={(updatedUser) => setUser(updatedUser)}
-            />
-          </Suspense>
+          <ErrorBoundary>
+            <Suspense fallback={<LoadingSpinner />}>
+              <PortableInterface
+                user={user}
+                isAuthenticated={isAuthenticated}
+                onUserUpdate={(updatedUser) => setUser(updatedUser)}
+              />
+            </Suspense>
+          </ErrorBoundary>
         </div>
       )}
 
       {/* PWA Update Notification */}
-      <Suspense fallback={null}>
-        <PWAUpdateNotification />
-      </Suspense>
+      <ErrorBoundary fallback={null}>
+        <Suspense fallback={null}>
+          <PWAUpdateNotification />
+        </Suspense>
+      </ErrorBoundary>
     </div>
   );
 }

@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef, memo, useCallback } from 'react';
-import { Send, ArrowLeft, Check, CheckCheck, Search, X, Trash2 } from 'lucide-react';
+import { Send, ArrowLeft, Check, CheckCheck, Search, X, Trash2, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import messagingService, { Message } from '../services/messaging';
 import { Contact } from '../types';
 import { useApp } from '../contexts/AppContext';
+import type { FreePlanLimits } from '../hooks/useFreePlanLimits';
+import UpgradeModal from './UpgradeModal';
 
 // Shadcn UI Components
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -20,6 +22,10 @@ interface ChatInterfaceProps {
   currentUserName: string;
   selectedContact: Contact | null;
   onBack?: () => void;
+  /** Plan limits for the current user — controls message count and voice notes */
+  planLimits?: FreePlanLimits;
+  /** Opens the pricing/upgrade flow */
+  onUpgrade?: () => void;
 }
 
 const ChatInterface: React.FC<ChatInterfaceProps> = ({
@@ -27,6 +33,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   currentUserName,
   selectedContact,
   onBack,
+  planLimits,
+  onUpgrade,
 }) => {
   const { t } = useApp();
   const [messages, setMessages] = useState<Message[]>([]);
@@ -37,9 +45,17 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [isTyping] = useState(false);
   const [selectedMsgId, setSelectedMsgId] = useState<string | null>(null);
+  const [upgradeModal, setUpgradeModal] = useState<'message_limit' | 'voice_notes' | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Derived plan state
+  const contactId = selectedContact?.id ?? '';
+  const canSendMsg = planLimits ? planLimits.canSendMessage(contactId) : true;
+  const msgsRemaining = planLimits ? planLimits.messagesRemainingToday(contactId) : -1;
+  const isFreeTier = planLimits ? planLimits.messagesPerDay !== -1 : false;
+  const voiceAllowed = planLimits ? planLimits.canUseVoiceNotes : true;
 
   const conversationId = selectedContact
     ? [currentUserId, selectedContact.id].sort().join('_')
@@ -87,6 +103,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const handleSendMessage = async () => {
     if (!selectedContact || !newMessage.trim() || sending) return;
 
+    // Enforce plan message limit
+    if (!canSendMsg) {
+      setUpgradeModal('message_limit');
+      return;
+    }
+
     setSending(true);
     const messageContent = newMessage.trim();
     setNewMessage('');
@@ -101,7 +123,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
     if (!success) {
       setNewMessage(messageContent);
-      alert('Error sending message. Please try again.');
+    } else {
+      planLimits?.recordMessageSent(contactId);
     }
 
     setSending(false);
@@ -120,8 +143,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         url,
         duration
       );
+      planLimits?.recordMessageSent(selectedContact.id);
     },
-    [selectedContact, currentUserId, currentUserName]
+    [selectedContact, currentUserId, currentUserName, planLimits]
   );
 
   // Long-press handlers (mobile) — select own message to show delete button
@@ -412,6 +436,37 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         )}
       </ScrollArea>
 
+      {/* Free-tier message limit banner */}
+      <AnimatePresence>
+        {isFreeTier && msgsRemaining >= 0 && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className={`px-4 py-1.5 flex items-center justify-between text-xs border-t ${
+              msgsRemaining === 0
+                ? 'bg-red-950/40 border-red-800/40 text-red-300'
+                : 'bg-amber-950/30 border-amber-800/30 text-amber-300'
+            }`}
+          >
+            <span>
+              {msgsRemaining === 0
+                ? t('msgLimitReached')
+                : t('msgLimitRemaining').replace('{n}', String(msgsRemaining))}
+            </span>
+            {onUpgrade && (
+              <button
+                onClick={onUpgrade}
+                className="flex items-center gap-1 font-semibold hover:underline"
+              >
+                <Sparkles className="w-3 h-3" />
+                {t('upgradePlan')}
+              </button>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Input */}
       <div className="bg-card border-t p-4">
         <div className="flex items-center space-x-2">
@@ -421,8 +476,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder={t('typeMessage')}
-            disabled={sending}
+            placeholder={canSendMsg ? t('typeMessage') : t('msgLimitReached')}
+            disabled={sending || !canSendMsg}
             className="flex-1 rounded-full"
           />
 
@@ -432,6 +487,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
               conversationId={conversationId}
               onSendVoiceNote={handleSendVoiceNote}
               disabled={sending}
+              voiceAllowed={voiceAllowed}
+              onFeatureBlocked={() => setUpgradeModal('voice_notes')}
             />
           )}
 
@@ -443,7 +500,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
             >
               <Button
                 onClick={handleSendMessage}
-                disabled={!newMessage.trim() || sending}
+                disabled={!newMessage.trim() || sending || !canSendMsg}
                 size="icon"
                 className="rounded-full"
               >
@@ -461,6 +518,16 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
           )}
         </div>
       </div>
+
+      {/* Upgrade modals */}
+      {upgradeModal && (
+        <UpgradeModal
+          open={true}
+          reason={upgradeModal}
+          onClose={() => setUpgradeModal(null)}
+          onUpgrade={() => { setUpgradeModal(null); onUpgrade?.(); }}
+        />
+      )}
     </div>
   );
 };
