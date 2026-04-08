@@ -1,0 +1,13 @@
+node_modules
+dist
+.git
+.env
+.env.local
+.env.*.local
+functions/node_modules
+android
+ios
+*.apk
+*.aab
+*.log
+.firebase
