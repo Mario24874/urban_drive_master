@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, MapPin, MessageSquare, LogIn, UserPlus, LogOut, User, LayoutDashboard, Menu, Share } from './Icons';
+import { Home, MapPin, MessageSquare, LogIn, UserPlus, LogOut, User, LayoutDashboard, Menu } from './Icons';
 import UrbanDriveLogo from '/assets/UrbanDrive.png';
-import ShareAPK from './ShareAPK';
 
 // Shadcn UI Components
 import {
@@ -33,9 +32,7 @@ interface NavbarProps {
 }
 
 const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, handleLogout, user }) => {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
-  const location = useLocation();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);  const location = useLocation();
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -139,11 +136,6 @@ const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, handleLogout, user }) 
                         </div>
                       </div>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => setIsShareModalOpen(true)}>
-                        <Share size={16} className="mr-2" />
-                        Share App
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
                       <DropdownMenuItem
                         onClick={handleLogout}
                         className="text-red-600 focus:text-red-600"
@@ -197,17 +189,6 @@ const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, handleLogout, user }) 
 
                   {isAuthenticated && (
                     <>
-                      <Button
-                        variant="ghost"
-                        className="w-full justify-start"
-                        onClick={() => {
-                          setIsShareModalOpen(true);
-                          setIsMobileMenuOpen(false);
-                        }}
-                      >
-                        <Share size={20} className="mr-3" />
-                        Share App
-                      </Button>
 
                       <Button
                         variant="ghost"
@@ -249,12 +230,6 @@ const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, handleLogout, user }) 
         </nav>
       )}
 
-      {/* Share APK Modal */}
-      <ShareAPK
-        isOpen={isShareModalOpen}
-        onClose={() => setIsShareModalOpen(false)}
-        apkUrl="http://localhost:3001/download-apk"
-      />
     </>
   );
 };

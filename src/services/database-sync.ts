@@ -67,12 +67,9 @@ export const toggleSync = (_enabled: boolean) => {};
 
 export const monitorFirebaseConnection = () => {};
 
-export const setupSupabaseTables = async (): Promise<void> => {};
-
 export default {
   writeData,
   readData,
   getSyncStatus,
   toggleSync,
-  setupSupabaseTables,
 };
