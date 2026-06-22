@@ -3,7 +3,7 @@
 ## El problema actual:
 El token en tu `.env` es un token de ejemplo que no funciona:
 ```
-VITE_MAPBOX_ACCESS_TOKEN=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw
+VITE_MAPBOX_ACCESS_TOKEN=pk.example_token_placeholder
 ```
 
 ## ✅ Solución aplicada:
@@ -12,7 +12,7 @@ VITE_MAPBOX_ACCESS_TOKEN=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRq
 
 Tu token real de Mapbox ya está configurado:
 ```env
-VITE_MAPBOX_ACCESS_TOKEN=pk.eyJ1IjoibWFyaW9tb3Jlbm8yNDg3NCIsImEiOiJjbTFqbGxoaWUwMnIwMmpwejQ0OXM0OW4xIn0.EuaA8BT-Y1tcK7bARIOlaQ
+VITE_MAPBOX_ACCESS_TOKEN=pk.your_mapbox_public_token_here
 ```
 
 ### 2. 🚨 IMPORTANTE - Actualizar en Netlify:
@@ -24,7 +24,7 @@ VITE_MAPBOX_ACCESS_TOKEN=pk.eyJ1IjoibWFyaW9tb3Jlbm8yNDg3NCIsImEiOiJjbTFqbGxoaWUw
 3. **Busca** `VITE_MAPBOX_ACCESS_TOKEN`
 4. **Edita** y reemplaza con:
    ```
-   pk.eyJ1IjoibWFyaW9tb3Jlbm8yNDg3NCIsImEiOiJjbTFqbGxoaWUwMnIwMmpwejQ0OXM0OW4xIn0.EuaA8BT-Y1tcK7bARIOlaQ
+   pk.your_mapbox_public_token_here
    ```
 5. **Redeploy** el sitio (Deploy trigger)
 
@@ -43,7 +43,7 @@ VITE_MAPBOX_ACCESS_TOKEN=pk.eyJ1IjoibWFyaW9tb3Jlbm8yNDg3NCIsImEiOiJjbTFqbGxoaWUw
 
 Si necesitas una solución temporal inmediata, puedes usar este token público de desarrollo:
 ```
-pk.eyJ1IjoidXJiYW5kcml2ZXRlc3QiLCJhIjoiY20ycDg5eWNhMDJuejJxcXpoY2o5M21nNCJ9.vNv_9_example_token
+pk.example_token_placeholder
 ```
 
 ⚠️ **Nota**: Para producción, siempre usa tu propio token personal.

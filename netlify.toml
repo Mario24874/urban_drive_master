@@ -3,7 +3,12 @@
   publish = "dist"
 
 [build.environment]
-  SECRETS_SCAN_ENABLED = "false"
+  # Secret scanning stays ENABLED. Public client-side keys (the Firebase web
+  # config and the Mapbox public pk. token) legitimately ship in the client
+  # bundle, so they are omitted to avoid false positives. Genuinely secret keys
+  # (e.g. STRIPE_SECRET_KEY, service-role keys) are still scanned and will fail
+  # the build if they ever leak into the output.
+  SECRETS_SCAN_OMIT_KEYS = "VITE_FIREBASE_API_KEY,VITE_FIREBASE_AUTH_DOMAIN,VITE_FIREBASE_PROJECT_ID,VITE_FIREBASE_STORAGE_BUCKET,VITE_FIREBASE_MESSAGING_SENDER_ID,VITE_FIREBASE_APP_ID,VITE_MAPBOX_ACCESS_TOKEN"
   
 # Redirect all routes to index.html for SPA
 [[redirects]]

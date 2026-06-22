@@ -121,7 +121,12 @@ service cloud.firestore {
         isMember(resource.data.adminIds) ||
         isMember(resource.data.memberIds)
       ));
-      allow create: if isSignedIn();
+      // Create: a user may only create their OWN company document
+      // (doc id == uid) and must set themselves as owner. Prevents creating a
+      // company with an arbitrary ownerId or squatting another user's slot.
+      allow create: if isSignedIn()
+        && companyId == request.auth.uid
+        && request.resource.data.ownerId == request.auth.uid;
       allow update: if isSignedIn() && (
         isMember(resource.data.adminIds) ||
         resource.data.ownerId == request.auth.uid
@@ -187,7 +192,14 @@ service cloud.firestore {
         resource.data.ownerId == request.auth.uid ||
         (resource.data.companyId != null && isCompanyMember(resource.data.companyId))
       );
-      allow create: if isSignedIn();
+      // Create: only an admin/owner of the target company may add vehicles to it
+      // (the app sets companyId on creation). Closes the open create that let any
+      // signed-in user insert vehicles into arbitrary companies.
+      allow create: if isSignedIn() && (
+        isAdmin() ||
+        (request.resource.data.companyId != null &&
+         isCompanyAdminOrOwner(request.resource.data.companyId))
+      );
       allow update, delete: if isSignedIn() && (
         isAdmin() ||
         resource.data.ownerId == request.auth.uid ||
