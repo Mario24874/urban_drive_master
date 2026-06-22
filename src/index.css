@@ -344,3 +344,34 @@
   }
 }
 
+/* ── Landing: Kinetic Dark / Neon Mobility ──────────────────────────────── */
+@layer components {
+  .glow-btn {
+    @apply inline-flex items-center justify-center rounded-full bg-brand-cyan px-7 py-3 font-display font-semibold text-brand-ink transition-all;
+  }
+  .glow-btn:hover {
+    box-shadow: 0 0 28px rgba(0, 229, 255, 0.55);
+    transform: translateY(-1px);
+  }
+
+  .ghost-btn {
+    @apply inline-flex items-center justify-center rounded-full px-7 py-3 font-display font-semibold text-white ring-1 ring-white/20 transition-colors hover:bg-white/5;
+  }
+
+  .glass-card {
+    @apply rounded-2xl p-7 ring-1 ring-white/10 backdrop-blur-md;
+    background: rgba(255, 255, 255, 0.04);
+  }
+}
+
+/* Respect users who prefer reduced motion: kill all animation/transition. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+

@@ -16,7 +16,15 @@ export default {
   			md: 'calc(var(--radius) - 2px)',
   			sm: 'calc(var(--radius) - 4px)'
   		},
+  		fontFamily: {
+  			display: ['"Space Grotesk"', 'system-ui', 'sans-serif'],
+  		},
   		colors: {
+  			brand: {
+  				ink: '#0A0B0D',
+  				cyan: '#00E5FF',
+  				lime: '#B6FF3C',
+  			},
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
   			card: {
