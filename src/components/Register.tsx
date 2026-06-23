@@ -8,6 +8,8 @@ import { useNavigate } from 'react-router-dom';
 import { createUserWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth';
 import { setDoc, doc } from 'firebase/firestore';
 import { auth, db } from '../firebase';
+import SocialAuthButtons from './auth/SocialAuthButtons';
+import type { User } from '../hooks/useAuth';
 
 // Shadcn UI Components
 import { Button } from '@/components/ui/button';
@@ -455,6 +457,17 @@ const Register: React.FC<RegisterProps> = ({ handleRegister }) => {
                 </Button>
               </p>
             </div>
+
+            <SocialAuthButtons
+              label="o regístrate con"
+              onAuthenticated={(user: User) => {
+                toast.success('¡Cuenta lista!', {
+                  description: `Sesión iniciada como ${user.displayName || user.email}`,
+                });
+                handleRegister();
+                navigate(user.userType === 'user' ? '/user-dashboard' : '/driver-dashboard');
+              }}
+            />
           </CardContent>
         </Card>
       </motion.div>

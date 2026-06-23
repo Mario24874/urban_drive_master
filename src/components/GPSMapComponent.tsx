@@ -193,7 +193,8 @@ const GPSMapComponent: React.FC<GPSMapComponentProps> = ({
         
         map.current = new mapboxgl.Map({
           container: mapContainer.current,
-          style: 'mapbox://styles/mapbox/streets-v12',
+          // Estilo de marca configurado por el usuario en Mapbox Studio.
+          style: 'mapbox://styles/mariomoreno24874/cm2e3oshc002n01pbdfmv1qtj',
           center: currentLocation,
           zoom: trackedUserLocation ? 15 : 12, // Mayor zoom si tenemos ubicación precisa
           pitch: 45,

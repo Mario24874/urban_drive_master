@@ -150,7 +150,22 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
     }
     const isRegister = path === '/register';
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
+      <div className="relative min-h-screen flex items-center justify-center overflow-hidden p-4">
+        {/* Fondo branded: poster del hero (autopista nocturna) + capa de marca. */}
+        <div
+          className="pointer-events-none absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: 'url(/assets/video/hero-poster.jpg)' }}
+          aria-hidden="true"
+        />
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background:
+              'radial-gradient(70% 60% at 50% 30%, rgba(255,214,10,.10), transparent 60%), linear-gradient(180deg, rgba(10,11,13,.82), rgba(10,11,13,.95))',
+          }}
+          aria-hidden="true"
+        />
+        <div className="relative z-10 w-full max-w-md">
         {isRegister ? (
           <div className="w-full">
             <Register handleRegister={handleRegister || (() => {})} />
@@ -178,6 +193,7 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
             </div>
           </div>
         )}
+        </div>
       </div>
     );
   }

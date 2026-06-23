@@ -9,6 +9,7 @@ import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/aut
 import { getDoc, doc } from 'firebase/firestore';
 import { auth, db } from '../firebase';
 import { User } from '../hooks/useAuth';
+import SocialAuthButtons from './auth/SocialAuthButtons';
 
 // Shadcn UI Components
 import { Button } from '@/components/ui/button';
@@ -131,6 +132,14 @@ const Login: React.FC<LoginProps> = ({ handleLogin }) => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const onSocialAuthenticated = (user: User) => {
+    toast.success('¡Bienvenido!', {
+      description: `Sesión iniciada como ${user.displayName || user.email}`,
+    });
+    handleLogin({ user, email: user.email, password: '' });
+    navigate(user.userType === 'user' ? '/user-dashboard' : '/driver-dashboard');
   };
 
   const handleForgotPassword = async () => {
@@ -269,6 +278,8 @@ const Login: React.FC<LoginProps> = ({ handleLogin }) => {
               {isResettingPassword ? 'Sending...' : 'Forgot your password?'}
             </Button>
           </div>
+
+          <SocialAuthButtons onAuthenticated={onSocialAuthenticated} />
         </CardContent>
       </Card>
     </motion.div>
