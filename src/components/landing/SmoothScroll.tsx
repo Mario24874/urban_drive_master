@@ -2,8 +2,11 @@ import { useEffect, type ReactNode } from 'react';
 import Lenis from 'lenis';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { DrawSVGPlugin } from 'gsap/DrawSVGPlugin';
+import { MotionPathPlugin } from 'gsap/MotionPathPlugin';
+import { setLenis } from '../../lib/scroll';
 
-gsap.registerPlugin(ScrollTrigger);
+gsap.registerPlugin(ScrollTrigger, DrawSVGPlugin, MotionPathPlugin);
 
 /**
  * Wraps the page in Lenis smooth scrolling, synced with GSAP ScrollTrigger.
@@ -15,6 +18,7 @@ export default function SmoothScroll({ children }: { children: ReactNode }) {
     if (reduce) return;
 
     const lenis = new Lenis({ duration: 1.1, smoothWheel: true });
+    setLenis(lenis);
     lenis.on('scroll', ScrollTrigger.update);
 
     // Drive Lenis from GSAP's ticker (single rAF loop). ticker time is seconds.
@@ -25,6 +29,7 @@ export default function SmoothScroll({ children }: { children: ReactNode }) {
     return () => {
       gsap.ticker.remove(raf);
       lenis.destroy();
+      setLenis(null);
     };
   }, []);
 
