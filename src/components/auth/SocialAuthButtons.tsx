@@ -1,15 +1,7 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { signInWithProvider, type SocialProvider } from '../../lib/socialAuth';
-import type { User } from '../../hooks/useAuth';
-
-interface Props {
-  /** Texto del divisor (p.ej. "o continúa con"). */
-  label?: string;
-  /** Se llama con el perfil resuelto tras un login social exitoso. */
-  onAuthenticated: (user: User) => void;
-}
+import { startSocialSignIn, type SocialProvider } from '../../lib/socialAuth';
 
 const GoogleIcon = () => (
   <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
@@ -26,19 +18,18 @@ const AppleIcon = () => (
   </svg>
 );
 
-export default function SocialAuthButtons({ label = 'o continúa con', onAuthenticated }: Props) {
+/** Botones de login social (Google/Apple) vía redirect. */
+export default function SocialAuthButtons({ label = 'o continúa con' }: { label?: string }) {
   const [busy, setBusy] = useState<SocialProvider | null>(null);
 
   const handle = async (providerName: SocialProvider) => {
     setBusy(providerName);
     try {
-      const user = await signInWithProvider(providerName);
-      onAuthenticated(user);
+      // Inicia el redirect; la página navega al proveedor y no retorna aquí.
+      await startSocialSignIn(providerName);
     } catch (err: unknown) {
       const code = (err as { code?: string })?.code;
-      if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') {
-        // El usuario cerró el popup; no es un error que mostrar.
-      } else if (code === 'auth/operation-not-allowed') {
+      if (code === 'auth/operation-not-allowed') {
         toast.error('Proveedor no habilitado', {
           description: `Activa ${providerName === 'google' ? 'Google' : 'Apple'} en Firebase → Authentication → Sign-in method.`,
         });
@@ -47,7 +38,6 @@ export default function SocialAuthButtons({ label = 'o continúa con', onAuthent
           description: (err as { message?: string })?.message || 'Intenta de nuevo.',
         });
       }
-    } finally {
       setBusy(null);
     }
   };

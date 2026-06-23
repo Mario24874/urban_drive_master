@@ -134,14 +134,6 @@ const Login: React.FC<LoginProps> = ({ handleLogin }) => {
     }
   };
 
-  const onSocialAuthenticated = (user: User) => {
-    toast.success('¡Bienvenido!', {
-      description: `Sesión iniciada como ${user.displayName || user.email}`,
-    });
-    handleLogin({ user, email: user.email, password: '' });
-    navigate(user.userType === 'user' ? '/user-dashboard' : '/driver-dashboard');
-  };
-
   const handleForgotPassword = async () => {
     const email = form.getValues('email');
 
@@ -279,7 +271,7 @@ const Login: React.FC<LoginProps> = ({ handleLogin }) => {
             </Button>
           </div>
 
-          <SocialAuthButtons onAuthenticated={onSocialAuthenticated} />
+          <SocialAuthButtons />
         </CardContent>
       </Card>
     </motion.div>
