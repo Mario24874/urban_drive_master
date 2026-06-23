@@ -22,11 +22,13 @@ export default function RouteTrace() {
 
     // Motion normal: dibujar al hacer scroll + mover marcador por la ruta.
     mm.add('(prefers-reduced-motion: no-preference)', () => {
-      gsap.set(route.current, { drawSVG: '0%' });
+      const path = route.current;
+      if (!path) return;
+      gsap.set(path, { drawSVG: '0%' });
       // Pre-posiciona el marcador en el inicio de la ruta y hazlo visible (evita salto desde 0,0).
       gsap.set(marker.current, {
         opacity: 1,
-        motionPath: { path: ROUTE_D, align: ROUTE_D, alignOrigin: [0.5, 0.5], start: 0, end: 0 },
+        motionPath: { path: ROUTE_D, align: path, alignOrigin: [0.5, 0.5], start: 0, end: 0 },
       });
       const tl = gsap.timeline({
         scrollTrigger: {
@@ -36,11 +38,11 @@ export default function RouteTrace() {
           scrub: 1,
         },
       });
-      tl.to(route.current, { drawSVG: '100%', ease: 'none' }, 0);
+      tl.to(path, { drawSVG: '100%', ease: 'none' }, 0);
       tl.to(
         marker.current,
         {
-          motionPath: { path: ROUTE_D, align: ROUTE_D, alignOrigin: [0.5, 0.5] },
+          motionPath: { path: ROUTE_D, align: path, alignOrigin: [0.5, 0.5] },
           ease: 'none',
         },
         0,
