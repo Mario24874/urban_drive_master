@@ -369,3 +369,18 @@
   }
 }
 
+/* ── NightDriveHero: parallax CSS scroll-timeline ────────────────────────── */
+@layer utilities {
+  @keyframes nd-rise  { to { transform: translateY(-8%); } }
+  @keyframes nd-rush  { to { transform: translateY(14%) scale(1.06); } }
+  @keyframes nd-sweep { to { opacity: 0.9; transform: translateX(12%); } }
+
+  @media (prefers-reduced-motion: no-preference) {
+    @supports (animation-timeline: scroll()) {
+      .nd-skyline { animation: nd-rise  linear both; animation-timeline: scroll(root); }
+      .nd-road    { animation: nd-rush  linear both; animation-timeline: scroll(root); }
+      .nd-lights  { animation: nd-sweep linear both; animation-timeline: scroll(root); }
+    }
+  }
+}
+

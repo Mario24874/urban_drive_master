@@ -2,6 +2,7 @@ import { useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { gsap } from 'gsap';
 import NeonRoute from './NeonRoute';
+import NightDriveHero from './NightDriveHero';
 
 /**
  * Full-viewport hero: animated headline + CTAs on the left, a neon route motif
@@ -57,6 +58,7 @@ export default function HeroSection() {
       ref={root}
       className="relative flex min-h-[100svh] items-center overflow-hidden bg-brand-ink text-white"
     >
+      <NightDriveHero />
       <div
         className="pointer-events-none absolute inset-0 opacity-70"
         style={{
