@@ -1,8 +1,7 @@
 import { useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { gsap } from 'gsap';
-import NeonRoute from './NeonRoute';
-import NightDriveHero from './NightDriveHero';
+import VideoBackdrop from './VideoBackdrop';
 
 /**
  * Full-viewport hero: animated headline + CTAs on the left, a neon route motif
@@ -56,14 +55,18 @@ export default function HeroSection() {
   return (
     <section
       ref={root}
-      className="relative flex min-h-[100svh] items-center overflow-hidden bg-brand-ink/40 text-white"
+      className="relative flex min-h-[100svh] items-center overflow-hidden bg-brand-ink text-white"
     >
-      <NightDriveHero />
+      {/* Fondo cinematográfico: autopista nocturna con estelas de luces. */}
+      <div className="absolute inset-0">
+        <VideoBackdrop src="/assets/video/hero.mp4" poster="/assets/video/hero-poster.jpg" />
+      </div>
+      {/* Oscurecido + viñeta: legibilidad del texto y enmascara la suavidad del video. */}
       <div
-        className="pointer-events-none absolute inset-0 opacity-70"
+        className="pointer-events-none absolute inset-0"
         style={{
           background:
-            'radial-gradient(60% 50% at 70% 30%, rgba(255,214,10,.18), transparent 60%), radial-gradient(50% 40% at 20% 80%, rgba(255,159,10,.12), transparent 60%)',
+            'linear-gradient(90deg, rgba(10,11,13,.92) 0%, rgba(10,11,13,.72) 38%, rgba(10,11,13,.45) 100%), radial-gradient(120% 80% at 50% 100%, rgba(10,11,13,.7), transparent 60%)',
         }}
       />
       <div className="container-responsive relative z-10 grid items-center gap-10 py-20 md:grid-cols-2">
@@ -92,7 +95,9 @@ export default function HeroSection() {
           </div>
         </div>
         <div ref={art} data-hero className="relative [transform-style:preserve-3d]">
-          <NeonRoute className="mx-auto w-full max-w-lg drop-shadow-[0_0_30px_rgba(255,214,10,.25)]" />
+          <div className="mx-auto aspect-square w-full max-w-md overflow-hidden rounded-3xl ring-1 ring-brand-yellow/20 drop-shadow-[0_0_40px_rgba(255,214,10,.25)]">
+            <VideoBackdrop src="/assets/video/logoanim.mp4" poster="/assets/video/logoanim-poster.jpg" />
+          </div>
         </div>
       </div>
     </section>
