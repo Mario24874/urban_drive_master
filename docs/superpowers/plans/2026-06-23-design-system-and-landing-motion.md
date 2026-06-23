@@ -11,7 +11,13 @@
 ## Global Constraints
 
 - La app renderiza en modo `.dark`; los tokens de marca viven ahí. Light mode no es objetivo.
-- Neón (cyan `#00E5FF` / lima `#B6FF3C`) reservado para elementos *vivos/activos* (ruta, posición, foco, estado activo); las superficies base son ink + blanco a baja opacidad (glass).
+- **PALETA DE MARCA (autoritativa, supera cualquier referencia cyan/lima previa en este plan):** los colores de la marca son **amarillo + negro con gradientes** (tránsito/tránsito), con rojo/verde como acentos tipo semáforo. Valores:
+  - Base/fondo: ink `#0A0B0D` (negro).
+  - **Primario: amarillo `#FFD60A`** (texto encima = ink). Gradiente cálido hacia ámbar `#FF9F0A` (el "glow" del logo).
+  - **Acento verde `#2DD36F`** = "avanza" / posición actual / estado activo. **Acento rojo `#FF3B30`** = alto / luces traseras / destructive.
+  - Superficies base: ink + blanco a baja opacidad (glass). El amarillo/glow se reserva para CTAs y elementos vivos; no inundar todas las superficies.
+  - **Sustitución de código:** donde cualquier bloque de código de este plan muestre `#00E5FF` (cyan) úsese amarillo `#FFD60A`; donde muestre `#B6FF3C` (lima) úsese verde `#2DD36F` para el marcador "posición/avanza"; el rojo `#FF3B30` se usa para el flujo de tráfico (luces traseras) y destructive.
+  - HSL para tokens shadcn `.dark`: `--primary: 50 100% 52%` (amarillo), `--primary-foreground: 220 13% 4%`, `--accent: 146 65% 50%` (verde), `--accent-foreground: 220 13% 4%`, `--destructive: 4 100% 59%` (rojo), `--ring: 50 100% 52%`.
 - Sin WebGL/Three.js. Solo SVG, CSS scroll-timeline y canvas 2D.
 - Todo efecto de motion debe degradar bajo `prefers-reduced-motion: reduce` a un estado estático equivalente.
 - Mobile-first: escalar/abaratar efectos en pantallas chicas; pausar loops fuera de viewport.

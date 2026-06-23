@@ -18,7 +18,7 @@ const PLAN_BADGE_STYLES: Record<SubscriptionTier, string> = {
   free:   'bg-white/10 text-white/50 border border-white/15',
   bronce: 'bg-gradient-to-r from-amber-700 to-amber-500 text-white',
   plata:  'bg-gradient-to-r from-slate-500 to-slate-300 text-white',
-  oro:    'bg-gradient-to-r from-yellow-500 to-yellow-300 text-gray-900',
+  oro:    'bg-gradient-to-r from-yellow-500 to-yellow-300 text-brand-ink',
 };
 const PLAN_LABELS: Record<SubscriptionTier, string> = {
   free: 'Plan Gratuito', bronce: 'Bronce', plata: 'Plata', oro: 'Oro',

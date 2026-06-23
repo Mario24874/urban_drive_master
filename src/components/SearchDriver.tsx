@@ -40,8 +40,8 @@ const SearchDriver: React.FC<SearchDriverProps> = ({ onDriverFound }) => {
   };
   
   return (
-    <div className="p-4 bg-white rounded-lg shadow-lg">
-      <h2 className="text-xl font-semibold text-gray-900 mb-4">Search Driver</h2>
+    <div className="p-4 bg-card rounded-lg shadow-lg">
+      <h2 className="text-xl font-semibold text-foreground mb-4">Search Driver</h2>
       <input
         type="text"
         className="input-field"

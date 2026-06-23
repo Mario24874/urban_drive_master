@@ -18,9 +18,9 @@ const UserProfile: React.FC<UserProfileProps> = ({ userId, userType, isVisible }
   };
 
   return (
-    <div className="p-4 bg-white rounded-lg shadow-lg">
+    <div className="p-4 bg-card rounded-lg shadow-lg">
       <label className="flex items-center space-x-2">
-        <span className="text-gray-900">Visible</span>
+        <span className="text-foreground">Visible</span>
         <input
           type="checkbox"
           checked={visibility}

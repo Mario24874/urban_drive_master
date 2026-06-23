@@ -367,7 +367,7 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({ user, onUpdate }) => {
                         type="checkbox"
                         checked={field.value}
                         onChange={field.onChange}
-                        className="h-4 w-4 rounded border-gray-300"
+                        className="h-4 w-4 rounded border-border"
                       />
                     </FormControl>
                   </FormItem>

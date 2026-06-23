@@ -392,7 +392,7 @@ const Register: React.FC<RegisterProps> = ({ handleRegister }) => {
                           type="checkbox"
                           checked={field.value}
                           onChange={field.onChange}
-                          className="mt-1 h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                          className="mt-1 h-4 w-4 rounded border-border text-primary focus:ring-primary"
                         />
                       </FormControl>
                       <div className="space-y-1 leading-none">

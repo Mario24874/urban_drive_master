@@ -119,7 +119,7 @@ const VisibilityToggle: React.FC<VisibilityToggleProps> = ({
           {isVisible ? (
             <Eye className="w-4 h-4 text-green-600" />
           ) : (
-            <EyeOff className="w-4 h-4 text-gray-600" />
+            <EyeOff className="w-4 h-4 text-muted-foreground" />
           )}
         </div>
       </button>
@@ -127,16 +127,16 @@ const VisibilityToggle: React.FC<VisibilityToggleProps> = ({
       <div className="text-center">
         <div className="text-sm font-medium">
           {loading ? (
-            <span className="text-gray-500">Actualizando...</span>
+            <span className="text-muted-foreground">Actualizando...</span>
           ) : isVisible ? (
             <span className="text-green-600">Visible</span>
           ) : (
-            <span className="text-gray-600">Oculto</span>
+            <span className="text-muted-foreground">Oculto</span>
           )}
         </div>
         
         {lastUpdate && (
-          <div className="text-xs text-gray-500">
+          <div className="text-xs text-muted-foreground">
             Actualizado: {lastUpdate.toLocaleTimeString()}
           </div>
         )}

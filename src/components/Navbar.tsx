@@ -76,7 +76,7 @@ const Navbar: React.FC<NavbarProps> = ({ isAuthenticated, handleLogout, user }) 
               />
               <Link
                 to="/"
-                className="text-xl font-bold text-gray-900 hover:text-gray-700 transition-colors"
+                className="text-xl font-bold text-foreground hover:text-foreground transition-colors"
               >
                 Urban Drive
               </Link>

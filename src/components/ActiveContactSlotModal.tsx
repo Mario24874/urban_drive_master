@@ -83,7 +83,7 @@ const ActiveContactSlotModal: React.FC<ActiveContactSlotModalProps> = ({
               <DialogTitle className="text-base font-bold text-white">
                 {t('slotModalTitle')}
               </DialogTitle>
-              <DialogDescription className="text-sm text-gray-300 text-center">
+              <DialogDescription className="text-sm text-muted-foreground text-center">
                 {t('slotModalDesc').replace('{name}', newPersonName)}
               </DialogDescription>
             </div>
@@ -93,19 +93,19 @@ const ActiveContactSlotModal: React.FC<ActiveContactSlotModalProps> = ({
         {/* Visual: current contact → new contact */}
         <div className="flex items-center justify-center gap-3 py-2">
           <div className="flex flex-col items-center gap-1">
-            <Avatar className="w-10 h-10 border border-gray-600">
+            <Avatar className="w-10 h-10 border border-border">
               <AvatarImage src={currentContact?.photoURL} />
               <AvatarFallback className="bg-gray-700 text-white text-xs">
                 {getInitials(currentPersonName)}
               </AvatarFallback>
             </Avatar>
-            <span className="text-xs text-gray-400 max-w-[70px] truncate text-center">
+            <span className="text-xs text-muted-foreground max-w-[70px] truncate text-center">
               {currentPersonName}
             </span>
             <span className="text-[10px] text-green-400">{t('slotCurrent')}</span>
           </div>
 
-          <RefreshCw className="w-5 h-5 text-gray-500" />
+          <RefreshCw className="w-5 h-5 text-muted-foreground" />
 
           <div className="flex flex-col items-center gap-1">
             <Avatar className="w-10 h-10 border border-blue-500/50">
@@ -113,7 +113,7 @@ const ActiveContactSlotModal: React.FC<ActiveContactSlotModalProps> = ({
                 {getInitials(newPersonName, pendingInvitation.fromEmail)}
               </AvatarFallback>
             </Avatar>
-            <span className="text-xs text-gray-300 max-w-[70px] truncate text-center">
+            <span className="text-xs text-muted-foreground max-w-[70px] truncate text-center">
               {newPersonName}
             </span>
             <span className="text-[10px] text-blue-400">{t('slotNew')}</span>
@@ -121,7 +121,7 @@ const ActiveContactSlotModal: React.FC<ActiveContactSlotModalProps> = ({
         </div>
 
         {/* Info hint */}
-        <p className="text-xs text-center text-gray-500 px-2">
+        <p className="text-xs text-center text-muted-foreground px-2">
           {t('slotHint')}
         </p>
 
@@ -129,7 +129,7 @@ const ActiveContactSlotModal: React.FC<ActiveContactSlotModalProps> = ({
         <div className="flex flex-col gap-2 pt-1">
           <Button
             onClick={() => { onUpgrade(); onClose(); }}
-            className="w-full bg-gradient-to-r from-amber-600 to-amber-400 hover:from-amber-500 hover:to-amber-300 text-gray-900 font-bold"
+            className="w-full bg-gradient-to-r from-amber-600 to-amber-400 hover:from-amber-500 hover:to-amber-300 text-brand-ink font-bold"
           >
             <Sparkles className="w-4 h-4 mr-2" />
             {t('slotUpgrade')}
@@ -138,7 +138,7 @@ const ActiveContactSlotModal: React.FC<ActiveContactSlotModalProps> = ({
           <Button
             variant="outline"
             onClick={() => { onReplace(pendingInvitation); onClose(); }}
-            className="w-full border-gray-600 text-white hover:bg-white/10"
+            className="w-full border-border text-white hover:bg-white/10"
           >
             <RefreshCw className="w-4 h-4 mr-2" />
             {t('slotReplace').replace('{name}', newPersonName)}
@@ -147,7 +147,7 @@ const ActiveContactSlotModal: React.FC<ActiveContactSlotModalProps> = ({
           <Button
             variant="ghost"
             onClick={() => { onDecline(pendingInvitation.id); onClose(); }}
-            className="w-full text-gray-400 hover:text-white hover:bg-white/10"
+            className="w-full text-muted-foreground hover:text-white hover:bg-white/10"
           >
             <X className="w-4 h-4 mr-2" />
             {t('slotDecline')}

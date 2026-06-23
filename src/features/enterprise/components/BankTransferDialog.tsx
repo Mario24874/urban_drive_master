@@ -56,12 +56,12 @@ const CopyableField: React.FC<{ label: string; value: string }> = ({ label, valu
   return (
     <div className="flex items-center justify-between py-2 border-b border-gray-700 last:border-0">
       <div>
-        <p className="text-xs text-gray-400">{label}</p>
+        <p className="text-xs text-muted-foreground">{label}</p>
         <p className="text-sm font-mono text-white">{value}</p>
       </div>
       <button
         onClick={handleCopy}
-        className="p-1.5 rounded-md text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
+        className="p-1.5 rounded-md text-muted-foreground hover:text-white hover:bg-white/10 transition-colors"
       >
         {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
       </button>
@@ -134,7 +134,7 @@ const BankTransferDialog: React.FC<BankTransferDialogProps> = ({
                 <Check className="w-8 h-8 text-green-400" />
               </div>
               <DialogTitle className="text-center">{t('transferConfirmedTitle')}</DialogTitle>
-              <DialogDescription className="text-center text-gray-300">
+              <DialogDescription className="text-center text-muted-foreground">
                 {t('transferConfirmedDesc').replace('{ref}', reference)}
               </DialogDescription>
             </div>
@@ -159,7 +159,7 @@ const BankTransferDialog: React.FC<BankTransferDialogProps> = ({
             </div>
             <div>
               <DialogTitle>{t('bankTransferTitle')}</DialogTitle>
-              <DialogDescription className="text-gray-400">
+              <DialogDescription className="text-muted-foreground">
                 {t('bankTransferDesc')}
               </DialogDescription>
             </div>
@@ -168,11 +168,11 @@ const BankTransferDialog: React.FC<BankTransferDialogProps> = ({
 
         {/* Amount */}
         <div className="bg-gray-800/60 rounded-lg p-3 text-center">
-          <p className="text-xs text-gray-400 mb-1">{t('transferAmount')}</p>
+          <p className="text-xs text-muted-foreground mb-1">{t('transferAmount')}</p>
           <p className="text-2xl font-bold text-white">
-            ${amount.toFixed(2)} <span className="text-base font-normal text-gray-400">USD</span>
+            ${amount.toFixed(2)} <span className="text-base font-normal text-muted-foreground">USD</span>
           </p>
-          <p className="text-xs text-gray-400 mt-1">
+          <p className="text-xs text-muted-foreground mt-1">
             {PLAN_LABELS[tier]} — {billing === 'yearly' ? t('billingYearly') : t('billingMonthly')}
           </p>
         </div>
@@ -207,7 +207,7 @@ const BankTransferDialog: React.FC<BankTransferDialogProps> = ({
           <Button
             variant="ghost"
             onClick={onClose}
-            className="w-full text-gray-400 hover:text-white hover:bg-white/10"
+            className="w-full text-muted-foreground hover:text-white hover:bg-white/10"
           >
             {t('cancel')}
           </Button>

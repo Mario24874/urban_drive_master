@@ -99,7 +99,7 @@ const FleetAnalytics: React.FC<FleetAnalyticsProps> = ({
             {onUpgrade && (
               <button
                 onClick={() => { onClose(); onUpgrade(); }}
-                className="px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-400 text-gray-900 font-bold text-sm hover:opacity-90 transition-opacity"
+                className="px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-400 text-brand-ink font-bold text-sm hover:opacity-90 transition-opacity"
               >
                 {t('planUpgrade')}
               </button>

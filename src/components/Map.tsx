@@ -151,8 +151,8 @@ const Map: React.FC = () => {
         maxWidth: isMobile ? '200px' : '300px'
       }).setHTML(`
         <div class="p-2">
-          <h3 class="font-semibold text-gray-900">Driver ID: ${driver.id}</h3>
-          <p class="text-sm text-gray-600 mt-1">
+          <h3 class="font-semibold text-foreground">Driver ID: ${driver.id}</h3>
+          <p class="text-sm text-muted-foreground mt-1">
             Lat: ${driver.latitude.toFixed(4)}<br>
             Lng: ${driver.longitude.toFixed(4)}
           </p>
@@ -191,7 +191,7 @@ const Map: React.FC = () => {
       {isMobile && (
         <button
           onClick={() => setIsDriverListVisible(!isDriverListVisible)}
-          className="absolute top-4 left-4 bg-white bg-opacity-90 backdrop-blur-sm rounded-lg p-3 shadow-lg z-10 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 hover:bg-opacity-100"
+          className="absolute top-4 left-4 bg-card bg-opacity-90 backdrop-blur-sm rounded-lg p-3 shadow-lg z-10 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 hover:bg-opacity-100"
           aria-label={isDriverListVisible ? 'Ocultar lista de conductores' : 'Mostrar lista de conductores'}
         >
           <div className="flex items-center space-x-2">
@@ -222,18 +222,18 @@ const Map: React.FC = () => {
         }
       `}>
         <div className={`
-          bg-white bg-opacity-95 backdrop-blur-sm rounded-lg shadow-xl overflow-hidden
+          bg-card bg-opacity-95 backdrop-blur-sm rounded-lg shadow-xl overflow-hidden
           ${isMobile ? 'max-h-64' : ''}
         `}>
-          <div className="p-4 border-b border-gray-200">
+          <div className="p-4 border-b border-border">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-gray-900">
+              <h3 className="text-lg font-semibold text-foreground">
                 Conductores Disponibles ({drivers.length})
               </h3>
               {isMobile && (
                 <button
                   onClick={() => setIsDriverListVisible(false)}
-                  className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                  className="p-1 hover:bg-muted rounded-full transition-colors"
                   aria-label="Cerrar lista"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -246,8 +246,8 @@ const Map: React.FC = () => {
           
           <div className={`overflow-y-auto ${isMobile ? 'max-h-48' : 'max-h-60'} scrollbar-hide`}>
             {drivers.length === 0 ? (
-              <div className="p-4 text-center text-gray-500">
-                <svg className="w-8 h-8 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="p-4 text-center text-muted-foreground">
+                <svg className="w-8 h-8 mx-auto mb-2 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
                 <p>No hay conductores disponibles</p>
@@ -255,7 +255,7 @@ const Map: React.FC = () => {
             ) : (
               <ul className="divide-y divide-gray-200">
                 {drivers.map(driver => (
-                  <li key={driver.id} className="touch-list-item cursor-pointer hover:bg-gray-50" onClick={() => focusOnDriver(driver)}>
+                  <li key={driver.id} className="touch-list-item cursor-pointer hover:bg-muted" onClick={() => focusOnDriver(driver)}>
                     <div className="flex items-center space-x-3">
                       <div className="flex-shrink-0">
                         <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
@@ -265,15 +265,15 @@ const Map: React.FC = () => {
                         </div>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate">
+                        <p className="text-sm font-medium text-foreground truncate">
                           Conductor {driver.id}
                         </p>
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-muted-foreground">
                           {driver.latitude.toFixed(4)}, {driver.longitude.toFixed(4)}
                         </p>
                       </div>
                       <div className="flex-shrink-0">
-                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                         </svg>
                       </div>

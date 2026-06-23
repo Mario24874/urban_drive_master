@@ -53,19 +53,19 @@ const ContactSelector: React.FC<ContactSelectorProps> = ({ onContactSelected }) 
   };
 
   return (
-    <div className="p-4 bg-white rounded-lg shadow-lg">
-      <h2 className="text-xl font-semibold text-gray-900 mb-4">Select Contact</h2>
-      {loading && <p className="text-gray-700">Loading contacts...</p>}
+    <div className="p-4 bg-card rounded-lg shadow-lg">
+      <h2 className="text-xl font-semibold text-foreground mb-4">Select Contact</h2>
+      {loading && <p className="text-foreground">Loading contacts...</p>}
       {error && <p className="text-red-500">{error}</p>}
       <ul className="space-y-2">
         {contacts.map(contact => (
           <li
             key={contact.id}
-            className={`p-2 cursor-pointer rounded-lg ${selectedContact?.id === contact.id ? 'bg-gray-200' : 'bg-gray-100 hover:bg-gray-200'}`}
+            className={`p-2 cursor-pointer rounded-lg ${selectedContact?.id === contact.id ? 'bg-muted' : 'bg-muted hover:bg-muted'}`}
             onClick={() => handleContactSelect(contact)}
           >
-            <p className="text-gray-900">{contact.displayName}</p>
-            <p className="text-gray-700">{contact.phone}</p>
+            <p className="text-foreground">{contact.displayName}</p>
+            <p className="text-foreground">{contact.phone}</p>
           </li>
         ))}
       </ul>

@@ -43,13 +43,13 @@ const Messages: React.FC<MessagesProps> = ({ messages, newMessage, setNewMessage
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-lg">
-      <h2 className="text-xl font-semibold text-gray-900 mb-4">Messages</h2>
+    <div className="bg-card p-6 rounded-lg shadow-lg">
+      <h2 className="text-xl font-semibold text-foreground mb-4">Messages</h2>
       <ContactSelector onContactSelected={handleContactSelected} />
       {error && <p className="text-red-500 mt-2">{error}</p>}
       {selectedContact && (
         <div className="mt-4">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Selected Contact: {selectedContact.displayName}</h3>
+          <h3 className="text-lg font-semibold text-foreground mb-2">Selected Contact: {selectedContact.displayName}</h3>
           <form onSubmit={handleSubmit} className="mt-4 space-y-4">
             <div>
               <input
@@ -72,7 +72,7 @@ const Messages: React.FC<MessagesProps> = ({ messages, newMessage, setNewMessage
       )}
       <ul className="mt-4 space-y-2">
         {messages.map((message) => (
-          <li key={message.id} className="text-gray-700">
+          <li key={message.id} className="text-foreground">
             {message.message}
           </li>
         ))}

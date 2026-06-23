@@ -50,7 +50,7 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
             </div>
             <div>
               <h2 className="text-lg font-bold text-white mb-1">Something went wrong</h2>
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-muted-foreground">
                 {import.meta.env.DEV && this.state.error
                   ? this.state.error.message
                   : 'An unexpected error occurred. Please try refreshing.'}
@@ -67,7 +67,7 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
               <Button
                 variant="outline"
                 onClick={() => window.location.reload()}
-                className="border-gray-600 text-gray-300 hover:bg-white/10"
+                className="border-border text-muted-foreground hover:bg-white/10"
               >
                 Reload app
               </Button>

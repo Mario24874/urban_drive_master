@@ -52,7 +52,7 @@ const PLAN_VISUAL: Record<Exclude<SubscriptionTier, 'free'>, {
     gradient: 'from-slate-500 via-slate-400 to-gray-300',
     border: 'border-slate-400/60',
     hasBadge: true,
-    accentText: 'text-slate-300',
+    accentText: 'text-muted-foreground',
     highlight: true,
   },
   oro: {
@@ -104,7 +104,7 @@ const PlanCard: React.FC<{
     >
       {badgeLabel && (
         <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-          <span className="flex items-center gap-1 bg-gradient-to-r from-slate-400 to-gray-300 text-gray-900 text-xs font-bold px-3 py-1 rounded-full shadow-lg">
+          <span className="flex items-center gap-1 bg-gradient-to-r from-slate-400 to-gray-300 text-foreground text-xs font-bold px-3 py-1 rounded-full shadow-lg">
             <Sparkles size={11} /> {badgeLabel}
           </span>
         </div>
@@ -402,7 +402,7 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ userId, currentTier = 'free
           <button
             onClick={() => setBilling('monthly')}
             className={`px-5 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${
-              billing === 'monthly' ? 'bg-white text-gray-900 shadow-md' : 'text-white/60 hover:text-white'
+              billing === 'monthly' ? 'bg-card text-foreground shadow-md' : 'text-white/60 hover:text-white'
             }`}
           >
             {t('billingMonthly')}
@@ -410,7 +410,7 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ userId, currentTier = 'free
           <button
             onClick={() => setBilling('yearly')}
             className={`flex items-center gap-2 px-5 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${
-              billing === 'yearly' ? 'bg-white text-gray-900 shadow-md' : 'text-white/60 hover:text-white'
+              billing === 'yearly' ? 'bg-card text-foreground shadow-md' : 'text-white/60 hover:text-white'
             }`}
           >
             {t('billingYearly')}
@@ -435,7 +435,7 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ userId, currentTier = 'free
               onClick={() => { setPaymentMethod(key); setTransferTier(null); }}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
                 paymentMethod === key
-                  ? 'bg-white text-gray-900 shadow-md'
+                  ? 'bg-card text-foreground shadow-md'
                   : 'text-white/50 hover:text-white border border-white/10 hover:border-white/30'
               }`}
             >

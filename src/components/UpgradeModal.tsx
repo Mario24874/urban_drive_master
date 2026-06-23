@@ -87,7 +87,7 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({
               <DialogTitle className="text-lg font-bold text-white">
                 {t(config.titleKey)}
               </DialogTitle>
-              <DialogDescription className="text-sm text-gray-300 text-center">
+              <DialogDescription className="text-sm text-muted-foreground text-center">
                 {t(config.descKey)}
               </DialogDescription>
             </div>
@@ -101,7 +101,7 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({
           </p>
           <ul className="space-y-1.5">
             {PLAN_FEATURES.map(({ key }) => (
-              <li key={key} className="flex items-center gap-2 text-sm text-gray-200">
+              <li key={key} className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Sparkles className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
                 {t(key)}
               </li>
@@ -112,7 +112,7 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({
         <DialogFooter className="flex-col gap-2 sm:flex-col">
           <Button
             onClick={() => { onUpgrade(); onClose(); }}
-            className="w-full bg-gradient-to-r from-amber-600 to-amber-400 hover:from-amber-500 hover:to-amber-300 text-gray-900 font-bold"
+            className="w-full bg-gradient-to-r from-amber-600 to-amber-400 hover:from-amber-500 hover:to-amber-300 text-brand-ink font-bold"
           >
             <Sparkles className="w-4 h-4 mr-2" />
             {t('upgradePlan')}
@@ -120,7 +120,7 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({
           <Button
             variant="ghost"
             onClick={onClose}
-            className="w-full text-gray-400 hover:text-white hover:bg-white/10"
+            className="w-full text-muted-foreground hover:text-white hover:bg-white/10"
           >
             {t('cancel')}
           </Button>

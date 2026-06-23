@@ -56,11 +56,11 @@ const DriverLocation: React.FC<DriverLocationProps> = ({ userId }) => {
   }
 
   return (
-    <div className="p-4 bg-white rounded-lg shadow-lg">
-      <h3 className="text-xl font-semibold text-gray-900 mb-2">Current Location:</h3>
-      <p className="text-gray-700">Latitude: {location.latitude}</p>
-      <p className="text-gray-700">Longitude: {location.longitude}</p>
-      <p className="text-gray-700">Accuracy: {location.accuracy} meters</p>
+    <div className="p-4 bg-card rounded-lg shadow-lg">
+      <h3 className="text-xl font-semibold text-foreground mb-2">Current Location:</h3>
+      <p className="text-foreground">Latitude: {location.latitude}</p>
+      <p className="text-foreground">Longitude: {location.longitude}</p>
+      <p className="text-foreground">Accuracy: {location.accuracy} meters</p>
     </div>
   );
 };

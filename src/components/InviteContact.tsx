@@ -127,14 +127,14 @@ const InviteContact: React.FC<InviteContactProps> = ({
   if (success) {
     return (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-lg p-6 max-w-md w-full text-center">
+        <div className="bg-card rounded-lg p-6 max-w-md w-full text-center">
           <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <Check className="w-8 h-8 text-green-600" />
           </div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+          <h3 className="text-lg font-semibold text-foreground mb-2">
             ¡Invitación Enviada!
           </h3>
-          <p className="text-sm text-gray-600 mb-4">
+          <p className="text-sm text-muted-foreground mb-4">
             La invitación ha sido enviada correctamente.
           </p>
           {inviteLink && (
@@ -152,16 +152,16 @@ const InviteContact: React.FC<InviteContactProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg p-6 max-w-md w-full">
+      <div className="bg-card rounded-lg p-6 max-w-md w-full">
         {/* Header */}
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold text-gray-900">
+          <h2 className="text-xl font-semibold text-foreground">
             Invitar Contacto
           </h2>
           {onClose && (
             <button
               onClick={onClose}
-              className="text-gray-500 hover:text-gray-700"
+              className="text-muted-foreground hover:text-foreground"
             >
               <X className="w-5 h-5" />
             </button>
@@ -175,7 +175,7 @@ const InviteContact: React.FC<InviteContactProps> = ({
 
         {/* Método de invitación */}
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-foreground mb-2">
             ¿Cómo quieres enviar la invitación?
           </label>
           <div className="grid grid-cols-3 gap-2">
@@ -184,7 +184,7 @@ const InviteContact: React.FC<InviteContactProps> = ({
               className={`p-3 rounded-lg border transition-colors ${
                 inviteMethod === 'whatsapp'
                   ? 'bg-green-50 border-green-500 text-green-700'
-                  : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                  : 'bg-card border-border text-foreground hover:bg-muted'
               }`}
             >
               <MessageCircle className="w-5 h-5 mx-auto mb-1" />
@@ -196,7 +196,7 @@ const InviteContact: React.FC<InviteContactProps> = ({
               className={`p-3 rounded-lg border transition-colors ${
                 inviteMethod === 'email'
                   ? 'bg-blue-50 border-blue-500 text-blue-700'
-                  : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                  : 'bg-card border-border text-foreground hover:bg-muted'
               }`}
             >
               <Mail className="w-5 h-5 mx-auto mb-1" />
@@ -208,7 +208,7 @@ const InviteContact: React.FC<InviteContactProps> = ({
               className={`p-3 rounded-lg border transition-colors ${
                 inviteMethod === 'sms'
                   ? 'bg-purple-50 border-purple-500 text-purple-700'
-                  : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                  : 'bg-card border-border text-foreground hover:bg-muted'
               }`}
             >
               <Phone className="w-5 h-5 mx-auto mb-1" />
@@ -219,7 +219,7 @@ const InviteContact: React.FC<InviteContactProps> = ({
 
         {/* Input de identificador */}
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-foreground mb-1">
             {inviteMethod === 'email' ? 'Correo electrónico' : 'Número de teléfono'}
           </label>
           <input
@@ -227,20 +227,20 @@ const InviteContact: React.FC<InviteContactProps> = ({
             value={identifier}
             onChange={(e) => setIdentifier(e.target.value)}
             placeholder={inviteMethod === 'email' ? 'ejemplo@correo.com' : '+1234567890'}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
 
         {/* Mensaje personalizado */}
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-foreground mb-1">
             Mensaje personalizado (opcional)
           </label>
           <textarea
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             rows={3}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+            className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
           />
         </div>
 
@@ -250,7 +250,7 @@ const InviteContact: React.FC<InviteContactProps> = ({
           disabled={loading || !identifier}
           className={`w-full py-3 px-4 rounded-lg font-medium transition-colors flex items-center justify-center space-x-2 ${
             loading || !identifier
-              ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              ? 'bg-gray-300 text-muted-foreground cursor-not-allowed'
               : 'bg-blue-600 hover:bg-blue-700 text-white'
           }`}
         >
@@ -268,7 +268,7 @@ const InviteContact: React.FC<InviteContactProps> = ({
         </button>
 
         {/* Información adicional */}
-        <p className="mt-4 text-xs text-gray-500 text-center">
+        <p className="mt-4 text-xs text-muted-foreground text-center">
           La invitación será válida por 7 días. El contacto recibirá un link para unirse a Urban Drive.
         </p>
       </div>
