@@ -3,6 +3,7 @@ import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { db } from '../firebase';
 import { collection, onSnapshot } from 'firebase/firestore';
+import { MAP_STYLE } from '../lib/mapStyle';
 
 // Configura el token de acceso de Mapbox desde las variables de entorno
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
@@ -39,7 +40,7 @@ const Map: React.FC = () => {
     if (map.current) return; // Inicializa el mapa solo una vez
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mariomoreno24874/cm2e3oshc002n01pbdfmv1qtj', // Nuevo Style URL
+      style: MAP_STYLE,
       center: [-69.3348, 10.0636], // Cambiado a Barquisimeto, Venezuela
       zoom: isMobile ? 11 : 12, // Ajustar zoom para móvil
       pitch: isMobile ? 45 : 60, // Reducir inclinación en móvil

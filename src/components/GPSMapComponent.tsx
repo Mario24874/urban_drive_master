@@ -4,6 +4,7 @@ import useContactTracking from '../hooks/useContactTracking';
 import NavigationInterface from './NavigationInterface';
 import VoicePushToTalk from './VoicePushToTalk';
 import { useApp } from '../contexts/AppContext';
+import { MAP_STYLE } from '../lib/mapStyle';
 
 function createAvatarMarkerEl(
   photoURL: string | undefined,
@@ -193,8 +194,7 @@ const GPSMapComponent: React.FC<GPSMapComponentProps> = ({
         
         map.current = new mapboxgl.Map({
           container: mapContainer.current,
-          // Estilo de marca configurado por el usuario en Mapbox Studio.
-          style: 'mapbox://styles/mariomoreno24874/cm2e3oshc002n01pbdfmv1qtj',
+          style: MAP_STYLE,
           center: currentLocation,
           zoom: trackedUserLocation ? 15 : 12, // Mayor zoom si tenemos ubicación precisa
           pitch: 45,
