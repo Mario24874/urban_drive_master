@@ -19,7 +19,7 @@ describe('scrollToSection', () => {
     const scrollTo = vi.fn();
     setLenis({ scrollTo } as never);
     scrollToSection('#features');
-    expect(scrollTo).toHaveBeenCalled();
+    expect(scrollTo).toHaveBeenCalledWith(document.querySelector('#features'));
   });
 
   it('no hace nada si el target no existe', () => {
