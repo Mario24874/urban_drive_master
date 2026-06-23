@@ -36,6 +36,17 @@
     width: 100%;
     overflow-x: hidden;
   }
+  /* Public landing: scroll en la VENTANA (Lenis + ScrollTrigger lo requieren).
+     La regla de arriba fija html/body/#root a 100% para el shell de la app, lo que
+     convierte a #root en el scroller y deja ciego a window.scrollY. Esto lo libera
+     solo cuando la ruta del landing está montada (clase en <html>). */
+  html.landing-scroll,
+  html.landing-scroll body,
+  html.landing-scroll #root {
+    height: auto;
+    min-height: 100%;
+    overflow-y: visible;
+  }
   :root {
     --background: 0 0% 100%;
     --foreground: 0 0% 3.9%;

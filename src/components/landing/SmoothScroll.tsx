@@ -26,7 +26,13 @@ export default function SmoothScroll({ children }: { children: ReactNode }) {
     gsap.ticker.add(raf);
     gsap.ticker.lagSmoothing(0);
 
+    // Los ScrollTrigger de las secciones se crean (en efectos hijos) antes de que
+    // Landing libere el scroll de la ventana, así calculan start/end contra un
+    // documento constreñido. Refrescar tras el primer paint los recalcula bien.
+    const refreshId = requestAnimationFrame(() => ScrollTrigger.refresh());
+
     return () => {
+      cancelAnimationFrame(refreshId);
       gsap.ticker.remove(raf);
       lenis.destroy();
       setLenis(null);
