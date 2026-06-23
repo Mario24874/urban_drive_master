@@ -192,7 +192,7 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
       {/* ── App Header ── */}
       <header className="sticky top-0 z-50 flex items-center justify-between px-4 h-14 landscape:h-10 bg-black/50 backdrop-blur-md border-b border-white/10 flex-shrink-0">
         <div className="flex items-center gap-2">
-          <img src="/assets/UrbanDrive.png" alt="Urban Drive" className="h-8 w-8 rounded-xl" />
+          <img src="/assets/UrbanDriveLogo-512.png" alt="Urban Drive" className="h-9 w-9 rounded-xl ring-1 ring-brand-yellow/20" />
           <span className="font-bold text-white text-base hidden sm:inline">Urban Drive</span>
         </div>
         <SettingsSheet
