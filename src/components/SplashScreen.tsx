@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import VideoBackdrop from './landing/VideoBackdrop';
 
 interface SplashScreenProps {
   onDone: () => void;
@@ -24,17 +25,20 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onDone }) => {
         exit={{ opacity: 0 }}
         transition={{ duration: 0.6 }}
         className="fixed inset-0 z-50 flex flex-col items-center justify-center"
-        style={{ background: 'linear-gradient(135deg, rgba(0,0,0,0.88) 0%, rgba(10,20,40,0.92) 100%)' }}
+        style={{
+          background:
+            'radial-gradient(60% 50% at 50% 38%, rgba(255,214,10,.12), transparent 60%), linear-gradient(135deg, #0a0b0d 0%, #111317 100%)',
+        }}
       >
-        {/* Logo */}
-        <motion.img
-          src="/assets/UrbanDrive.png"
-          alt="Urban Drive"
-          className="h-28 w-28 rounded-3xl shadow-2xl mb-6"
+        {/* Logo animado (reveal 3D) */}
+        <motion.div
+          className="mb-6 h-32 w-32 overflow-hidden rounded-3xl shadow-2xl ring-1 ring-brand-yellow/20"
           initial={{ scale: 0.4, opacity: 0, y: 20 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
           transition={{ duration: 0.7, ease: [0.34, 1.56, 0.64, 1] }}
-        />
+        >
+          <VideoBackdrop src="/assets/video/logoanim.mp4" poster="/assets/video/logoanim-poster.jpg" />
+        </motion.div>
 
         {/* App name */}
         <motion.h1

@@ -180,9 +180,9 @@ const Login: React.FC<LoginProps> = ({ handleLogin }) => {
       {/* Logo */}
       <div className="text-center mb-6">
         <img
-          src="/assets/UrbanDrive.png"
+          src="/assets/UrbanDriveLogo-512.png"
           alt="Urban Drive"
-          className="h-20 w-20 mx-auto rounded-2xl shadow-xl mb-3"
+          className="h-24 w-24 mx-auto rounded-2xl shadow-xl mb-3 ring-1 ring-brand-yellow/20"
         />
         <h1 className="text-2xl font-bold text-white">Urban Drive</h1>
       </div>

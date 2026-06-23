@@ -41,7 +41,7 @@ export default function TopNav() {
     >
       <div className="container-responsive flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
-          <img src="/assets/UrbanDrive.png" alt="Urban Drive" className="h-8 w-8 rounded-xl" />
+          <img src="/assets/UrbanDriveLogo-512.png" alt="Urban Drive" className="h-9 w-9 rounded-xl ring-1 ring-brand-yellow/20" />
           <span className="font-display text-lg font-bold text-white">Urban Drive</span>
         </Link>
 
