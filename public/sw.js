@@ -3,7 +3,7 @@ const urlsToCache = [
   '/',
   '/index.html',
   '/manifest.json',
-  '/assets/UrbanDrive.png',
+  '/icons/icon-192.png',
   '/assets/marker.png',
   '/favicon.ico',
   // Note: background.jpg is NOT pre-cached due to size (2.28MB)
@@ -41,11 +41,22 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       fetch(event.request)
         .then((response) => {
+          // Cachea el shell del SPA bajo una clave estable (no por URL de ruta).
           const responseToCache = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseToCache));
+          caches.open(CACHE_NAME).then((cache) => cache.put('/index.html', responseToCache));
           return response;
         })
-        .catch(() => caches.match('/index.html'))
+        // SIEMPRE devolver una Response válida: respondWith(undefined) lanza
+        // "Failed to convert value to 'Response'".
+        .catch(async () => {
+          const cached = (await caches.match('/index.html')) || (await caches.match('/'));
+          return cached || new Response(
+            '<!doctype html><meta charset="utf-8"><title>Sin conexión</title>' +
+            '<body style="font-family:system-ui;background:#0a0b0d;color:#fff;display:grid;place-items:center;height:100vh;margin:0">' +
+            'Sin conexión. Reintenta.</body>',
+            { status: 503, headers: { 'Content-Type': 'text/html; charset=utf-8' } },
+          );
+        })
     );
     return;
   }
@@ -85,8 +96,10 @@ self.addEventListener('fetch', (event) => {
             });
 
           return response;
-        }).catch(() =>
-          caches.match(event.request) ||
+        }).catch(async () =>
+          // caches.match devuelve una Promise (siempre truthy); hay que await-earla
+          // antes del fallback, si no respondWith recibe undefined y lanza TypeError.
+          (await caches.match(event.request)) ||
           new Response('Offline - Resource not available', {
             status: 503,
             statusText: 'Service Unavailable',
@@ -136,8 +149,8 @@ self.addEventListener('sync', (event) => {
 self.addEventListener('push', (event) => {
   const options = {
     body: event.data ? event.data.text() : 'New notification from Urban Drive',
-    icon: '/assets/UrbanDrive.png',
-    badge: '/assets/UrbanDrive.png',
+    icon: '/icons/icon-192.png',
+    badge: '/icons/icon-192.png',
     vibrate: [100, 50, 100],
     data: {
       dateOfArrival: Date.now(),
