@@ -1,10 +1,9 @@
 import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { auth, db } from './services/firebase';
-import { onAuthStateChanged, getRedirectResult } from 'firebase/auth';
-import { doc, getDoc, onSnapshot, setDoc, serverTimestamp } from 'firebase/firestore';
+import { onAuthStateChanged } from 'firebase/auth';
+import { doc, getDoc, onSnapshot } from 'firebase/firestore';
 import { fcmService } from './services/fcmService';
-import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
 import SplashScreen from './components/SplashScreen';
 import { AppProvider } from './contexts/AppContext';
@@ -19,7 +18,7 @@ const AdminPortal = lazy(() => import('./admin/AdminPortal'));
 const LoadingSpinner = () => (
   <div className="min-h-screen flex items-center justify-center">
     <div className="flex flex-col items-center space-y-4">
-      <img src="/assets/UrbanDriveLogo-512.png" alt="Urban Drive" className="h-16 w-16 rounded-2xl shadow-xl mb-2 ring-1 ring-brand-yellow/20" />
+      <img src="/assets/UrbanDrive.png" alt="Urban Drive" className="h-16 w-16 rounded-2xl shadow-xl mb-2" />
       <Loader2 className="h-10 w-10 animate-spin text-white" />
       <p className="text-sm text-white/80">Loading...</p>
     </div>
@@ -39,14 +38,6 @@ function AppContent() {
 
   // Monitor authentication state and keep user doc reactive via onSnapshot
   useEffect(() => {
-    // Completa un login social por redirect (al volver del proveedor) y surface errores.
-    getRedirectResult(auth).catch((err) => {
-      console.error('Social redirect error:', err);
-      toast.error('No se pudo completar el inicio de sesión', {
-        description: err?.message || 'Intenta de nuevo.',
-      });
-    });
-
     const authUnsub = onAuthStateChanged(auth, async (firebaseUser) => {
       // Cancel previous user-doc subscription on auth change
       if (docUnsubRef.current) {
@@ -55,36 +46,9 @@ function AppContent() {
       }
 
       if (firebaseUser) {
-        // Determine which collection this user belongs to.
-        let collName: 'users' | 'drivers' = 'users';
-        const usersSnap = await getDoc(doc(db, 'users', firebaseUser.uid));
-        if (usersSnap.exists()) {
-          collName = 'users';
-        } else {
-          const driversSnap = await getDoc(doc(db, 'drivers', firebaseUser.uid));
-          if (driversSnap.exists()) {
-            collName = 'drivers';
-          } else {
-            // Sin perfil en ninguna colección. Si entró con Google/Apple es su primer
-            // ingreso social → crea un perfil de pasajero por defecto. Si es 'password',
-            // es un registro por email en curso (Register escribe su propio doc).
-            const providerId = firebaseUser.providerData[0]?.providerId;
-            if (providerId === 'google.com' || providerId === 'apple.com') {
-              await setDoc(doc(db, 'users', firebaseUser.uid), {
-                displayName: firebaseUser.displayName || '',
-                email: firebaseUser.email || '',
-                phone: firebaseUser.phoneNumber || '',
-                photoURL: firebaseUser.photoURL || '',
-                userType: 'user',
-                isVisible: true,
-                createdAt: serverTimestamp(),
-              });
-              collName = 'users';
-            } else {
-              collName = 'drivers';
-            }
-          }
-        }
+        // Determine which collection this user belongs to
+        const firstSnap = await getDoc(doc(db, 'users', firebaseUser.uid));
+        const collName = firstSnap.exists() ? 'users' : 'drivers';
 
         authUidRef.current = firebaseUser.uid;
         fcmService.initialize(firebaseUser.uid).catch(() => {});
