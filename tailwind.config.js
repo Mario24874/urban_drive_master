@@ -22,8 +22,10 @@ export default {
   		colors: {
   			brand: {
   				ink: '#0A0B0D',
-  				cyan: '#00E5FF',
-  				lime: '#B6FF3C',
+  				yellow: '#FFD60A',
+  				amber: '#FF9F0A',
+  				green: '#2DD36F',
+  				red: '#FF3B30',
   			},
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',

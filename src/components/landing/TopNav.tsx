@@ -21,7 +21,7 @@ export default function TopNav() {
         <button
           key={item.target}
           onClick={() => { scrollToSection(item.target); onNavigate?.(); }}
-          className="font-display text-sm font-medium text-white/80 transition-colors hover:text-brand-cyan"
+          className="font-display text-sm font-medium text-white/80 transition-colors hover:text-brand-yellow"
         >
           {item.label}
         </button>

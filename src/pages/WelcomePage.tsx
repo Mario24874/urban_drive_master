@@ -50,7 +50,7 @@ const WelcomePage = () => {
       <div
         data-glow
         className="pointer-events-none absolute h-72 w-72 rounded-full opacity-40"
-        style={{ background: 'radial-gradient(circle, rgba(0,229,255,.4), transparent 65%)' }}
+        style={{ background: 'radial-gradient(circle, rgba(255,214,10,.4), transparent 65%)' }}
       />
       <img
         data-intro
@@ -61,7 +61,7 @@ const WelcomePage = () => {
       <p data-intro className="relative mt-6 font-display text-2xl font-bold tracking-tight">
         Urban Drive
       </p>
-      <p data-intro className="relative mt-2 text-sm uppercase tracking-widest text-brand-cyan/80">
+      <p data-intro className="relative mt-2 text-sm uppercase tracking-widest text-brand-yellow/80">
         Movilidad en tiempo real
       </p>
     </div>

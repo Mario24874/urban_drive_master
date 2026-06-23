@@ -10,7 +10,7 @@ interface FeatureCardProps {
 export default function FeatureCard({ icon: Icon, title, desc }: FeatureCardProps) {
   return (
     <div data-reveal className="glass-card group">
-      <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-brand-cyan/10 text-brand-cyan ring-1 ring-brand-cyan/20 transition-transform group-hover:scale-110">
+      <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-brand-yellow/10 text-brand-yellow ring-1 ring-brand-yellow/20 transition-transform group-hover:scale-110">
         <Icon size={24} />
       </div>
       <h3 className="font-display text-xl font-semibold text-white">{title}</h3>

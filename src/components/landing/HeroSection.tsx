@@ -61,12 +61,12 @@ export default function HeroSection() {
         className="pointer-events-none absolute inset-0 opacity-70"
         style={{
           background:
-            'radial-gradient(60% 50% at 70% 30%, rgba(0,229,255,.18), transparent 60%), radial-gradient(50% 40% at 20% 80%, rgba(182,255,60,.12), transparent 60%)',
+            'radial-gradient(60% 50% at 70% 30%, rgba(255,214,10,.18), transparent 60%), radial-gradient(50% 40% at 20% 80%, rgba(255,159,10,.12), transparent 60%)',
         }}
       />
       <div className="container-responsive relative z-10 grid items-center gap-10 py-20 md:grid-cols-2">
         <div>
-          <p data-hero className="mb-4 font-display text-sm uppercase tracking-widest text-brand-cyan">
+          <p data-hero className="mb-4 font-display text-sm uppercase tracking-widest text-brand-yellow">
             Movilidad urbana en tiempo real
           </p>
           <h1 data-hero className="font-display text-5xl font-bold leading-[0.95] sm:text-6xl lg:text-7xl">
@@ -74,7 +74,7 @@ export default function HeroSection() {
             <br />
             la ciudad,
             <br />
-            <span className="text-brand-cyan">en vivo.</span>
+            <span className="text-brand-yellow">en vivo.</span>
           </h1>
           <p data-hero className="mt-6 max-w-md text-lg text-white/70">
             Localiza conductores en tiempo real, comunícate al instante y llega más rápido. Todo en
@@ -90,7 +90,7 @@ export default function HeroSection() {
           </div>
         </div>
         <div ref={art} data-hero className="relative [transform-style:preserve-3d]">
-          <NeonRoute className="mx-auto w-full max-w-lg drop-shadow-[0_0_30px_rgba(0,229,255,.25)]" />
+          <NeonRoute className="mx-auto w-full max-w-lg drop-shadow-[0_0_30px_rgba(255,214,10,.25)]" />
         </div>
       </div>
     </section>

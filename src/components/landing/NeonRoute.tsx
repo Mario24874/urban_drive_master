@@ -58,12 +58,12 @@ export default function NeonRoute({ className = '' }: { className?: string }) {
       <path
         ref={pathRef}
         d="M20 250 C 80 250 90 130 160 130 S 280 70 330 70 S 380 130 380 50"
-        stroke="#00E5FF"
+        stroke="#FFD60A"
         strokeWidth="3"
         strokeLinecap="round"
         filter="url(#neon-glow)"
       />
-      <circle ref={dotRef} cx="20" cy="250" r="6" fill="#B6FF3C" filter="url(#neon-glow)" />
+      <circle ref={dotRef} cx="20" cy="250" r="6" fill="#2DD36F" filter="url(#neon-glow)" />
     </svg>
   );
 }
