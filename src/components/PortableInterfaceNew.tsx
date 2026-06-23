@@ -1,4 +1,5 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
+import { useLocation as useRouterLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { signOut } from 'firebase/auth';
 import { auth } from '../services/firebase';
@@ -18,6 +19,7 @@ import ContactList from './contacts/ContactList';
 import SettingsSheet from './SettingsSheet';
 import Login from './Login';
 import Register from './Register';
+import Landing from './landing/Landing';
 import PricingPlans from '../features/enterprise/components/PricingPlans';
 import CompanySetup from '../features/enterprise/components/CompanySetup';
 import FleetManager from '../features/enterprise/components/FleetManager';
@@ -76,7 +78,6 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState('home');
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
-  const [showRegister, setShowRegister] = useState(false);
   const [navTarget, setNavTarget] = useState<Contact | null>(null);
   const [showPricing, setShowPricing] = useState(false);
   const [showCompanySetup, setShowCompanySetup] = useState(false);
@@ -87,6 +88,8 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
   const [showFleetAnalytics, setShowFleetAnalytics] = useState(false);
 
   const { t } = useApp();
+  const routerLocation = useRouterLocation();
+  const navigate = useNavigate();
   const { tier: subscriptionTier, isActive: hasActiveSub } = useSubscription(user?.id ?? null);
   const { company } = useCompany(user?.id ?? null);
   const planLimits = useFreePlanLimits(user?.id ?? null, subscriptionTier);
@@ -139,17 +142,22 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
     setActiveTab('map');
   };
 
-  // Show login/register if not authenticated
+  // Not authenticated: public marketing landing by default; auth forms on /login & /register.
   if (!isAuthenticated || !user) {
+    const path = routerLocation.pathname;
+    if (path !== '/login' && path !== '/register') {
+      return <Landing />;
+    }
+    const isRegister = path === '/register';
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
-        {showRegister ? (
+        {isRegister ? (
           <div className="w-full">
             <Register handleRegister={handleRegister || (() => {})} />
             <div className="mt-4 text-center">
               <Button
                 variant="link"
-                onClick={() => setShowRegister(false)}
+                onClick={() => navigate('/login')}
                 className="text-sm"
               >
                 {t('alreadyHaveAccount')}
@@ -162,7 +170,7 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
             <div className="mt-4 text-center">
               <Button
                 variant="link"
-                onClick={() => setShowRegister(true)}
+                onClick={() => navigate('/register')}
                 className="text-sm"
               >
                 {t('dontHaveAccount')}
