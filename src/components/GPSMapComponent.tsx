@@ -192,25 +192,46 @@ const GPSMapComponent: React.FC<GPSMapComponentProps> = ({
       try {
         console.log('Creating GPS-enabled Mapbox map with location:', currentLocation);
         
+        // En móvil/GPUs débiles (p.ej. Xiaomi Redmi A10, Mali) el render 3D con pitch
+        // alto rompe el canvas WebGL (carga y se queda en blanco). Mapa plano en móvil,
+        // sin antialias, y forzar render aunque el navegador reporte GPU lenta.
+        const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+
         map.current = new mapboxgl.Map({
           container: mapContainer.current,
           style: MAP_STYLE,
           center: currentLocation,
           zoom: trackedUserLocation ? 15 : 12, // Mayor zoom si tenemos ubicación precisa
-          pitch: 45,
+          pitch: isMobile ? 0 : 45,
           bearing: 0,
           touchZoomRotate: true,
-          touchPitch: true
+          touchPitch: !isMobile,
+          antialias: false,
+          failIfMajorPerformanceCaveat: false,
         });
 
         map.current.on('load', () => {
           console.log('GPS Map loaded successfully');
           setMapLoaded(true);
+          // El contenedor suele tener 0px al inicializar dentro de tabs/flex; forzar
+          // un resize cuando ya está visible evita un canvas roto/vacío.
+          requestAnimationFrame(() => map.current?.resize());
         });
 
         map.current.on('error', (e: any) => {
           console.error('Mapbox map error:', e);
           showFallbackMap();
+        });
+
+        // Recupera el mapa si el navegador pierde el contexto WebGL (común en
+        // dispositivos de gama baja con poca memoria).
+        const canvas = map.current.getCanvas();
+        canvas.addEventListener('webglcontextlost', (ev: Event) => {
+          ev.preventDefault();
+          console.warn('WebGL context lost; intentando recuperar el mapa');
+        });
+        canvas.addEventListener('webglcontextrestored', () => {
+          map.current?.resize();
         });
 
         // Agregar controles de navegación optimizados para móvil

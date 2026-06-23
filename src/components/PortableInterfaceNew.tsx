@@ -203,7 +203,11 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="h-screen flex flex-col"
+      className="h-screen flex flex-col bg-brand-ink"
+      style={{
+        backgroundImage:
+          'radial-gradient(80% 50% at 50% -10%, rgba(255,214,10,.07), transparent 60%), radial-gradient(60% 40% at 100% 100%, rgba(45,211,111,.05), transparent 60%)',
+      }}
     >
       {/* ── App Header ── */}
       <header className="sticky top-0 z-50 flex items-center justify-between px-4 h-14 landscape:h-10 bg-black/50 backdrop-blur-md border-b border-white/10 flex-shrink-0">

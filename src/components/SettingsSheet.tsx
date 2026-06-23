@@ -285,28 +285,23 @@ const SettingsSheet: React.FC<SettingsSheetProps> = ({
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
               {t('appearance')}
             </p>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                {theme === 'dark' ? (
-                  <Moon size={18} className="text-muted-foreground" />
-                ) : (
-                  <Sun size={18} className="text-muted-foreground" />
-                )}
-                <span className="text-sm">{theme === 'dark' ? t('darkMode') : t('lightMode')}</span>
-              </div>
-              <button
-                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
-                  theme === 'dark' ? 'bg-primary' : 'bg-input'
-                }`}
-                aria-label="Toggle dark mode"
+            <div className="flex gap-2">
+              <Button
+                variant={theme === 'light' ? 'default' : 'outline'}
+                size="sm"
+                className="flex-1 gap-2"
+                onClick={() => setTheme('light')}
               >
-                <span
-                  className={`pointer-events-none inline-block h-4 w-4 rounded-full bg-background shadow-lg ring-0 transition-transform ${
-                    theme === 'dark' ? 'translate-x-6' : 'translate-x-1'
-                  }`}
-                />
-              </button>
+                <Sun size={15} /> {t('lightMode')}
+              </Button>
+              <Button
+                variant={theme === 'dark' ? 'default' : 'outline'}
+                size="sm"
+                className="flex-1 gap-2"
+                onClick={() => setTheme('dark')}
+              >
+                <Moon size={15} /> {t('darkMode')}
+              </Button>
             </div>
           </div>
 
