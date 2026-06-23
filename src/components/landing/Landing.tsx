@@ -1,17 +1,23 @@
 import SmoothScroll from './SmoothScroll';
+import RouteTrace from './RouteTrace';
+import TopNav from './TopNav';
 import HeroSection from './HeroSection';
 import FeaturesSection from './FeaturesSection';
+import LiveSection from './LiveSection';
 import CtaSection from './CtaSection';
 
-/** Public marketing landing: smooth-scrolled hero + features + CTA. */
+/** Landing público: nav + fondo de ruta neón + secciones con motion ligado a movilidad. */
 export default function Landing() {
   return (
     <SmoothScroll>
-      <div className="bg-brand-ink">
+      <RouteTrace />
+      <TopNav />
+      <main className="relative">
         <HeroSection />
         <FeaturesSection />
+        <LiveSection />
         <CtaSection />
-      </div>
+      </main>
     </SmoothScroll>
   );
 }

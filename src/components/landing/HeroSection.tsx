@@ -56,7 +56,7 @@ export default function HeroSection() {
   return (
     <section
       ref={root}
-      className="relative flex min-h-[100svh] items-center overflow-hidden bg-brand-ink text-white"
+      className="relative flex min-h-[100svh] items-center overflow-hidden bg-brand-ink/40 text-white"
     >
       <NightDriveHero />
       <div

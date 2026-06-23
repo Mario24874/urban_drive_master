@@ -14,7 +14,7 @@ export default function FeaturesSection() {
   useGsapReveal(ref);
 
   return (
-    <section ref={ref} className="bg-brand-ink py-24">
+    <section id="features" ref={ref} className="py-24 md:py-32">
       <div className="container-responsive">
         <h2 data-reveal className="text-center font-display text-3xl font-bold text-white sm:text-4xl">
           Todo lo que necesitas para moverte

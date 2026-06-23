@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 /** Closing call-to-action with an ambient neon glow. */
 export default function CtaSection() {
   return (
-    <section className="relative overflow-hidden bg-brand-ink py-28">
+    <section id="cta" className="relative overflow-hidden py-24 md:py-32">
       <div
         className="pointer-events-none absolute inset-0 opacity-60"
         style={{ background: 'radial-gradient(50% 60% at 50% 50%, rgba(255,214,10,.15), transparent 70%)' }}
