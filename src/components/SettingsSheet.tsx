@@ -136,7 +136,7 @@ const SettingsSheet: React.FC<SettingsSheetProps> = ({
       </SheetTrigger>
       <SheetContent side="right" className="w-full sm:max-w-sm flex flex-col gap-0 p-0">
         <SheetHeader className="px-6 pt-6 pb-4">
-          <SheetTitle>{t('settings')}</SheetTitle>
+          <SheetTitle className="font-display text-xl">{t('settings')}</SheetTitle>
         </SheetHeader>
 
         <div className="flex-1 overflow-y-auto">
@@ -148,7 +148,7 @@ const SettingsSheet: React.FC<SettingsSheetProps> = ({
                 <AvatarFallback className="text-lg">{initials}</AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0">
-                <p className="font-semibold truncate">{user.displayName || user.email}</p>
+                <p className="font-display font-semibold truncate">{user.displayName || user.email}</p>
                 <p className="text-sm text-muted-foreground truncate">{user.email}</p>
                 <div className="flex items-center gap-2 mt-1 flex-wrap">
                   <Badge variant="outline" className="text-xs flex items-center gap-1">
