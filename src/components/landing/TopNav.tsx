@@ -1,9 +1,10 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Menu } from 'lucide-react';
 import { useScrolled } from '../../hooks/useScrolled';
 import { scrollToSection } from '../../lib/scroll';
 import {
-  Sheet, SheetContent, SheetTrigger, SheetClose,
+  Sheet, SheetContent, SheetTrigger,
 } from '@/components/ui/sheet';
 
 const NAV = [
@@ -12,22 +13,23 @@ const NAV = [
   { label: 'Empezar', target: '#cta' },
 ];
 
+const NavLinks = ({ onNavigate }: { onNavigate?: () => void }) => (
+  <>
+    {NAV.map((item) => (
+      <button
+        key={item.target}
+        onClick={() => { scrollToSection(item.target); onNavigate?.(); }}
+        className="font-display text-sm font-medium text-white/80 transition-colors hover:text-brand-yellow"
+      >
+        {item.label}
+      </button>
+    ))}
+  </>
+);
+
 export default function TopNav() {
   const scrolled = useScrolled(10);
-
-  const NavLinks = ({ onNavigate }: { onNavigate?: () => void }) => (
-    <>
-      {NAV.map((item) => (
-        <button
-          key={item.target}
-          onClick={() => { scrollToSection(item.target); onNavigate?.(); }}
-          className="font-display text-sm font-medium text-white/80 transition-colors hover:text-brand-yellow"
-        >
-          {item.label}
-        </button>
-      ))}
-    </>
-  );
+  const [open, setOpen] = useState(false);
 
   return (
     <header
@@ -52,17 +54,13 @@ export default function TopNav() {
           <Link to="/register" className="glow-btn !px-5 !py-2 text-sm">Empezar</Link>
         </div>
 
-        <Sheet>
+        <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger className="lg:hidden text-white" aria-label="Abrir menú">
             <Menu />
           </SheetTrigger>
           <SheetContent side="right" className="border-white/10 bg-brand-ink/95 backdrop-blur-xl">
             <div className="mt-10 flex flex-col gap-6">
-              <SheetClose asChild>
-                <div className="flex flex-col items-start gap-6">
-                  <NavLinks />
-                </div>
-              </SheetClose>
+              <NavLinks onNavigate={() => setOpen(false)} />
               <Link to="/login" className="ghost-btn w-full">Iniciar sesión</Link>
               <Link to="/register" className="glow-btn w-full">Empezar</Link>
             </div>
