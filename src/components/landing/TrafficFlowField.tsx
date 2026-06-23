@@ -39,9 +39,6 @@ export default function TrafficFlowField() {
 
     let raf = 0;
     let running = true;
-    const io = new IntersectionObserver(([e]) => { running = e.isIntersecting; }, { threshold: 0 });
-    io.observe(canvas);
-
     const draw = () => {
       const boost = reduce ? 0 : speedRef.current;
       ctx.fillStyle = 'rgba(10,11,13,0.25)';
@@ -60,6 +57,13 @@ export default function TrafficFlowField() {
       }
       if (!reduce && running) raf = requestAnimationFrame(draw);
     };
+    // Pausa el RAF fuera de viewport; al reentrar, reanuda el loop (no solo running=true).
+    const io = new IntersectionObserver(([e]) => {
+      running = e.isIntersecting;
+      if (running && !reduce) { cancelAnimationFrame(raf); raf = requestAnimationFrame(draw); }
+    }, { threshold: 0 });
+    io.observe(canvas);
+
     draw(); // un frame siempre; loop solo si hay motion
 
     return () => { cancelAnimationFrame(raf); io.disconnect(); window.removeEventListener('resize', resize); };
