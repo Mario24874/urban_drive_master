@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { LogOut, RefreshCw, Settings, Download, Car, UserRound, Sparkles, ExternalLink, Building2, Users, Wrench, FileText, BarChart2 } from 'lucide-react';
+import { LogOut, RefreshCw, Settings, Download, Car, UserRound, Sparkles, ExternalLink, Building2, Users, Wrench, FileText, BarChart2, Bell, BellOff } from 'lucide-react';
+import { fcmService } from '../services/fcmService';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import app from '../services/firebase';
 import { toast } from 'sonner';
@@ -55,6 +56,23 @@ const SettingsSheet: React.FC<SettingsSheetProps> = ({
 
   const [open, setOpen] = useState(false);
   const [isOpeningPortal, setIsOpeningPortal] = useState(false);
+  const [notifMuted, setNotifMuted] = useState<boolean>(() => fcmService.isMuted());
+  const [savingMute, setSavingMute] = useState(false);
+
+  const handleToggleMute = async () => {
+    if (savingMute) return;
+    const next = !notifMuted;
+    setSavingMute(true);
+    try {
+      await fcmService.setMuted(user.id, next);
+      setNotifMuted(next);
+      toast.success(next ? t('notifMutedOn') : t('notifMutedOff'));
+    } catch {
+      toast.error(t('notifMuteError'));
+    } finally {
+      setSavingMute(false);
+    }
+  };
 
   const handleOpenPortal = async () => {
     setIsOpeningPortal(true);
@@ -301,6 +319,37 @@ const SettingsSheet: React.FC<SettingsSheetProps> = ({
                 onClick={() => setLang('es')}
               >
                 🇪🇸 Español
+              </Button>
+            </div>
+          </div>
+
+          <Separator className="mx-6 w-auto" />
+
+          {/* ── Notifications ── */}
+          <div className="px-6 py-4 space-y-3">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              {t('notifications')}
+            </p>
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2 min-w-0">
+                {notifMuted
+                  ? <BellOff size={16} className="text-white/40 flex-shrink-0" />
+                  : <Bell size={16} className="text-brand-yellow flex-shrink-0" />}
+                <div className="min-w-0">
+                  <p className="text-sm">{t('notifSoundAndPush')}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {notifMuted ? t('notifStateMuted') : t('notifStateActive')}
+                  </p>
+                </div>
+              </div>
+              <Button
+                variant={notifMuted ? 'outline' : 'default'}
+                size="sm"
+                className="flex-shrink-0"
+                onClick={handleToggleMute}
+                disabled={savingMute}
+              >
+                {notifMuted ? t('notifUnmute') : t('notifMute')}
               </Button>
             </div>
           </div>

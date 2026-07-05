@@ -184,6 +184,35 @@ const translations: Record<Lang, Record<string, string>> = {
     mapSlotBadge: 'On map',
     mapSlotSet: 'Show on my map',
 
+    // Invite links
+    orDivider: 'or',
+    inviteCreateLink: 'Create invite link',
+    inviteShare: 'Share',
+    inviteCopy: 'Copy',
+    inviteCopied: 'Link copied!',
+    inviteCopyFailed: 'Could not copy — link:',
+    inviteShareText: 'Join me on Urban Drive so we can see each other on the map',
+    inviteLinkItem: 'Invite link',
+    inviteRedeemedTitle: 'Contact added!',
+    inviteRedeemedDesc: '{name} is now in your contacts',
+    inviteErrorTitle: 'Could not redeem invitation',
+    inviteInvalid: 'This invitation link is not valid',
+    inviteUsed: 'This link was already used or cancelled',
+    inviteOwn: 'You cannot use your own invite link',
+    inviteBannerText: '{name} wants to connect with you',
+    inviteBannerMore: '+{n} more pending',
+
+    // Notifications
+    notifications: 'Notifications',
+    notifSoundAndPush: 'Sound and push notifications',
+    notifStateActive: 'Active — new messages will alert you',
+    notifStateMuted: 'Muted — no sound or push',
+    notifMute: 'Mute',
+    notifUnmute: 'Unmute',
+    notifMutedOn: 'Notifications muted',
+    notifMutedOff: 'Notifications active',
+    notifMuteError: 'Could not update notification settings',
+
     // Free-tier active contact slot modal
     slotModalTitle: 'Your contact slot is full',
     slotModalDesc: '{name} wants to connect with you, but you already have an active contact.',
@@ -691,6 +720,35 @@ const translations: Record<Lang, Record<string, string>> = {
     // Free-tier map slot
     mapSlotBadge: 'En mapa',
     mapSlotSet: 'Ver en mi mapa',
+
+    // Invite links
+    orDivider: 'o',
+    inviteCreateLink: 'Crear enlace de invitación',
+    inviteShare: 'Compartir',
+    inviteCopy: 'Copiar',
+    inviteCopied: '¡Enlace copiado!',
+    inviteCopyFailed: 'No se pudo copiar — enlace:',
+    inviteShareText: 'Únete a Urban Drive para vernos en el mapa',
+    inviteLinkItem: 'Enlace de invitación',
+    inviteRedeemedTitle: '¡Contacto agregado!',
+    inviteRedeemedDesc: '{name} ya está en tus contactos',
+    inviteErrorTitle: 'No se pudo canjear la invitación',
+    inviteInvalid: 'Este enlace de invitación no es válido',
+    inviteUsed: 'Este enlace ya fue usado o cancelado',
+    inviteOwn: 'No puedes usar tu propio enlace',
+    inviteBannerText: '{name} quiere conectar contigo',
+    inviteBannerMore: '+{n} más pendientes',
+
+    // Notifications
+    notifications: 'Notificaciones',
+    notifSoundAndPush: 'Sonido y notificaciones push',
+    notifStateActive: 'Activas — te avisarán los mensajes nuevos',
+    notifStateMuted: 'Silenciadas — sin sonido ni push',
+    notifMute: 'Silenciar',
+    notifUnmute: 'Activar',
+    notifMutedOn: 'Notificaciones silenciadas',
+    notifMutedOff: 'Notificaciones activas',
+    notifMuteError: 'No se pudo actualizar la configuración',
 
     // Free-tier active contact slot modal
     slotModalTitle: 'Tu espacio de contacto está ocupado',

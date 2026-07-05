@@ -13,6 +13,7 @@ import type { UserData, Contact } from '../types';
 // Components — GPSMapComponent is lazy to defer mapbox-gl loading until map tab opens
 const GPSMapComponent = lazy(() => import('./GPSMapComponent'));
 import ChatInterface from './ChatInterface';
+import InvitationBanner from './InvitationBanner';
 import messagingService from '../services/messaging';
 import ConversationsList from './ConversationsList';
 import ProfileEditor from './profile/ProfileEditor';
@@ -241,6 +242,15 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
           onOpenFleetAnalytics={() => setShowFleetAnalytics(true)}
         />
       </header>
+
+      {/* Invitación pendiente — aceptar/rechazar en 1 tap */}
+      <InvitationBanner
+        invitation={invitationsData.received[0] ?? null}
+        count={invitationsData.pendingCount}
+        onAccept={(inv) => invitationsData.acceptInvitation(inv, user.userType)}
+        onReject={(inv) => invitationsData.rejectInvitation(inv.id)}
+        onView={() => setActiveTab('contacts')}
+      />
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
         {/* Desktop Tabs List */}

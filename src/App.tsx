@@ -4,6 +4,7 @@ import { auth, db } from './services/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc, onSnapshot } from 'firebase/firestore';
 import { fcmService } from './services/fcmService';
+import { useInviteRedemption } from './hooks/useInviteRedemption';
 import { Loader2 } from 'lucide-react';
 import SplashScreen from './components/SplashScreen';
 import { AppProvider } from './contexts/AppContext';
@@ -35,6 +36,9 @@ function AppContent() {
   const [showSplash, setShowSplash] = useState<boolean>(!isAdminRoute);
   const authUidRef = useRef<string | null>(null);
   const docUnsubRef = useRef<(() => void) | null>(null);
+
+  // Enlaces de invitación compartibles (/invite/:id)
+  useInviteRedemption(isAuthenticated, loading);
 
   // Monitor authentication state and keep user doc reactive via onSnapshot
   useEffect(() => {

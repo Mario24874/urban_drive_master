@@ -10,3 +10,6 @@ export { createCheckoutSession, stripeWebhook, createPortalSession } from './str
 
 // ── Notification Cloud Functions ──────────────────────────────────────────────
 export { sendMessageNotification } from './notifications';
+
+// ── Invitation Cloud Functions ────────────────────────────────────────────────
+export { redeemInvitation, claimPendingInvitations, onInvitationCreated } from './invitations';

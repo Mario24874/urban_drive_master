@@ -42,6 +42,9 @@ export const sendMessageNotification = onCall(
     const fcmToken: string | undefined = tokenDoc.data()?.token;
     if (!fcmToken) return { sent: false, reason: 'empty_token' };
 
+    // Respect the recipient's mute preference
+    if (tokenDoc.data()?.muted === true) return { sent: false, reason: 'muted' };
+
     const body: string =
       messageType === 'voice'
         ? '🎤 Voice message'

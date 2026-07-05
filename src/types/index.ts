@@ -61,9 +61,11 @@ export interface Invitation {
   fromEmail: string;
   fromPhone: string;
   fromType: 'user' | 'driver';
-  toIdentifier: string;   // email or phone used to search
+  toIdentifier: string | null; // email or phone used to search (null for link invites)
   toId: string | null;    // resolved uid when target found
   status: 'pending' | 'accepted' | 'rejected';
+  /** 'link' = invitación por enlace compartible */
+  kind?: 'direct' | 'link';
   createdAt: Date;
 }
 

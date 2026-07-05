@@ -5,8 +5,10 @@ import {
   Search, UserPlus, Check, X, Trash2,
   Eye, EyeOff, MessageSquare, MapPin, Clock,
   MoreVertical, Navigation, Car, UserRound,
-  Lock, Sparkles,
+  Lock, Sparkles, Link2, Copy, Share2,
 } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
+import { toast } from 'sonner';
 import type { Contact, Invitation } from '../../types';
 import { useContacts } from '../../hooks/useContacts';
 
@@ -41,6 +43,7 @@ export interface InvitationsData {
   isSending: boolean;
   pendingCount: number;
   sendInvitation: (currentUser: any, identifier: string) => Promise<void>;
+  createLinkInvitation: (currentUser: any) => Promise<string | null>;
   acceptInvitation: (invitation: Invitation, userType: 'user' | 'driver') => Promise<void>;
   rejectInvitation: (invitationId: string) => Promise<void>;
   cancelInvitation: (invitationId: string) => Promise<void>;
@@ -254,7 +257,7 @@ const InvitationItem: React.FC<{
   >
     <Avatar className="flex-shrink-0">
       <AvatarFallback>
-        {getInitials(type === 'received' ? invitation.fromName : invitation.toIdentifier)}
+        {getInitials(type === 'received' ? invitation.fromName : invitation.toIdentifier ?? '')}
       </AvatarFallback>
     </Avatar>
 
@@ -271,7 +274,9 @@ const InvitationItem: React.FC<{
         </>
       ) : (
         <>
-          <p className="text-sm font-medium">{invitation.toIdentifier}</p>
+          <p className="text-sm font-medium">
+            {invitation.kind === 'link' ? t('inviteLinkItem') : invitation.toIdentifier}
+          </p>
           <div className="flex items-center gap-1 mt-0.5">
             <Badge
               variant={
@@ -382,11 +387,51 @@ const ContactList: React.FC<ContactListProps> = ({
     isSending,
     pendingCount,
     sendInvitation,
+    createLinkInvitation,
     acceptInvitation,
     rejectInvitation,
     cancelInvitation,
     deleteInvitation,
   } = invitationsData;
+
+  const [inviteLink, setInviteLink] = useState<string | null>(null);
+  const [creatingLink, setCreatingLink] = useState(false);
+
+  const handleCreateLink = async () => {
+    setCreatingLink(true);
+    const url = await createLinkInvitation(currentUser);
+    setCreatingLink(false);
+    if (url) setInviteLink(url);
+  };
+
+  const handleCopyLink = async () => {
+    if (!inviteLink) return;
+    try {
+      await navigator.clipboard.writeText(inviteLink);
+      toast.success(t('inviteCopied'));
+    } catch {
+      toast.error(t('inviteCopyFailed'), { description: inviteLink });
+    }
+  };
+
+  const handleShareLink = async () => {
+    if (!inviteLink) return;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Urban Drive',
+          text: t('inviteShareText'),
+          url: inviteLink,
+        });
+        return;
+      } catch {
+        // usuario canceló el share sheet — no es un error
+        return;
+      }
+    }
+    // Sin Web Share API (desktop): copiar es el mejor fallback
+    await handleCopyLink();
+  };
 
   // Aceptar nunca se bloquea por plan: el free chatea con todos sus contactos
   // y el plan solo limita cuántos ve en el mapa (su slot activo).
@@ -482,6 +527,42 @@ const ContactList: React.FC<ContactListProps> = ({
                 )}
               </Button>
             </div>
+
+            {/* Enlace compartible: WhatsApp, redes, email — sin adivinar identificadores */}
+            <div className="my-4 flex items-center gap-3">
+              <Separator className="flex-1" />
+              <span className="text-xs text-white/40 uppercase">{t('orDivider')}</span>
+              <Separator className="flex-1" />
+            </div>
+
+            {inviteLink ? (
+              <div className="flex flex-col items-center gap-3">
+                <div className="bg-white p-3 rounded-xl">
+                  <QRCodeSVG value={inviteLink} size={160} />
+                </div>
+                <p className="text-xs text-white/60 break-all text-center px-2">{inviteLink}</p>
+                <div className="flex gap-2 w-full">
+                  <Button variant="secondary" className="flex-1 gap-2" onClick={handleCopyLink}>
+                    <Copy size={15} />
+                    {t('inviteCopy')}
+                  </Button>
+                  <Button className="flex-1 gap-2" onClick={handleShareLink}>
+                    <Share2 size={15} />
+                    {t('inviteShare')}
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <Button
+                variant="secondary"
+                className="w-full gap-2"
+                onClick={handleCreateLink}
+                disabled={creatingLink}
+              >
+                <Link2 size={16} />
+                {creatingLink ? '…' : t('inviteCreateLink')}
+              </Button>
+            )}
           </SheetContent>
         </Sheet>
       </div>

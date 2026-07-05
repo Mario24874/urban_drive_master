@@ -4,7 +4,9 @@ import {
   addDoc, updateDoc, deleteDoc, doc, getDoc, getDocs,
   arrayUnion, serverTimestamp, Timestamp,
 } from 'firebase/firestore';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 import { db } from '../services/firebase';
+import app from '../services/firebase';
 import { toast } from 'sonner';
 import type { Invitation } from '../types';
 
@@ -58,20 +60,21 @@ export function useInvitations(
     if (emailLower) {
       unsubByEmail = onSnapshot(
         query(invRef, where('toIdentifier', '==', emailLower), where('status', '==', 'pending')),
-        async (snap) => {
+        (snap) => {
           byEmail = snap.docs.map(toInvitation);
           notify();
-
-          // Auto-resolve: set toId on any invitation that was sent before we were found
-          for (const d of snap.docs) {
-            if (!d.data().toId) {
-              await updateDoc(doc(db, 'invitations', d.id), { toId: userId }).catch(() => {});
-            }
-          }
         },
         (err) => console.error('[useInvitations] byEmail query error:', err),
       );
     }
+
+    // Resolver toId de invitaciones enviadas a mi email/teléfono antes de
+    // registrarme. Server-side (callable): las rules no permiten que el
+    // cliente actualice una invitación cuyo toId aún no lo nombra — el
+    // auto-resolve anterior desde el cliente fallaba siempre en silencio.
+    httpsCallable(getFunctions(app), 'claimPendingInvitations')().catch((err) => {
+      console.error('[useInvitations] claimPendingInvitations error:', err);
+    });
 
     // All invitations sent by me
     const myCollName = userType === 'driver' ? 'drivers' : 'users';
@@ -177,6 +180,32 @@ export function useInvitations(
     }
   };
 
+  /**
+   * Crea una invitación por enlace compartible (WhatsApp, redes, email…).
+   * Devuelve la URL para compartir; el canje ocurre server-side en /invite/:id.
+   */
+  const createLinkInvitation = async (currentUser: any): Promise<string | null> => {
+    if (!userId) return null;
+    try {
+      const ref = await addDoc(collection(db, 'invitations'), {
+        fromId: userId,
+        fromName: currentUser.displayName || currentUser.email || '',
+        fromEmail: currentUser.email || '',
+        fromPhone: currentUser.phone || '',
+        fromType: userType || 'user',
+        kind: 'link',
+        toIdentifier: null,
+        toId: null,
+        status: 'pending',
+        createdAt: serverTimestamp(),
+      });
+      return `${window.location.origin}/invite/${ref.id}`;
+    } catch (err: any) {
+      toast.error('Failed to create invite link', { description: err.message });
+      return null;
+    }
+  };
+
   const acceptInvitation = async (invitation: Invitation, currentUserType: 'user' | 'driver') => {
     if (!userId) return;
     try {
@@ -230,6 +259,7 @@ export function useInvitations(
     isSending,
     pendingCount: received.length,
     sendInvitation,
+    createLinkInvitation,
     acceptInvitation,
     rejectInvitation,
     cancelInvitation,
