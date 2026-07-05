@@ -1,4 +1,4 @@
-const CACHE_NAME = 'urban-drive-v2.1.0';
+const CACHE_NAME = 'urban-drive-v2.2.0';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -31,6 +31,12 @@ self.addEventListener('fetch', (event) => {
   // Skip cross-origin requests and non-GET requests
   if (!event.request.url.startsWith(self.location.origin) ||
       event.request.method !== 'GET') {
+    return;
+  }
+
+  // El proxy de Mapbox (estilos/tiles/glyphs) va SIEMPRE directo a la red:
+  // interceptarlo solo agrega puntos de fallo y los tiles no deben cachearse aquí.
+  if (event.request.url.includes('/mapbox-api/')) {
     return;
   }
 
