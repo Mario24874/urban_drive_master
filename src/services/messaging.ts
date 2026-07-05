@@ -27,6 +27,14 @@ function getNotifyFn() {
   return httpsCallable(getFunctions(app), 'sendMessageNotification');
 }
 
+/** Referencia a un mensaje citado (responder estilo WhatsApp) */
+export interface ReplyRef {
+  id: string;
+  senderName: string;
+  preview: string; // primeros ~90 chars o '🎤 Nota de voz'
+  type: 'text' | 'voice';
+}
+
 export interface Message {
   id?: string;
   senderId: string;
@@ -36,6 +44,9 @@ export interface Message {
   content: string;
   timestamp: Timestamp | null;
   read: boolean;
+  delivered?: boolean; // ✓✓ gris: el dispositivo del receptor lo recibió
+  deleted?: boolean;   // tombstone "mensaje eliminado" (soft-delete)
+  replyTo?: ReplyRef;
   conversationId: string;
   messageType?: 'text' | 'voice';
   voiceUrl?: string;
@@ -49,7 +60,12 @@ export interface Conversation {
   lastMessage: string;
   lastMessageTime: Timestamp | null;
   unreadCount: { [key: string]: number };
+  /** typing.{uid} = epoch millis de la última tecla; vigente si < TYPING_TTL_MS */
+  typing?: { [key: string]: number };
 }
+
+// Lógica pura (ticks, typing) vive en lib/chatLogic para testearse sin Firebase
+export { TYPING_TTL_MS, messageTickState, isTypingActive } from '../lib/chatLogic';
 
 class MessagingService {
   private listeners: Map<string, () => void> = new Map();
@@ -70,7 +86,8 @@ class MessagingService {
     senderName: string,
     receiverId: string,
     receiverName: string,
-    content: string
+    content: string,
+    replyTo?: ReplyRef
   ): Promise<boolean> {
     try {
       if (!content.trim()) {
@@ -88,6 +105,8 @@ class MessagingService {
         content: content.trim(),
         timestamp: serverTimestamp() as Timestamp,
         read: false,
+        delivered: false,
+        ...(replyTo ? { replyTo } : {}),
         conversationId
       };
 
@@ -182,7 +201,7 @@ class MessagingService {
       orderBy('timestamp', 'asc')
     );
 
-    const unsubscribe = onSnapshot(messagesQuery, 
+    const unsubscribe = onSnapshot(messagesQuery,
       (snapshot) => {
         const messages: Message[] = [];
         snapshot.forEach((doc) => {
@@ -192,6 +211,13 @@ class MessagingService {
           } as Message);
         });
         callback(messages);
+
+        // ✓✓ entregado: este dispositivo (receptor) acaba de recibir los mensajes
+        messages
+          .filter((m) => m.receiverId === userId && !m.delivered && m.id)
+          .forEach((m) =>
+            updateDoc(doc(db, 'messages', m.id!), { delivered: true }).catch(() => {})
+          );
       },
       (error) => {
         console.error('Error en suscripción de mensajes:', error);
@@ -409,6 +435,7 @@ class MessagingService {
         content: placeholder,
         timestamp: serverTimestamp() as Timestamp,
         read: false,
+        delivered: false,
         conversationId,
         messageType: 'voice',
         voiceUrl,
@@ -438,16 +465,57 @@ class MessagingService {
   }
 
   /**
-   * Borrar un mensaje individual (remitente o destinatario)
+   * Eliminar para todos (estilo WhatsApp): solo mensajes propios, soft-delete.
+   * El doc queda como tombstone y ambos lados ven "mensaje eliminado".
    */
   async deleteMessage(messageId: string): Promise<boolean> {
     try {
-      await deleteDoc(doc(db, 'messages', messageId));
+      await updateDoc(doc(db, 'messages', messageId), {
+        deleted: true,
+        content: '',
+        voiceUrl: '',
+      });
       return true;
     } catch (error) {
       console.error('Error borrando mensaje:', error);
       return false;
     }
+  }
+
+  /**
+   * Señal "escribiendo…": marca de tiempo por usuario en el doc de conversación.
+   * Llamar con throttle desde el composer; el receptor la considera vigente
+   * durante TYPING_TTL_MS.
+   */
+  async setTyping(userId: string, contactId: string): Promise<void> {
+    const conversationId = this.generateConversationId(userId, contactId);
+    await updateDoc(doc(db, 'conversations', conversationId), {
+      [`typing.${userId}`]: Date.now(),
+    }).catch(() => {}); // la conversación puede no existir aún: silencioso
+  }
+
+  /** Limpia la señal de typing (al enviar o salir del chat) */
+  async clearTyping(userId: string, contactId: string): Promise<void> {
+    const conversationId = this.generateConversationId(userId, contactId);
+    await updateDoc(doc(db, 'conversations', conversationId), {
+      [`typing.${userId}`]: 0,
+    }).catch(() => {});
+  }
+
+  /**
+   * Suscripción al doc de conversación (typing, unread) de un par de usuarios
+   */
+  subscribeToConversationDoc(
+    userId: string,
+    contactId: string,
+    callback: (conv: Conversation | null) => void
+  ): () => void {
+    const conversationId = this.generateConversationId(userId, contactId);
+    return onSnapshot(
+      doc(db, 'conversations', conversationId),
+      (snap) => callback(snap.exists() ? ({ id: snap.id, ...snap.data() } as Conversation) : null),
+      () => callback(null)
+    );
   }
 
   /**

@@ -13,6 +13,7 @@ import type { UserData, Contact } from '../types';
 // Components — GPSMapComponent is lazy to defer mapbox-gl loading until map tab opens
 const GPSMapComponent = lazy(() => import('./GPSMapComponent'));
 import ChatInterface from './ChatInterface';
+import messagingService from '../services/messaging';
 import ConversationsList from './ConversationsList';
 import ProfileEditor from './profile/ProfileEditor';
 import ContactList from './contacts/ContactList';
@@ -78,6 +79,7 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
   onUserUpdate,
 }) => {
   const [activeTab, setActiveTab] = useState('home');
+  const [unreadMessages, setUnreadMessages] = useState(0);
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [navTarget, setNavTarget] = useState<Contact | null>(null);
   const [showPricing, setShowPricing] = useState(false);
@@ -120,6 +122,15 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
 
   // Custom hooks
   const { location, loading: locationLoading, refreshLocation } = useLocation(user);
+
+  // Total de mensajes no leídos → badge del tab Chat
+  useEffect(() => {
+    if (!user?.id) return;
+    const unsub = messagingService.subscribeToUserConversations(user.id, (convs) => {
+      setUnreadMessages(convs.reduce((sum, c) => sum + (c.unreadCount?.[user.id] || 0), 0));
+    });
+    return unsub;
+  }, [user?.id]);
 
   // Invitations — hoisted here so they stay mounted regardless of active tab
   const invitationsData = useInvitations(
@@ -253,9 +264,14 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
                   </Badge>
                 )}
               </TabsTrigger>
-              <TabsTrigger value="messages" className="flex items-center space-x-2">
+              <TabsTrigger value="messages" className="flex items-center space-x-2 relative">
                 <MessageSquare size={18} />
                 <span className="hidden md:inline">{t('messages')}</span>
+                {unreadMessages > 0 && (
+                  <Badge className="absolute -top-1 -right-1 h-4 min-w-4 px-1 p-0 text-[10px] flex items-center justify-center bg-brand-green text-brand-ink">
+                    {unreadMessages > 99 ? '99+' : unreadMessages}
+                  </Badge>
+                )}
               </TabsTrigger>
               <TabsTrigger value="profile" className="flex items-center space-x-2">
                 <UserIcon size={18} />
@@ -470,6 +486,11 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
                 {value === 'contacts' && invitationsData.pendingCount > 0 && (
                   <span className="absolute top-1 right-3 h-4 w-4 rounded-full bg-brand-red text-[10px] text-white flex items-center justify-center font-bold">
                     {invitationsData.pendingCount}
+                  </span>
+                )}
+                {value === 'messages' && unreadMessages > 0 && (
+                  <span className="absolute top-1 right-3 h-4 min-w-4 px-0.5 rounded-full bg-brand-green text-[10px] text-brand-ink flex items-center justify-center font-bold">
+                    {unreadMessages > 99 ? '99+' : unreadMessages}
                   </span>
                 )}
               </TabsTrigger>

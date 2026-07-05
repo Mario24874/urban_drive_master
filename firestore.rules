@@ -68,11 +68,16 @@ service cloud.firestore {
       // Create: only the actual sender
       allow create: if isSignedIn() &&
         request.resource.data.senderId == request.auth.uid;
-      // Update: only the receiver may flip 'read' to true (markMessagesAsRead)
-      allow update: if isSignedIn() &&
-        resource.data.receiverId == request.auth.uid &&
-        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
-      // Both sender and receiver can delete messages (removes for everyone)
+      // Update — receiver: solo acuses de recibo (read/delivered).
+      //          sender: solo tombstone de soft-delete (deleted + vaciar contenido).
+      allow update: if isSignedIn() && (
+        (resource.data.receiverId == request.auth.uid &&
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read', 'delivered'])) ||
+        (resource.data.senderId == request.auth.uid &&
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['deleted', 'content', 'voiceUrl']) &&
+         request.resource.data.deleted == true)
+      );
+      // Hard delete (limpieza de conversación completa): ambos participantes
       allow delete: if isSignedIn() && (
         resource.data.senderId == request.auth.uid ||
         resource.data.receiverId == request.auth.uid

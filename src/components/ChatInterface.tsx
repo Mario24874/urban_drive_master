@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef, memo, useCallback } from 'react';
-import { Send, ArrowLeft, Check, CheckCheck, Search, X, Trash2, Sparkles } from 'lucide-react';
+import { Send, ArrowLeft, Check, CheckCheck, Search, X, Trash2, Sparkles, Reply } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import messagingService, { Message } from '../services/messaging';
+import messagingService, { Message, ReplyRef, messageTickState, isTypingActive } from '../services/messaging';
+import { usePresenceHeartbeat, useContactPresence, formatLastSeen } from '../hooks/usePresence';
 import { Contact } from '../types';
 import { useApp } from '../contexts/AppContext';
 import type { FreePlanLimits } from '../hooks/useFreePlanLimits';
@@ -43,8 +44,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const [loading, setLoading] = useState(false);
   const [searchMode, setSearchMode] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [isTyping] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
+  const [replyTarget, setReplyTarget] = useState<Message | null>(null);
   const [selectedMsgId, setSelectedMsgId] = useState<string | null>(null);
+  const lastTypingSentRef = useRef(0);
   const [upgradeModal, setUpgradeModal] = useState<'message_limit' | 'voice_notes' | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -60,6 +63,47 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const conversationId = selectedContact
     ? [currentUserId, selectedContact.id].sort().join('_')
     : '';
+
+  // Presencia: publicar la propia y observar la del contacto
+  usePresenceHeartbeat(currentUserId);
+  const contactLastActive = useContactPresence(selectedContact?.id ?? null);
+  const presenceLabel = formatLastSeen(contactLastActive, t);
+
+  // Typing del contacto: observar el doc de conversación
+  useEffect(() => {
+    if (!selectedContact) return;
+    let poll: ReturnType<typeof setInterval> | null = null;
+    let lastTyping: { [k: string]: number } | undefined;
+
+    const unsub = messagingService.subscribeToConversationDoc(
+      currentUserId,
+      selectedContact.id,
+      (conv) => {
+        lastTyping = conv?.typing;
+        setIsTyping(isTypingActive(lastTyping, selectedContact.id));
+      }
+    );
+    // Re-evaluar cada 2 s para que el indicador caduque sin nuevos snapshots
+    poll = setInterval(() => {
+      setIsTyping(isTypingActive(lastTyping, selectedContact.id));
+    }, 2000);
+
+    return () => {
+      unsub();
+      if (poll) clearInterval(poll);
+      messagingService.clearTyping(currentUserId, selectedContact.id);
+    };
+  }, [selectedContact, currentUserId]);
+
+  // Emitir mi señal de typing (throttle 2.5 s)
+  const emitTyping = () => {
+    if (!selectedContact) return;
+    const now = Date.now();
+    if (now - lastTypingSentRef.current > 2500) {
+      lastTypingSentRef.current = now;
+      messagingService.setTyping(currentUserId, selectedContact.id);
+    }
+  };
 
   // Scroll to bottom when new messages arrive
   const scrollToBottom = () => {
@@ -113,12 +157,28 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     const messageContent = newMessage.trim();
     setNewMessage('');
 
+    // Cita estilo WhatsApp si hay mensaje seleccionado para responder
+    const replyRef: ReplyRef | undefined = replyTarget
+      ? {
+          id: replyTarget.id!,
+          senderName: replyTarget.senderId === currentUserId ? currentUserName : replyTarget.senderName,
+          preview:
+            replyTarget.messageType === 'voice'
+              ? t('voiceNotePreview')
+              : replyTarget.content.slice(0, 90),
+          type: replyTarget.messageType === 'voice' ? 'voice' : 'text',
+        }
+      : undefined;
+    setReplyTarget(null);
+    messagingService.clearTyping(currentUserId, selectedContact.id);
+
     const success = await messagingService.sendMessage(
       currentUserId,
       currentUserName,
       selectedContact.id,
       selectedContact.displayName,
-      messageContent
+      messageContent,
+      replyRef
     );
 
     if (!success) {
@@ -245,10 +305,18 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
               </Avatar>
 
               <div>
-                <h3 className="font-semibold">{selectedContact.displayName}</h3>
+                <h3 className="font-display font-semibold">{selectedContact.displayName}</h3>
                 <p className="text-sm text-muted-foreground">
-                  {selectedContact.userType === 'driver' ? t('driverBadge') : t('userBadge')}
-                  {selectedContact.isVisible && ` • 🟢 ${t('online')}`}
+                  {isTyping ? (
+                    <span className="text-brand-yellow">{t('typingIndicator')}</span>
+                  ) : presenceLabel ? (
+                    <span className={presenceLabel === t('online') ? 'text-brand-green' : ''}>
+                      {presenceLabel === t('online') && '🟢 '}
+                      {presenceLabel}
+                    </span>
+                  ) : (
+                    selectedContact.userType === 'driver' ? t('driverBadge') : t('userBadge')
+                  )}
                 </p>
               </div>
             </div>
@@ -310,8 +378,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
             <AnimatePresence mode="popLayout">
               {messages.map((message) => {
                 const isOwn = message.senderId === currentUserId;
-                const isVoice = message.messageType === 'voice';
+                const isVoice = message.messageType === 'voice' && !message.deleted;
                 const isSelected = selectedMsgId === message.id;
+                const tick = messageTickState(message);
 
                 return (
                   <motion.div
@@ -335,17 +404,26 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                       </Avatar>
                     )}
 
-                    {/* Trash — left of own bubble */}
-                    {isOwn && (
-                      <button
-                        onClick={(e) => { e.stopPropagation(); handleDeleteMessage(message.id!); }}
-                        className={`shrink-0 p-1.5 rounded-full text-destructive/50 hover:text-destructive hover:bg-destructive/10 transition-all ${
-                          isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
-                        }`}
-                        title={t('deleteMessage')}
-                      >
-                        <Trash2 size={14} />
-                      </button>
+                    {/* Acciones — a la izquierda de burbuja propia: responder + eliminar */}
+                    {isOwn && !message.deleted && (
+                      <div className={`flex shrink-0 gap-0.5 transition-all ${
+                        isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+                      }`}>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setReplyTarget(message); setSelectedMsgId(null); inputRef.current?.focus(); }}
+                          className="p-1.5 rounded-full text-white/40 hover:text-brand-yellow hover:bg-brand-yellow/10"
+                          title={t('reply')}
+                        >
+                          <Reply size={14} />
+                        </button>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleDeleteMessage(message.id!); }}
+                          className="p-1.5 rounded-full text-destructive/50 hover:text-destructive hover:bg-destructive/10"
+                          title={t('deleteMessage')}
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
                     )}
 
                     <div
@@ -358,12 +436,26 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                       }`}
                     >
                       {!isOwn && !isVoice && (
-                        <p className="text-xs font-semibold mb-1 text-amber-500 dark:text-amber-400">
+                        <p className="text-xs font-semibold mb-1 text-brand-yellow">
                           {message.senderName}
                         </p>
                       )}
 
-                      {isVoice && message.voiceUrl ? (
+                      {/* Cita del mensaje respondido */}
+                      {message.replyTo && !message.deleted && (
+                        <div className={`mb-1.5 rounded-lg border-l-2 border-brand-yellow px-2 py-1 text-xs ${
+                          isOwn ? 'bg-black/15' : 'bg-white/5'
+                        }`}>
+                          <p className="font-semibold text-brand-yellow">{message.replyTo.senderName}</p>
+                          <p className={`truncate ${isOwn ? 'text-primary-foreground/70' : 'text-white/60'}`}>
+                            {message.replyTo.preview}
+                          </p>
+                        </div>
+                      )}
+
+                      {message.deleted ? (
+                        <p className="text-sm italic opacity-60">{t('messageDeleted')}</p>
+                      ) : isVoice && message.voiceUrl ? (
                         <VoiceNotePlayer
                           url={message.voiceUrl}
                           duration={message.voiceDuration ?? 0}
@@ -379,22 +471,28 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                           }`}
                         >
                           <span>{formatTime(message.timestamp)}</span>
-                          {isOwn &&
-                            (message.read ? <CheckCheck size={14} /> : <Check size={14} />)}
+                          {isOwn && !message.deleted && (
+                            tick === 'read'
+                              // Azul universal de "leído" (WhatsApp); contrasta sobre burbuja amarilla
+                              ? <CheckCheck size={14} className="text-sky-600" />
+                              : tick === 'delivered'
+                                ? <CheckCheck size={14} />
+                                : <Check size={14} />
+                          )}
                         </div>
                       )}
                     </div>
 
-                    {/* Trash — right of received bubble */}
-                    {!isOwn && (
+                    {/* Responder — a la derecha de burbuja recibida (solo el remitente puede eliminar) */}
+                    {!isOwn && !message.deleted && (
                       <button
-                        onClick={(e) => { e.stopPropagation(); handleDeleteMessage(message.id!); }}
-                        className={`shrink-0 p-1.5 rounded-full text-destructive/50 hover:text-destructive hover:bg-destructive/10 transition-all ${
+                        onClick={(e) => { e.stopPropagation(); setReplyTarget(message); setSelectedMsgId(null); inputRef.current?.focus(); }}
+                        className={`shrink-0 p-1.5 rounded-full text-white/40 hover:text-brand-yellow hover:bg-brand-yellow/10 transition-all ${
                           isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
                         }`}
-                        title={t('deleteMessage')}
+                        title={t('reply')}
                       >
-                        <Trash2 size={14} />
+                        <Reply size={14} />
                       </button>
                     )}
                   </motion.div>
@@ -469,12 +567,41 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
       {/* Input */}
       <div className="bg-card border-t p-4">
+        {/* Preview de respuesta (cita) */}
+        <AnimatePresence>
+          {replyTarget && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="mb-2 flex items-center justify-between gap-2 rounded-lg border-l-2 border-brand-yellow bg-white/5 px-3 py-1.5"
+            >
+              <div className="min-w-0 text-xs">
+                <p className="font-semibold text-brand-yellow">
+                  {t('replyingTo').replace(
+                    '{name}',
+                    replyTarget.senderId === currentUserId ? currentUserName : replyTarget.senderName
+                  )}
+                </p>
+                <p className="truncate text-white/60">
+                  {replyTarget.messageType === 'voice' ? t('voiceNotePreview') : replyTarget.content}
+                </p>
+              </div>
+              <button
+                onClick={() => setReplyTarget(null)}
+                className="shrink-0 p-1 rounded-full text-white/40 hover:text-white hover:bg-white/10"
+              >
+                <X size={14} />
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
         <div className="flex items-center space-x-2">
           <Input
             ref={inputRef}
             type="text"
             value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
+            onChange={(e) => { setNewMessage(e.target.value); if (e.target.value) emitTyping(); }}
             onKeyPress={handleKeyPress}
             placeholder={canSendMsg ? t('typeMessage') : t('msgLimitReached')}
             disabled={sending || !canSendMsg}
