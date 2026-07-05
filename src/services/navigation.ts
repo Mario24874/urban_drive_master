@@ -3,6 +3,8 @@
  * Proporciona navegación turn-by-turn con instrucciones de voz
  */
 
+import { proxyMapboxUrl } from '../lib/mapboxProxy';
+
 export interface NavigationRoute {
   distance: number;
   duration: number;
@@ -212,7 +214,7 @@ class NavigationService {
     }
 
     try {
-      const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${origin[0]},${origin[1]};${destination[0]},${destination[1]}?` +
+      const url = proxyMapboxUrl(`https://api.mapbox.com/directions/v5/mapbox/driving/${origin[0]},${origin[1]};${destination[0]},${destination[1]}?`) +
         `steps=true&geometries=geojson&access_token=${this.mapboxToken}&` +
         `voice_instructions=true&banner_instructions=true&language=es`;
 

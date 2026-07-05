@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
+import '../lib/mapboxProxy'; // enruta el SDK vía proxy propio (fix Starlink)
+import { proxyMapboxUrl } from '../lib/mapboxProxy';
 import { Navigation, Volume2, VolumeX, RotateCcw, X, MapPin, Clock, Search, RefreshCw } from 'lucide-react';
 import navigationService, { NavigationState } from '../services/navigation';
 import { useApp } from '../contexts/AppContext';
@@ -108,7 +110,7 @@ const NavigationInterface: React.FC<NavigationInterfaceProps> = ({
     const timer = setTimeout(async () => {
       try {
         const res = await fetch(
-          `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(addressQuery)}.json?access_token=${token}&language=es&limit=5`
+          proxyMapboxUrl(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(addressQuery)}.json?access_token=${token}&language=es&limit=5`)
         );
         const data = await res.json();
         setGeocodeResults(

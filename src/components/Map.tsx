@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
+import '../lib/mapboxProxy'; // enruta el SDK vía proxy propio (fix Starlink)
 import { db } from '../firebase';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { MAP_STYLE } from '../lib/mapStyle';
