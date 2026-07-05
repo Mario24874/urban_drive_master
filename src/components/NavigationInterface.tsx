@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import mapboxgl from 'mapbox-gl';
 import { Navigation, Volume2, VolumeX, RotateCcw, X, MapPin, Clock, Search, RefreshCw } from 'lucide-react';
 import navigationService, { NavigationState } from '../services/navigation';
 import { useApp } from '../contexts/AppContext';
@@ -155,8 +156,6 @@ const NavigationInterface: React.FC<NavigationInterfaceProps> = ({
 
     const initTimer = setTimeout(() => {
       if (!mapRef.current) return;
-      const mapboxgl = (window as any).mapboxgl;
-      if (!mapboxgl) return;
       if (navMapInstance.current) return;
 
       const accessToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;

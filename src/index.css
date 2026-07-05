@@ -178,6 +178,15 @@
 }
 
 @layer utilities {
+  /* Fondo "vitrina" nocturno estático (bienvenida, pricing, upgrade):
+     misma identidad de la landing sin video ni animación */
+  .bg-night {
+    background-color: #0A0B0D;
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% -10%, rgba(255, 214, 10, 0.08), transparent),
+      radial-gradient(ellipse 60% 40% at 85% 110%, rgba(255, 159, 10, 0.06), transparent);
+  }
+
   /* Safe area utilities for mobile devices */
   .safe-top {
     padding-top: env(safe-area-inset-top);

@@ -130,14 +130,20 @@ const Map: React.FC = () => {
       // Tamaño responsivo del marcador
       const markerSize = isMobile ? '35px' : '40px';
       
-      el.style.backgroundImage = 'url(https://placekitten.com/g/40/40)';
+      // Marcador de marca (placekitten.com dejó de existir): tinta + amarillo
+      el.textContent = String(driver.id).slice(0, 2).toUpperCase();
       el.style.width = markerSize;
       el.style.height = markerSize;
-      el.style.backgroundSize = 'cover';
+      el.style.display = 'flex';
+      el.style.alignItems = 'center';
+      el.style.justifyContent = 'center';
+      el.style.background = '#0A0B0D';
+      el.style.color = '#FFD60A';
+      el.style.font = `700 12px 'Space Grotesk', system-ui, sans-serif`;
       el.style.borderRadius = '50%';
       el.style.cursor = 'pointer';
-      el.style.border = '2px solid #ffffff';
-      el.style.boxShadow = '0 2px 6px rgba(0,0,0,0.3)';
+      el.style.border = '2px solid #FFD60A';
+      el.style.boxShadow = '0 2px 8px rgba(0,0,0,0.5)';
       
       // Mejorar accesibilidad táctil
       if (isMobile) {

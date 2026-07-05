@@ -1015,8 +1015,8 @@ function detectLang(): Lang {
 }
 
 function detectTheme(): Theme {
-  const stored = localStorage.getItem('theme') as Theme | null;
-  if (stored === 'dark' || stored === 'light') return stored;
+  // La app es solo tema oscuro (identidad de la landing); se ignora
+  // cualquier 'light' guardado de versiones anteriores.
   return 'dark';
 }
 

@@ -1,4 +1,6 @@
 import React, { useEffect, useRef, useState, memo } from 'react';
+import mapboxgl from 'mapbox-gl';
+import 'mapbox-gl/dist/mapbox-gl.css';
 import { Navigation } from 'lucide-react';
 import useContactTracking from '../hooks/useContactTracking';
 import NavigationInterface from './NavigationInterface';
@@ -138,41 +140,9 @@ const GPSMapComponent: React.FC<GPSMapComponentProps> = ({
     // Solo cargar el mapa una vez
     if (map.current) return;
     
-    // Cargar Mapbox GL JS dinámicamente
-    const loadMapbox = async () => {
-
-      try {
-        // Cargar CSS de Mapbox
-        if (!document.querySelector('link[href*="mapbox-gl"]')) {
-          const cssLink = document.createElement('link');
-          cssLink.href = 'https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.css';
-          cssLink.rel = 'stylesheet';
-          document.head.appendChild(cssLink);
-        }
-
-        // Cargar JavaScript de Mapbox
-        if (!(window as any).mapboxgl) {
-          const script = document.createElement('script');
-          script.src = 'https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.js';
-          script.onload = initializeMap;
-          document.head.appendChild(script);
-        } else {
-          initializeMap();
-        }
-      } catch (error) {
-        console.error('Error cargando Mapbox:', error);
-        showFallbackMap();
-      }
-    };
-
+    // mapbox-gl viene en el bundle (import estático): no depende del CDN,
+    // que fallaba en redes con DNS/rutas problemáticas (p.ej. Starlink)
     const initializeMap = () => {
-      const mapboxgl = (window as any).mapboxgl;
-      
-      if (!mapboxgl) {
-        showFallbackMap();
-        return;
-      }
-
       // Obtener token de Mapbox desde variables de entorno
       const accessToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
       
@@ -197,6 +167,7 @@ const GPSMapComponent: React.FC<GPSMapComponentProps> = ({
         // sin antialias, y forzar render aunque el navegador reporte GPU lenta.
         const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
 
+        if (!mapContainer.current) return;
         map.current = new mapboxgl.Map({
           container: mapContainer.current,
           style: MAP_STYLE,
@@ -330,7 +301,7 @@ const GPSMapComponent: React.FC<GPSMapComponentProps> = ({
       }
     };
 
-    loadMapbox();
+    initializeMap();
 
     // Cleanup
     return () => {
@@ -384,10 +355,6 @@ const GPSMapComponent: React.FC<GPSMapComponentProps> = ({
     const existingMarkers = document.querySelectorAll('.gps-marker');
     existingMarkers.forEach(marker => marker.remove());
 
-    // Re-ejecutar función de marcadores
-    const mapboxgl = (window as any).mapboxgl;
-    if (!mapboxgl) return;
-
     // Código de marcadores aquí (simplificado para evitar duplicación)
     const currentUserLocation = trackedUserLocation || (userLocation ? 
       [userLocation.longitude, userLocation.latitude] : null);
@@ -408,7 +375,8 @@ const GPSMapComponent: React.FC<GPSMapComponentProps> = ({
 
     // Agregar marcadores de contactos
     visibleContacts.forEach(contact => {
-      if (!contact.location) return;
+      if (contact.location?.longitude == null || contact.location?.latitude == null) return;
+      const { longitude, latitude } = contact.location;
 
       const contactMarkerEl = createAvatarMarkerEl(
         contact.photoURL,
@@ -422,7 +390,7 @@ const GPSMapComponent: React.FC<GPSMapComponentProps> = ({
       });
 
       new mapboxgl.Marker(contactMarkerEl)
-        .setLngLat([contact.location.longitude, contact.location.latitude])
+        .setLngLat([longitude, latitude])
         .addTo(map.current);
     });
   }, [visibleContacts, trackedUserLocation, userLocation, userType, mapLoaded]);
