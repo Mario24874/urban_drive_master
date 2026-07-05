@@ -177,7 +177,7 @@ const ContactItem: React.FC<{
                 className="w-full justify-start gap-3 h-12 text-base"
                 onClick={() => { onNavigate(); setActionSheetOpen(false); }}
               >
-                <Navigation size={20} className="text-blue-400" />
+                <Navigation size={20} className="text-brand-yellow" />
                 {t('navigateHere')}
               </Button>
             )}

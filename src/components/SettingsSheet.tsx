@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Moon, Sun, LogOut, RefreshCw, Settings, Download, Car, UserRound, Sparkles, ExternalLink, Building2, Users, Wrench, FileText, BarChart2 } from 'lucide-react';
+import { LogOut, RefreshCw, Settings, Download, Car, UserRound, Sparkles, ExternalLink, Building2, Users, Wrench, FileText, BarChart2 } from 'lucide-react';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import app from '../services/firebase';
 import { toast } from 'sonner';
@@ -51,7 +51,7 @@ const SettingsSheet: React.FC<SettingsSheetProps> = ({
   onOpenDocumentsDashboard,
   onOpenFleetAnalytics,
 }) => {
-  const { theme, setTheme, lang, setLang, t } = useApp();
+  const { lang, setLang, t } = useApp();
 
   const [open, setOpen] = useState(false);
   const [isOpeningPortal, setIsOpeningPortal] = useState(false);
@@ -277,33 +277,6 @@ const SettingsSheet: React.FC<SettingsSheetProps> = ({
               </div>
             </div>
           )}
-
-          <Separator className="mx-6 w-auto" />
-
-          {/* ── Appearance ── */}
-          <div className="px-6 py-4 space-y-3">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              {t('appearance')}
-            </p>
-            <div className="flex gap-2">
-              <Button
-                variant={theme === 'light' ? 'default' : 'outline'}
-                size="sm"
-                className="flex-1 gap-2"
-                onClick={() => setTheme('light')}
-              >
-                <Sun size={15} /> {t('lightMode')}
-              </Button>
-              <Button
-                variant={theme === 'dark' ? 'default' : 'outline'}
-                size="sm"
-                className="flex-1 gap-2"
-                onClick={() => setTheme('dark')}
-              >
-                <Moon size={15} /> {t('darkMode')}
-              </Button>
-            </div>
-          </div>
 
           <Separator className="mx-6 w-auto" />
 

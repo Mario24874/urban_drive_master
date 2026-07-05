@@ -67,16 +67,16 @@ const ActiveContactSlotModal: React.FC<ActiveContactSlotModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
-      <DialogContent className="sm:max-w-sm bg-gray-900 border-gray-700 text-white">
+      <DialogContent className="sm:max-w-sm bg-brand-ink border-white/10 text-white">
         <DialogHeader>
           <div className="flex flex-col items-center gap-3 pt-2">
             <motion.div
               initial={{ scale: 0.8 }}
               animate={{ scale: 1 }}
               transition={{ type: 'spring', stiffness: 300 }}
-              className="p-3 rounded-full bg-blue-500/15 border border-blue-500/30"
+              className="p-3 rounded-full bg-brand-yellow/10 border border-brand-yellow/30"
             >
-              <Users className="w-8 h-8 text-blue-400" />
+              <Users className="w-8 h-8 text-brand-yellow" />
             </motion.div>
 
             <div className="text-center space-y-1">
@@ -95,7 +95,7 @@ const ActiveContactSlotModal: React.FC<ActiveContactSlotModalProps> = ({
           <div className="flex flex-col items-center gap-1">
             <Avatar className="w-10 h-10 border border-border">
               <AvatarImage src={currentContact?.photoURL} />
-              <AvatarFallback className="bg-gray-700 text-white text-xs">
+              <AvatarFallback className="bg-white/10 text-white text-xs">
                 {getInitials(currentPersonName)}
               </AvatarFallback>
             </Avatar>
@@ -108,15 +108,15 @@ const ActiveContactSlotModal: React.FC<ActiveContactSlotModalProps> = ({
           <RefreshCw className="w-5 h-5 text-muted-foreground" />
 
           <div className="flex flex-col items-center gap-1">
-            <Avatar className="w-10 h-10 border border-blue-500/50">
-              <AvatarFallback className="bg-blue-900/50 text-blue-300 text-xs">
+            <Avatar className="w-10 h-10 border border-brand-yellow/50">
+              <AvatarFallback className="bg-brand-yellow/10 text-brand-yellow text-xs">
                 {getInitials(newPersonName, pendingInvitation.fromEmail)}
               </AvatarFallback>
             </Avatar>
             <span className="text-xs text-muted-foreground max-w-[70px] truncate text-center">
               {newPersonName}
             </span>
-            <span className="text-[10px] text-blue-400">{t('slotNew')}</span>
+            <span className="text-[10px] text-brand-yellow">{t('slotNew')}</span>
           </div>
         </div>
 

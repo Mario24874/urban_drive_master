@@ -26,7 +26,7 @@ const STATUS_STYLES: Record<DocumentStatus, string> = {
   valid: 'text-green-400 bg-green-400/10 border-green-400/30',
   expiring_soon: 'text-yellow-400 bg-yellow-400/10 border-yellow-400/30',
   expired: 'text-red-400 bg-red-400/10 border-red-400/30',
-  no_expiry: 'text-blue-400 bg-blue-400/10 border-blue-400/30',
+  no_expiry: 'text-brand-yellow bg-brand-yellow/10 border-brand-yellow/30',
 };
 
 const STATUS_ICONS: Record<DocumentStatus, React.ReactNode> = {
@@ -145,7 +145,7 @@ const DocumentsDashboard: React.FC<DocumentsDashboardProps> = ({
         <div className="flex-shrink-0 px-4 pt-safe-top">
           <div className="flex items-center justify-between py-4">
             <div className="flex items-center gap-3">
-              <FileText size={22} className="text-blue-400" />
+              <FileText size={22} className="text-brand-yellow" />
               <div>
                 <h1 className="text-white font-bold text-lg leading-tight">
                   {t('documentsDashboard')}

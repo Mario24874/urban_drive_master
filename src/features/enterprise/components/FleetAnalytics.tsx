@@ -277,7 +277,7 @@ const FleetAnalytics: React.FC<FleetAnalyticsProps> = ({
                               </div>
                               <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
                                 <div
-                                  className="h-full bg-blue-500/60 rounded-full"
+                                  className="h-full bg-brand-yellow/60 rounded-full"
                                   style={{ width: `${maxCount > 0 ? (item.count / maxCount) * 100 : 0}%` }}
                                 />
                               </div>

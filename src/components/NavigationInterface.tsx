@@ -507,7 +507,7 @@ const NavigationInterface: React.FC<NavigationInterfaceProps> = ({
           <div className="h-full relative">
             <div ref={mapRef} className="absolute inset-0" />
             {!navState.userLocation && (
-              <div className="absolute inset-0 flex items-center justify-center bg-gray-900/80 text-white">
+              <div className="absolute inset-0 flex items-center justify-center bg-brand-ink/80 text-white">
                 <div className="text-center">
                   <Navigation size={40} className="mx-auto mb-3 animate-pulse" />
                   <p className="text-sm">{t('waitingGPS')}</p>

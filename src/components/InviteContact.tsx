@@ -140,7 +140,7 @@ const InviteContact: React.FC<InviteContactProps> = ({
           {inviteLink && (
             <button
               onClick={copyToClipboard}
-              className="text-sm text-blue-600 hover:text-blue-700"
+              className="text-sm text-brand-yellow hover:text-brand-amber"
             >
               Copiar link de invitación
             </button>
@@ -169,7 +169,7 @@ const InviteContact: React.FC<InviteContactProps> = ({
         </div>
 
         {/* Plataforma detectada */}
-        <div className="mb-4 p-2 bg-blue-50 rounded text-sm text-blue-700">
+        <div className="mb-4 p-2 bg-brand-yellow/10 rounded text-sm text-brand-yellow">
           {platform === 'mobile' ? '📱' : '💻'} Detectado: {platform === 'mobile' ? 'Dispositivo móvil' : 'Desktop'}
         </div>
 
@@ -195,7 +195,7 @@ const InviteContact: React.FC<InviteContactProps> = ({
               onClick={() => setInviteMethod('email')}
               className={`p-3 rounded-lg border transition-colors ${
                 inviteMethod === 'email'
-                  ? 'bg-blue-50 border-blue-500 text-blue-700'
+                  ? 'bg-brand-yellow/10 border-brand-yellow text-brand-yellow'
                   : 'bg-card border-border text-foreground hover:bg-muted'
               }`}
             >
@@ -227,7 +227,7 @@ const InviteContact: React.FC<InviteContactProps> = ({
             value={identifier}
             onChange={(e) => setIdentifier(e.target.value)}
             placeholder={inviteMethod === 'email' ? 'ejemplo@correo.com' : '+1234567890'}
-            className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-yellow/60"
           />
         </div>
 
@@ -240,7 +240,7 @@ const InviteContact: React.FC<InviteContactProps> = ({
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             rows={3}
-            className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+            className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-yellow/60 resize-none"
           />
         </div>
 
@@ -250,8 +250,8 @@ const InviteContact: React.FC<InviteContactProps> = ({
           disabled={loading || !identifier}
           className={`w-full py-3 px-4 rounded-lg font-medium transition-colors flex items-center justify-center space-x-2 ${
             loading || !identifier
-              ? 'bg-gray-300 text-muted-foreground cursor-not-allowed'
-              : 'bg-blue-600 hover:bg-blue-700 text-white'
+              ? 'bg-white/10 text-white/40 cursor-not-allowed'
+              : 'bg-brand-yellow hover:bg-brand-amber text-brand-ink'
           }`}
         >
           {loading ? (

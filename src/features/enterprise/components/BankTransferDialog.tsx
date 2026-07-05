@@ -54,7 +54,7 @@ const CopyableField: React.FC<{ label: string; value: string }> = ({ label, valu
   };
 
   return (
-    <div className="flex items-center justify-between py-2 border-b border-gray-700 last:border-0">
+    <div className="flex items-center justify-between py-2 border-b border-white/10 last:border-0">
       <div>
         <p className="text-xs text-muted-foreground">{label}</p>
         <p className="text-sm font-mono text-white">{value}</p>
@@ -127,7 +127,7 @@ const BankTransferDialog: React.FC<BankTransferDialogProps> = ({
   if (confirmed) {
     return (
       <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
-        <DialogContent className="sm:max-w-sm bg-gray-900 border-gray-700 text-white">
+        <DialogContent className="sm:max-w-sm bg-brand-ink border-white/10 text-white">
           <DialogHeader>
             <div className="flex flex-col items-center gap-3 pt-2">
               <div className="p-3 rounded-full bg-green-500/15 border border-green-500/30">
@@ -151,11 +151,11 @@ const BankTransferDialog: React.FC<BankTransferDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
-      <DialogContent className="sm:max-w-md bg-gray-900 border-gray-700 text-white">
+      <DialogContent className="sm:max-w-md bg-brand-ink border-white/10 text-white">
         <DialogHeader>
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-blue-500/15 border border-blue-500/30">
-              <Building2 className="w-6 h-6 text-blue-400" />
+            <div className="p-2 rounded-lg bg-brand-yellow/10 border border-brand-yellow/30">
+              <Building2 className="w-6 h-6 text-brand-yellow" />
             </div>
             <div>
               <DialogTitle>{t('bankTransferTitle')}</DialogTitle>
@@ -167,7 +167,7 @@ const BankTransferDialog: React.FC<BankTransferDialogProps> = ({
         </DialogHeader>
 
         {/* Amount */}
-        <div className="bg-gray-800/60 rounded-lg p-3 text-center">
+        <div className="bg-white/5 rounded-lg p-3 text-center">
           <p className="text-xs text-muted-foreground mb-1">{t('transferAmount')}</p>
           <p className="text-2xl font-bold text-white">
             ${amount.toFixed(2)} <span className="text-base font-normal text-muted-foreground">USD</span>
@@ -178,7 +178,7 @@ const BankTransferDialog: React.FC<BankTransferDialogProps> = ({
         </div>
 
         {/* Bank Details */}
-        <div className="bg-gray-800/40 rounded-lg px-3">
+        <div className="bg-white/5 rounded-lg px-3">
           <CopyableField label={t('bankName')} value={BANK_CONFIG.bankName} />
           <CopyableField label={t('bankAccountName')} value={BANK_CONFIG.accountName} />
           <CopyableField label={t('bankAccountNumber')} value={BANK_CONFIG.accountNumber} />
@@ -197,7 +197,7 @@ const BankTransferDialog: React.FC<BankTransferDialogProps> = ({
           <Button
             onClick={handleConfirmTransfer}
             disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold"
+            className="w-full bg-brand-yellow hover:bg-brand-amber text-brand-ink font-bold"
           >
             {loading
               ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />{t('transferring')}</>

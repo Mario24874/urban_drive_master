@@ -25,7 +25,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ userId, userType, isVisible }
           type="checkbox"
           checked={visibility}
           onChange={handleVisibilityChange}
-          className="form-checkbox h-5 w-5 text-blue-600"
+          className="form-checkbox h-5 w-5 text-brand-yellow"
         />
       </label>
     </div>

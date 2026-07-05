@@ -71,7 +71,7 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
-      <DialogContent className="sm:max-w-md bg-gray-900 border-gray-700 text-white">
+      <DialogContent className="sm:max-w-md bg-brand-ink border-white/10 text-white">
         <DialogHeader>
           <div className="flex flex-col items-center gap-3 pt-2 pb-1">
             <motion.div
@@ -95,7 +95,7 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({
         </DialogHeader>
 
         {/* Feature list for Bronze plan */}
-        <div className="bg-gray-800/50 rounded-lg p-3 mx-1">
+        <div className="bg-white/5 rounded-lg p-3 mx-1">
           <p className="text-xs font-semibold text-amber-400 uppercase tracking-wider mb-2">
             {t('upgradePlanBronce')}
           </p>

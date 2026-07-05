@@ -198,7 +198,7 @@ const Map: React.FC = () => {
       {isMobile && (
         <button
           onClick={() => setIsDriverListVisible(!isDriverListVisible)}
-          className="absolute top-4 left-4 bg-card bg-opacity-90 backdrop-blur-sm rounded-lg p-3 shadow-lg z-10 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 hover:bg-opacity-100"
+          className="absolute top-4 left-4 bg-card bg-opacity-90 backdrop-blur-sm rounded-lg p-3 shadow-lg z-10 focus:outline-none focus:ring-2 focus:ring-brand-yellow/60 transition-all duration-200 hover:bg-opacity-100"
           aria-label={isDriverListVisible ? 'Ocultar lista de conductores' : 'Mostrar lista de conductores'}
         >
           <div className="flex items-center space-x-2">
@@ -260,13 +260,13 @@ const Map: React.FC = () => {
                 <p>No hay conductores disponibles</p>
               </div>
             ) : (
-              <ul className="divide-y divide-gray-200">
+              <ul className="divide-y divide-white/10">
                 {drivers.map(driver => (
                   <li key={driver.id} className="touch-list-item cursor-pointer hover:bg-muted" onClick={() => focusOnDriver(driver)}>
                     <div className="flex items-center space-x-3">
                       <div className="flex-shrink-0">
-                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                          <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div className="w-8 h-8 bg-brand-yellow/15 rounded-full flex items-center justify-center">
+                          <svg className="w-4 h-4 text-brand-yellow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                           </svg>
                         </div>

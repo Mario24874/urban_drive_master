@@ -24,7 +24,9 @@ const buttonVariants = cva(
         default: "h-9 px-4 py-2",
         sm: "h-8 rounded-md px-3 text-xs",
         lg: "h-10 rounded-md px-8",
+        touch: "h-11 rounded-lg px-6", // ≥44px: mínimo táctil en móvil
         icon: "h-9 w-9",
+        "icon-touch": "h-11 w-11",
       },
     },
     defaultVariants: {

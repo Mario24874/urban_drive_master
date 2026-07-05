@@ -252,7 +252,7 @@ const DriverManager: React.FC<DriverManagerProps> = ({
                     <div className="flex items-center gap-1">
                       <button
                         onClick={() => setDocumentDriver({ id: d.id, name: d.name })}
-                        className="w-8 h-8 rounded-lg bg-white/5 hover:bg-blue-500/20 flex items-center justify-center text-white/50 hover:text-blue-400 transition-colors"
+                        className="w-8 h-8 rounded-lg bg-white/5 hover:bg-brand-yellow/15 flex items-center justify-center text-white/50 hover:text-brand-yellow transition-colors"
                         title={t('documentVault')}
                       >
                         <FileText size={14} />

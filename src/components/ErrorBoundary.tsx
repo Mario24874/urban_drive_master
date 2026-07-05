@@ -59,7 +59,7 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
             <div className="flex gap-3 justify-center">
               <Button
                 onClick={this.handleRetry}
-                className="bg-blue-600 hover:bg-blue-500 text-white"
+                className="bg-brand-yellow hover:bg-brand-amber text-brand-ink"
               >
                 <RefreshCw className="w-4 h-4 mr-2" />
                 Try again

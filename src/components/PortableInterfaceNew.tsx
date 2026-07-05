@@ -38,6 +38,7 @@ import {
 } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { StatCard } from '@/components/ui/stat-card';
 import { RefreshCw, MapPinOff, Eye, EyeOff } from 'lucide-react';
 import { SUBSCRIPTION_PLANS } from '../features/enterprise/types/subscription';
 import { toast } from 'sonner';
@@ -232,9 +233,9 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
         {/* Desktop Tabs List */}
-        <div className="hidden sm:block border-b bg-black/50 backdrop-blur-md">
+        <div className="hidden sm:block border-b border-white/10 bg-black/50 backdrop-blur-md">
           <div className="container-responsive py-3">
-            <TabsList className="grid w-full max-w-2xl grid-cols-5 mx-auto">
+            <TabsList className="grid w-full max-w-2xl grid-cols-5 mx-auto bg-white/5 [&_[data-state=active]]:bg-brand-yellow [&_[data-state=active]]:text-brand-ink">
               <TabsTrigger value="home" className="flex items-center space-x-2">
                 <Home size={18} />
                 <span className="hidden md:inline">{t('home')}</span>
@@ -274,13 +275,13 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
               className="max-w-4xl mx-auto space-y-6"
             >
               <div>
-                <h1 className="text-3xl font-bold mb-1">
+                <h1 className="font-display text-3xl font-bold leading-tight text-white mb-1">
                   {t('welcome')}, {user.displayName || user.email}!
                 </h1>
                 <div className="flex items-center gap-2 mt-1 mb-1">
                   <PlanBadge tier={subscriptionTier} />
                 </div>
-                <p className="text-muted-foreground text-sm">
+                <p className="text-white/60 text-sm">
                   {user.userType === 'driver'
                     ? t('subtitleDriver')
                     : t('subtitleUser')}
@@ -318,57 +319,29 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
               )}
 
               {/* Quick Stats */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-card p-6 rounded-lg border">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground">{t('contacts')}</p>
-                      <p className="text-2xl font-bold">{user.contacts?.length ?? 0}</p>
-                    </div>
-                    <Users className="text-muted-foreground" size={32} />
-                  </div>
-                </div>
-
-                <div className="bg-card p-6 rounded-lg border">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground">{t('location')}</p>
-                      <div className="text-2xl font-bold">
-                        {location
-                          ? <MapPin size={28} className="text-green-400" />
-                          : <MapPinOff size={28} className="text-destructive" />}
-                      </div>
-                    </div>
-                    <MapPin className="text-muted-foreground" size={32} />
-                  </div>
-                  {location && (
-                    <p className="text-xs text-muted-foreground mt-2">
-                      {t('accuracy')}: {Math.round(location.accuracy || 0)}m
-                    </p>
-                  )}
-                </div>
-
-                <div className="bg-card p-6 rounded-lg border">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground">{t('status')}</p>
-                      <div className="text-2xl font-bold">
-                        {user.isVisible
-                          ? <Eye size={28} className="text-green-400" />
-                          : <EyeOff size={28} className="text-muted-foreground" />}
-                      </div>
-                    </div>
-                    <UserIcon className="text-muted-foreground" size={32} />
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    {user.isVisible ? t('visible') : t('hidden')}
-                  </p>
-                </div>
+              <div className="grid grid-cols-3 gap-3 md:gap-4">
+                <StatCard
+                  label={t('contacts')}
+                  value={user.contacts?.length ?? 0}
+                  icon={<Users size={20} />}
+                />
+                <StatCard
+                  label={location ? `${t('accuracy')}: ${Math.round(location.accuracy || 0)}m` : t('location')}
+                  value={location ? <MapPin size={24} /> : <MapPinOff size={24} />}
+                  tone={location ? 'success' : 'danger'}
+                  icon={<MapPin size={20} />}
+                />
+                <StatCard
+                  label={user.isVisible ? t('visible') : t('hidden')}
+                  value={user.isVisible ? <Eye size={24} /> : <EyeOff size={24} />}
+                  tone={user.isVisible ? 'success' : 'default'}
+                  icon={<UserIcon size={20} />}
+                />
               </div>
 
               {/* Quick Actions */}
               <div className="space-y-2">
-                <h2 className="text-lg font-semibold">{t('quickActions')}</h2>
+                <h2 className="font-display text-lg font-semibold text-white">{t('quickActions')}</h2>
                 <div className="grid grid-cols-2 gap-3">
                   <Button
                     onClick={refreshLocation}
@@ -477,34 +450,30 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
           </TabsContent>
         </div>
 
-        {/* Mobile Bottom Navigation */}
-        <div className="sm:hidden border-t bg-black/70 backdrop-blur-md pb-safe flex-shrink-0">
-          <TabsList className="grid w-full grid-cols-5 h-16 landscape:h-10">
-            <TabsTrigger value="home" className="flex-col space-y-0.5">
-              <Home size={18} />
-              <span className="text-xs landscape:hidden">{t('home')}</span>
-            </TabsTrigger>
-            <TabsTrigger value="map" className="flex-col space-y-0.5">
-              <MapPin size={18} />
-              <span className="text-xs landscape:hidden">{t('map')}</span>
-            </TabsTrigger>
-            <TabsTrigger value="contacts" className="flex-col space-y-0.5 relative">
-              <Users size={18} />
-              <span className="text-xs landscape:hidden">{t('contacts')}</span>
-              {invitationsData.pendingCount > 0 && (
-                <span className="absolute top-1 right-3 h-4 w-4 rounded-full bg-destructive text-[10px] text-destructive-foreground flex items-center justify-center font-bold">
-                  {invitationsData.pendingCount}
-                </span>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="messages" className="flex-col space-y-0.5">
-              <MessageSquare size={18} />
-              <span className="text-xs landscape:hidden">{t('chat')}</span>
-            </TabsTrigger>
-            <TabsTrigger value="profile" className="flex-col space-y-0.5">
-              <UserIcon size={18} />
-              <span className="text-xs landscape:hidden">{t('profile')}</span>
-            </TabsTrigger>
+        {/* Mobile Bottom Navigation — activo en amarillo de marca */}
+        <div className="sm:hidden border-t border-white/10 bg-black/70 backdrop-blur-md pb-safe flex-shrink-0">
+          <TabsList className="grid w-full grid-cols-5 h-16 landscape:h-10 bg-transparent p-0 rounded-none">
+            {([
+              ['home', Home, t('home')],
+              ['map', MapPin, t('map')],
+              ['contacts', Users, t('contacts')],
+              ['messages', MessageSquare, t('chat')],
+              ['profile', UserIcon, t('profile')],
+            ] as const).map(([value, Icon, label]) => (
+              <TabsTrigger
+                key={value}
+                value={value}
+                className="relative h-full flex-col space-y-0.5 rounded-none text-white/50 data-[state=active]:bg-transparent data-[state=active]:text-brand-yellow data-[state=active]:shadow-none"
+              >
+                <Icon size={18} />
+                <span className="text-[10px] landscape:hidden">{label}</span>
+                {value === 'contacts' && invitationsData.pendingCount > 0 && (
+                  <span className="absolute top-1 right-3 h-4 w-4 rounded-full bg-brand-red text-[10px] text-white flex items-center justify-center font-bold">
+                    {invitationsData.pendingCount}
+                  </span>
+                )}
+              </TabsTrigger>
+            ))}
           </TabsList>
         </div>
       </Tabs>

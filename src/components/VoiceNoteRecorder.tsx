@@ -49,7 +49,7 @@ const VoiceNoteRecorder: React.FC<VoiceNoteRecorderProps> = ({
       <button
         onClick={onFeatureBlocked}
         title={t('voiceNotesLockedTitle')}
-        className="w-11 h-11 rounded-full flex items-center justify-center bg-gray-700 hover:bg-gray-600 transition-colors relative"
+        className="w-11 h-11 rounded-full flex items-center justify-center bg-white/10 hover:bg-white/20 transition-colors relative"
       >
         <Mic size={20} className="text-muted-foreground" />
         <Lock size={10} className="text-amber-400 absolute bottom-1.5 right-1.5" />

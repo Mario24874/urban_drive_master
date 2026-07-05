@@ -103,7 +103,7 @@ const VisibilityToggle: React.FC<VisibilityToggleProps> = ({
           w-20 h-10 rounded-full transition-all duration-300
           ${isVisible 
             ? 'bg-green-500 hover:bg-green-600' 
-            : 'bg-gray-400 hover:bg-gray-500'
+            : 'bg-white/20 hover:bg-white/30'
           }
           ${loading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
         `}
