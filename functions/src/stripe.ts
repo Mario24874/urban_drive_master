@@ -7,7 +7,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? '', {
   apiVersion: '2024-06-20',
 });
 
-const APP_URL = process.env.APP_URL ?? 'https://urbandrive-1082b.web.app';
+const APP_URL = process.env.APP_URL ?? 'https://urbandrive.cloud';
 
 // ─── Firestore (initialized by index.ts or here lazily) ──────────────────────
 function db() {

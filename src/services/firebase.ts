@@ -1,7 +1,7 @@
 // Firebase Configuration - single source of truth
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { initializeFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
@@ -26,6 +26,8 @@ if (import.meta.env.DEV) {
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
 export const auth = getAuth(app);
-export const db = getFirestore(app);
+// Optional fields use the `value || undefined` idiom expecting omission;
+// without this flag the SDK throws on any undefined instead of omitting it.
+export const db = initializeFirestore(app, { ignoreUndefinedProperties: true });
 export const storage = getStorage(app);
 export default app;
