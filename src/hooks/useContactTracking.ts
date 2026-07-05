@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { collection, query, where, onSnapshot, doc, setDoc, getDoc, documentId } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { Contact } from '../types';
+import type { SubscriptionTier } from '../features/enterprise/types/subscription';
 
 interface TrackableContact extends Omit<Contact, 'lastSeen'> {
   distanceFromUser?: number;
@@ -17,7 +18,12 @@ interface ContactTrackingState {
   error: string | null;
 }
 
-export const useContactTracking = (userId: string, userType: 'user' | 'driver') => {
+export const useContactTracking = (
+  userId: string,
+  userType: 'user' | 'driver',
+  /** Plan del usuario: en 'free' el mapa muestra solo el slot activo (1 contacto) */
+  tier: SubscriptionTier = 'free',
+) => {
   const [state, setState] = useState<ContactTrackingState>({
     visibleContacts: [],
     selectedContact: null,
@@ -132,18 +138,16 @@ export const useContactTracking = (userId: string, userType: 'user' | 'driver') 
   useEffect(() => {
     if (!userId) return;
 
-    const unsubscribers: (() => void)[] = [];
+    let contactUnsubs: (() => void)[] = [];
+    let subscribedIdsKey = '';
 
-    const fetchUserContactsAndSubscribe = async () => {
+    const unsubscribeContacts = () => {
+      contactUnsubs.forEach(u => u());
+      contactUnsubs = [];
+    };
+
+    const subscribeToContacts = (contactIds: string[]) => {
       try {
-        const collName = userType === 'driver' ? 'drivers' : 'users';
-        const userDoc = await getDoc(doc(db, collName, userId));
-        if (!userDoc.exists()) {
-          setState(prev => ({ ...prev, visibleContacts: [] }));
-          return;
-        }
-
-        const contactIds: string[] = userDoc.data().contacts || [];
         if (contactIds.length === 0) {
           setState(prev => ({ ...prev, visibleContacts: [] }));
           return;
@@ -207,7 +211,7 @@ export const useContactTracking = (userId: string, userType: 'user' | 'driver') 
             (snap) => handleSnapshot(snap, 'driver'),
             (err) => console.error('[useContactTracking] drivers error:', err),
           );
-          unsubscribers.push(usersUnsub, driversUnsub);
+          contactUnsubs.push(usersUnsub, driversUnsub);
         }
       } catch (error) {
         console.error('Error al obtener contactos:', error);
@@ -215,9 +219,44 @@ export const useContactTracking = (userId: string, userType: 'user' | 'driver') 
       }
     };
 
-    fetchUserContactsAndSubscribe();
-    return () => unsubscribers.forEach(u => u());
-  }, [userId, userType, calculateDistance]);
+    // Listen to own doc so contacts[] and activeMapContactId react in real time
+    const collName = userType === 'driver' ? 'drivers' : 'users';
+    const unsubOwnDoc = onSnapshot(
+      doc(db, collName, userId),
+      (snap) => {
+        if (!snap.exists()) {
+          unsubscribeContacts();
+          subscribedIdsKey = '';
+          setState(prev => ({ ...prev, visibleContacts: [] }));
+          return;
+        }
+
+        const allContactIds: string[] = snap.data().contacts || [];
+
+        // Plan free: solo el slot activo va al mapa. Fallback al primer
+        // contacto para usuarios que aún no han elegido slot.
+        let effectiveIds = allContactIds;
+        if (tier === 'free') {
+          const activeId: string | null = snap.data().activeMapContactId || null;
+          const slotId = activeId && allContactIds.includes(activeId)
+            ? activeId
+            : allContactIds[0];
+          effectiveIds = slotId ? [slotId] : [];
+        }
+
+        const key = effectiveIds.join(',');
+        if (key === subscribedIdsKey) return;
+        subscribedIdsKey = key;
+
+        unsubscribeContacts();
+        setState(prev => ({ ...prev, visibleContacts: [] }));
+        subscribeToContacts(effectiveIds);
+      },
+      (err) => console.error('[useContactTracking] own doc error:', err),
+    );
+
+    return () => { unsubOwnDoc(); unsubscribeContacts(); };
+  }, [userId, userType, tier, calculateDistance]);
 
   const selectContactForNavigation = useCallback((contact: TrackableContact) => {
     if (!contact.location) {

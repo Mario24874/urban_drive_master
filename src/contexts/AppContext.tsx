@@ -180,6 +180,10 @@ const translations: Record<Lang, Record<string, string>> = {
     msgLimitReached: 'Daily message limit reached. Upgrade to chat freely.',
     msgLimitRemaining: '{n} messages left today',
 
+    // Free-tier map slot
+    mapSlotBadge: 'On map',
+    mapSlotSet: 'Show on my map',
+
     // Free-tier active contact slot modal
     slotModalTitle: 'Your contact slot is full',
     slotModalDesc: '{name} wants to connect with you, but you already have an active contact.',
@@ -683,6 +687,10 @@ const translations: Record<Lang, Record<string, string>> = {
     // Free-tier message limits
     msgLimitReached: 'Límite diario alcanzado. Actualiza tu plan para chatear sin límites.',
     msgLimitRemaining: '{n} mensajes restantes hoy',
+
+    // Free-tier map slot
+    mapSlotBadge: 'En mapa',
+    mapSlotSet: 'Ver en mi mapa',
 
     // Free-tier active contact slot modal
     slotModalTitle: 'Tu espacio de contacto está ocupado',

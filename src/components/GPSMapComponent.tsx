@@ -4,6 +4,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import '../lib/mapboxProxy'; // enruta el SDK vía proxy propio (fix Starlink)
 import { Navigation } from 'lucide-react';
 import useContactTracking from '../hooks/useContactTracking';
+import { useSubscription } from '../features/enterprise/hooks/useSubscription';
 import NavigationInterface from './NavigationInterface';
 import VoicePushToTalk from './VoicePushToTalk';
 import { useApp } from '../contexts/AppContext';
@@ -112,6 +113,8 @@ const GPSMapComponent: React.FC<GPSMapComponentProps> = ({
   const [selectedContactName, setSelectedContactName] = useState<string>('');
   const [mapLoaded, setMapLoaded] = useState(false);
   
+  const { tier } = useSubscription(userId);
+
   const {
     visibleContacts,
     userLocation: trackedUserLocation,
@@ -124,7 +127,7 @@ const GPSMapComponent: React.FC<GPSMapComponentProps> = ({
     nearbyContacts,
     drivers,
     users
-  } = useContactTracking(userId, userType);
+  } = useContactTracking(userId, userType, tier);
 
   // Iniciar tracking automáticamente
   useEffect(() => {

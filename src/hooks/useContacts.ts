@@ -13,8 +13,11 @@ interface UseContactsReturn {
   error: string | null;
   contactIds: string[];
   contactVisibility: Record<string, boolean>;
+  /** Contacto que ocupa el slot de mapa del plan free (null = sin definir) */
+  activeMapContactId: string | null;
   removeContact: (contactId: string, contactType: 'user' | 'driver') => Promise<void>;
   toggleContactVisibility: (contactId: string, visible: boolean) => Promise<void>;
+  setActiveMapContact: (contactId: string) => Promise<void>;
 }
 
 export function useContacts(
@@ -24,6 +27,7 @@ export function useContacts(
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [contactIds, setContactIds] = useState<string[]>([]);
   const [contactVisibility, setContactVisibility] = useState<Record<string, boolean>>({});
+  const [activeMapContactId, setActiveMapContactId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -42,6 +46,7 @@ export function useContacts(
         if (snap.exists()) {
           setContactIds(snap.data().contacts || []);
           setContactVisibility(snap.data().contactVisibility || {});
+          setActiveMapContactId(snap.data().activeMapContactId || null);
         }
       },
       (err) => setError(err.message),
@@ -132,5 +137,18 @@ export function useContacts(
     }
   };
 
-  return { contacts, loading, error, contactIds, contactVisibility, removeContact, toggleContactVisibility };
+  const setActiveMapContact = async (contactId: string) => {
+    if (!userId) return;
+    try {
+      const collName = userType === 'driver' ? 'drivers' : 'users';
+      await updateDoc(doc(db, collName, userId), { activeMapContactId: contactId });
+    } catch (err: any) {
+      toast.error('Failed to update map contact', { description: err.message });
+    }
+  };
+
+  return {
+    contacts, loading, error, contactIds, contactVisibility, activeMapContactId,
+    removeContact, toggleContactVisibility, setActiveMapContact,
+  };
 }

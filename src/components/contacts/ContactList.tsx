@@ -7,7 +7,6 @@ import {
   MoreVertical, Navigation, Car, UserRound,
   Lock, Sparkles,
 } from 'lucide-react';
-import ActiveContactSlotModal from '../ActiveContactSlotModal';
 import type { Contact, Invitation } from '../../types';
 import { useContacts } from '../../hooks/useContacts';
 
@@ -76,11 +75,15 @@ const ContactItem: React.FC<{
   contact: Contact;
   isSelected: boolean;
   isVisible: boolean;
+  /** Plan free: este contacto ocupa el slot de mapa */
+  isMapSlot?: boolean;
   onSelect: () => void;
   onToggleVisibility: () => void;
   onRemove: () => void;
   onNavigate?: () => void;
-}> = ({ contact, isSelected, isVisible, onSelect, onToggleVisibility, onRemove, onNavigate }) => {
+  /** Plan free: elegir este contacto como slot de mapa */
+  onSetMapSlot?: () => void;
+}> = ({ contact, isSelected, isVisible, isMapSlot, onSelect, onToggleVisibility, onRemove, onNavigate, onSetMapSlot }) => {
   const { t } = useApp();
   const [actionSheetOpen, setActionSheetOpen] = useState(false);
 
@@ -108,6 +111,12 @@ const ContactItem: React.FC<{
           <p className="font-medium text-sm truncate">{contact.displayName}</p>
           {isVisible && (
             <span className="w-2 h-2 bg-green-400 rounded-full flex-shrink-0" />
+          )}
+          {isMapSlot && (
+            <Badge className="text-[10px] py-0 px-1.5 gap-0.5 bg-brand-yellow/15 text-brand-yellow border-brand-yellow/30 flex-shrink-0">
+              <MapPin size={9} />
+              {t('mapSlotBadge')}
+            </Badge>
           )}
         </div>
         <div className="flex items-center gap-2 mt-0.5">
@@ -179,6 +188,18 @@ const ContactItem: React.FC<{
               >
                 <Navigation size={20} className="text-brand-yellow" />
                 {t('navigateHere')}
+              </Button>
+            )}
+
+            {/* Free plan: choose this contact as the single map slot */}
+            {onSetMapSlot && !isMapSlot && (
+              <Button
+                variant="ghost"
+                className="w-full justify-start gap-3 h-12 text-base"
+                onClick={() => { onSetMapSlot(); setActionSheetOpen(false); }}
+              >
+                <MapPin size={20} className="text-brand-yellow" />
+                {t('mapSlotSet')}
               </Button>
             )}
 
@@ -335,15 +356,23 @@ const ContactList: React.FC<ContactListProps> = ({
   const [addSheetOpen, setAddSheetOpen] = useState(false);
   const [removeTarget, setRemoveTarget] = useState<Contact | null>(null);
   const [upgradeDialogOpen, setUpgradeDialogOpen] = useState(false);
-  const [slotModal, setSlotModal] = useState<{ invitation: Invitation } | null>(null);
 
   const {
     contacts,
     loading,
     contactVisibility,
+    activeMapContactId,
     removeContact,
     toggleContactVisibility,
+    setActiveMapContact,
   } = useContacts(userId, userType);
+
+  // Contacto que ocupa el slot de mapa del plan free (fallback: primero de la lista)
+  const mapSlotContactId = isFreeSlotPlan
+    ? (activeMapContactId && contacts.some((c) => c.id === activeMapContactId)
+        ? activeMapContactId
+        : contacts[0]?.id ?? null)
+    : null;
 
   const isAtLimit = maxContacts !== -1 && contacts.length >= maxContacts;
 
@@ -359,22 +388,10 @@ const ContactList: React.FC<ContactListProps> = ({
     deleteInvitation,
   } = invitationsData;
 
-  // Intercept acceptInvitation when the free slot is occupied
+  // Aceptar nunca se bloquea por plan: el free chatea con todos sus contactos
+  // y el plan solo limita cuántos ve en el mapa (su slot activo).
   const handleAcceptInvitation = (invitation: Invitation) => {
-    if (isFreeSlotPlan && isAtLimit) {
-      setSlotModal({ invitation });
-    } else {
-      acceptInvitation(invitation, userType);
-    }
-  };
-
-  // Replace: remove current contact, then accept new invitation
-  const handleReplaceContact = async (invitation: Invitation) => {
-    const current = contacts[0];
-    if (current) {
-      await removeContact(current.id, current.userType as 'user' | 'driver');
-    }
-    await acceptInvitation(invitation, userType);
+    acceptInvitation(invitation, userType);
   };
 
   const filtered = contacts.filter((c) => {
@@ -523,6 +540,7 @@ const ContactList: React.FC<ContactListProps> = ({
                     contact={contact}
                     isSelected={selectedContact?.id === contact.id}
                     isVisible={contactVisibility[contact.id] !== false}
+                    isMapSlot={contact.id === mapSlotContactId}
                     onSelect={() => onSelectContact(contact)}
                     onToggleVisibility={() =>
                       toggleContactVisibility(contact.id, contactVisibility[contact.id] === false)
@@ -532,6 +550,9 @@ const ContactList: React.FC<ContactListProps> = ({
                       onNavigateToContact && contact.location
                         ? () => onNavigateToContact(contact)
                         : undefined
+                    }
+                    onSetMapSlot={
+                      isFreeSlotPlan ? () => setActiveMapContact(contact.id) : undefined
                     }
                   />
                 ))}
@@ -641,16 +662,6 @@ const ContactList: React.FC<ContactListProps> = ({
         </DialogContent>
       </Dialog>
 
-      {/* Active contact slot modal — shown when free user gets 2nd invitation */}
-      <ActiveContactSlotModal
-        open={!!slotModal}
-        onClose={() => setSlotModal(null)}
-        pendingInvitation={slotModal?.invitation ?? null}
-        currentContact={contacts[0] ?? null}
-        onUpgrade={() => { setSlotModal(null); onUpgrade?.(); }}
-        onReplace={(inv) => { setSlotModal(null); handleReplaceContact(inv); }}
-        onDecline={(id) => { setSlotModal(null); rejectInvitation(id); }}
-      />
     </div>
   );
 };

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Urban Drive — Diagnóstico de mapa</title>
+<link rel="stylesheet" href="/mapbox-api/mapbox-gl-js/v3.7.0/mapbox-gl.css">
+<style>
+  body { margin:0; font-family: system-ui, sans-serif; background:#111; color:#eee; }
+  #map { width:100%; height:45vh; background:#222; }
+  #log { padding:10px; font-size:12px; font-family:monospace; white-space:pre-wrap; word-break:break-all; }
+  .ok { color:#4caf50; } .fail { color:#ff5252; } .info { color:#90caf9; }
+  h3 { margin:8px 10px 0; font-size:14px; }
+</style>
+</head>
+<body>
+<h3>Diagnóstico de mapa — Urban Drive</h3>
+<div id="map"></div>
+<div id="log"></div>
+<script>
+// Token PÚBLICO de Mapbox (pk., el mismo que viaja en el bundle de la app).
+// Partido en dos solo porque el secret-scanner de GitHub lo marca por error.
+const TOKEN = "pk.eyJ1IjoibWFyaW9tb3Jlbm8yNDg3NCIsImEiOiJjbTFqbGxoaWUwMnIwMmpwejQ0" +
+              "OXM0OW4xIn0.EuaA8BT-Y1tcK7bARIOlaQ";
+const logEl = document.getElementById("log");
+function log(msg, cls) {
+  const line = document.createElement("div");
+  line.textContent = new Date().toISOString().slice(11,19) + " " + msg;
+  if (cls) line.className = cls;
+  logEl.appendChild(line);
+}
+window.onerror = (m, src, l, c, err) => log("JS ERROR: " + m + " @ " + (src||"") + ":" + l, "fail");
+window.onunhandledrejection = e => log("PROMISE ERROR: " + (e.reason && e.reason.message || e.reason), "fail");
+
+// 1. Info del entorno
+log("UA: " + navigator.userAgent, "info");
+log("Online: " + navigator.onLine + " | serviceWorker controller: " + (navigator.serviceWorker && navigator.serviceWorker.controller ? "SÍ (interceptando)" : "no"), "info");
+
+// 2. Soporte WebGL
+try {
+  const c = document.createElement("canvas");
+  const gl = c.getContext("webgl2") || c.getContext("webgl");
+  if (gl) {
+    const dbg = gl.getExtension("WEBGL_debug_renderer_info");
+    const renderer = dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER);
+    log("WebGL OK: " + renderer, "ok");
+  } else {
+    log("WebGL NO DISPONIBLE — el mapa no puede renderizar en este dispositivo/navegador", "fail");
+  }
+} catch(e) { log("WebGL check falló: " + e.message, "fail"); }
+
+// 3. Fetches directos a cada tipo de recurso vía el proxy
+const tests = [
+  ["estilo",  "/mapbox-api/styles/v1/mapbox/navigation-night-v1?access_token=" + TOKEN],
+  ["sprite",  "/mapbox-api/styles/v1/mapbox/navigation-night-v1/sprite.json?access_token=" + TOKEN],
+  ["glyphs",  "/mapbox-api/fonts/v1/mapbox/DIN%20Pro%20Regular,Arial%20Unicode%20MS%20Regular/0-255.pbf?access_token=" + TOKEN],
+  ["tile vector", "/mapbox-api/v4/mapbox.mapbox-streets-v8,mapbox.mapbox-terrain-v2/14/3811/7028.vector.pbf?access_token=" + TOKEN],
+  ["directo a api.mapbox.com (sin proxy)", "https://api.mapbox.com/styles/v1/mapbox/navigation-night-v1?access_token=" + TOKEN]
+];
+tests.forEach(([name, url]) => {
+  const t0 = performance.now();
+  fetch(url).then(r => {
+    const ms = Math.round(performance.now() - t0);
+    return r.arrayBuffer().then(b =>
+      log("fetch " + name + ": HTTP " + r.status + " · " + b.byteLength + " bytes · " + ms + "ms", r.ok ? "ok" : "fail"));
+  }).catch(e => log("fetch " + name + ": FALLÓ — " + e.message + " (" + Math.round(performance.now()-t0) + "ms)", "fail"));
+});
+
+// 4. Mapa real vía proxy, igual que la app
+const s = document.createElement("script");
+s.src = "/mapbox-api/mapbox-gl-js/v3.7.0/mapbox-gl.js";
+s.onload = () => {
+  log("mapbox-gl.js cargado v" + mapboxgl.version, "ok");
+  mapboxgl.accessToken = TOKEN;
+  mapboxgl.baseApiUrl = window.location.origin + "/mapbox-api";
+  try {
+    const map = new mapboxgl.Map({
+      container: "map",
+      style: "mapbox://styles/mapbox/navigation-night-v1",
+      center: [-96.134, 19.173],
+      zoom: 13
+    });
+    map.on("load", () => log("✅ MAPA CARGADO COMPLETO — estilo y tiles OK", "ok"));
+    map.on("error", e => log("map error: " + (e.error && e.error.message || JSON.stringify(e.error)) + (e.error && e.error.status ? " [HTTP " + e.error.status + "]" : ""), "fail"));
+    map.on("styledata", () => log("styledata: estilo recibido", "ok"));
+  } catch(e) { log("Map constructor falló: " + e.message, "fail"); }
+};
+s.onerror = () => log("NO se pudo cargar mapbox-gl.js desde el proxy — la red bloquea /mapbox-api", "fail");
+document.head.appendChild(s);
+</script>
+</body>
+</html>

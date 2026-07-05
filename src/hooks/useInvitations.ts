@@ -74,14 +74,40 @@ export function useInvitations(
     }
 
     // All invitations sent by me
+    const myCollName = userType === 'driver' ? 'drivers' : 'users';
     const unsubSent = onSnapshot(
       query(invRef, where('fromId', '==', userId)),
-      (snap) => setSent(snap.docs.map(toInvitation)),
+      async (snap) => {
+        const sentInvs = snap.docs.map(toInvitation);
+        setSent(sentInvs);
+
+        // Default de visibilidad asimétrica: quien invita queda oculto para el
+        // invitado hasta permitirlo con el toggle por contacto. Se aplica solo a
+        // invitaciones 'pending' con destinatario resuelto y sin entrada previa en
+        // contactVisibility, para no tocar relaciones ya aceptadas antes de esta regla.
+        const pendingResolved = sentInvs.filter((inv) => inv.status === 'pending' && inv.toId);
+        if (pendingResolved.length === 0) return;
+        try {
+          const mySnap = await getDoc(doc(db, myCollName, userId));
+          const myVisibility: Record<string, boolean> = mySnap.data()?.contactVisibility || {};
+          const updates: Record<string, boolean> = {};
+          for (const inv of pendingResolved) {
+            if (myVisibility[inv.toId!] === undefined) {
+              updates[`contactVisibility.${inv.toId}`] = false;
+            }
+          }
+          if (Object.keys(updates).length > 0) {
+            await updateDoc(doc(db, myCollName, userId), updates);
+          }
+        } catch (err) {
+          console.error('[useInvitations] visibility default error:', err);
+        }
+      },
       (err) => console.error('[useInvitations] sent query error:', err),
     );
 
     return () => { unsubById(); unsubByEmail(); unsubSent(); };
-  }, [userId, userEmail]);
+  }, [userId, userEmail, userType]);
 
   const sendInvitation = async (currentUser: any, identifier: string) => {
     if (!userId || !identifier.trim()) return;
