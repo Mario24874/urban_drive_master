@@ -6,6 +6,7 @@ import type { Conversation } from '../services/messaging';
 import type { Contact } from '../types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/ui/empty-state';
 import { MessageSquare, UserPlus, Trash2, Check, X } from 'lucide-react';
 import { useApp } from '../contexts/AppContext';
 
@@ -106,17 +107,18 @@ const ConversationsList: React.FC<ConversationsListProps> = ({
 
   if (conversations.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-full gap-4 px-6 text-center text-muted-foreground">
-        <MessageSquare size={52} className="opacity-20" />
-        <p className="font-medium">{t('noConversations')}</p>
-        <p className="text-sm opacity-70">
-          {t('startChatFromContacts')}
-        </p>
-        <Button variant="outline" size="sm" onClick={onNewChat} className="mt-2">
-          <UserPlus size={15} className="mr-2" />
-          {t('newChat')}
-        </Button>
-      </div>
+      <EmptyState
+        className="h-full"
+        icon={<MessageSquare size={26} />}
+        title={t('noConversations')}
+        description={t('startChatFromContacts')}
+        action={
+          <Button size="touch" onClick={onNewChat}>
+            <UserPlus size={15} className="mr-2" />
+            {t('newChat')}
+          </Button>
+        }
+      />
     );
   }
 

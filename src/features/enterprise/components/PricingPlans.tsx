@@ -383,7 +383,7 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ userId, currentTier = 'free
           <div className="flex items-center gap-3">
             <img src="/assets/UrbanDrive.png" alt="Urban Drive" className="h-9 w-9 rounded-xl shadow-lg" />
             <div>
-              <h1 className="text-white font-bold text-lg leading-tight">{t('pricingTitle')}</h1>
+              <h1 className="font-display text-white font-bold text-lg leading-tight">{t('pricingTitle')}</h1>
               <p className="text-white/50 text-xs">{t('pricingSubtitle')}</p>
             </div>
           </div>

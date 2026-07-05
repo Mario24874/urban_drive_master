@@ -133,7 +133,7 @@ const CompanySetup: React.FC<CompanySetupProps> = ({
           <div className="flex items-center gap-3">
             <Building2 size={24} className="text-amber-400" />
             <div>
-              <h1 className="text-white font-bold text-lg leading-tight">
+              <h1 className="font-display text-white font-bold text-lg leading-tight">
                 {t('companySetupTitle')}
               </h1>
               <p className="text-white/50 text-xs">{stepLabel}</p>

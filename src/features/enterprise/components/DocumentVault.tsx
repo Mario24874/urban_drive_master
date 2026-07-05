@@ -163,7 +163,7 @@ const DocumentVault: React.FC<DocumentVaultProps> = ({
             <div className="flex items-center gap-3">
               <FileText size={22} className="text-brand-yellow" />
               <div>
-                <h1 className="text-white font-bold text-lg leading-tight">
+                <h1 className="font-display text-white font-bold text-lg leading-tight">
                   {t('documentVault')}
                 </h1>
                 <p className="text-white/50 text-xs font-mono">

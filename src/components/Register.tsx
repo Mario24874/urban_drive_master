@@ -195,12 +195,12 @@ const Register: React.FC<RegisterProps> = ({ handleRegister }) => {
             alt="Urban Drive"
             className="h-24 w-24 mx-auto rounded-2xl shadow-xl mb-3 ring-1 ring-brand-yellow/20"
           />
-          <h1 className="text-2xl font-bold text-white">Urban Drive</h1>
+          <h1 className="font-display text-2xl font-bold text-white">Urban Drive</h1>
         </div>
 
         <Card className="shadow-lg">
           <CardHeader className="space-y-1 text-center">
-            <CardTitle className="text-2xl sm:text-3xl font-bold">
+            <CardTitle className="font-display text-2xl sm:text-3xl font-bold">
               Create Account
             </CardTitle>
             <CardDescription className="text-base">

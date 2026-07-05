@@ -69,7 +69,7 @@ const FleetAnalytics: React.FC<FleetAnalyticsProps> = ({
           <div className="flex items-center gap-3">
             <BarChart2 size={22} className="text-amber-400" />
             <div>
-              <h1 className="text-white font-bold text-lg leading-tight">{t('fleetAnalytics')}</h1>
+              <h1 className="font-display text-white font-bold text-lg leading-tight">{t('fleetAnalytics')}</h1>
               {analyticsLevel !== 'none' && (
                 <p className="text-white/50 text-xs capitalize">{subscriptionTier}</p>
               )}

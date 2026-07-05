@@ -177,7 +177,7 @@ const MaintenanceLog: React.FC<MaintenanceLogProps> = ({
             <div className="flex items-center gap-3">
               <Wrench size={22} className="text-amber-400" />
               <div>
-                <h1 className="text-white font-bold text-lg leading-tight">
+                <h1 className="font-display text-white font-bold text-lg leading-tight">
                   {t('maintenanceLog')}
                 </h1>
                 <p className="text-white/50 text-xs font-mono">{vehiclePlate}</p>

@@ -147,7 +147,7 @@ const DocumentsDashboard: React.FC<DocumentsDashboardProps> = ({
             <div className="flex items-center gap-3">
               <FileText size={22} className="text-brand-yellow" />
               <div>
-                <h1 className="text-white font-bold text-lg leading-tight">
+                <h1 className="font-display text-white font-bold text-lg leading-tight">
                   {t('documentsDashboard')}
                 </h1>
                 <p className="text-white/50 text-xs">

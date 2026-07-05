@@ -164,7 +164,7 @@ const DriverManager: React.FC<DriverManagerProps> = ({
             <div className="flex items-center gap-3">
               <Users size={22} className="text-amber-400" />
               <div>
-                <h1 className="text-white font-bold text-lg leading-tight">
+                <h1 className="font-display text-white font-bold text-lg leading-tight">
                   {t('driversLabel')}
                 </h1>
                 <p className="text-white/50 text-xs">
