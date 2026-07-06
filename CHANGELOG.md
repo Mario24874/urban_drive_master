@@ -5,6 +5,46 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/),
 y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.0] - 2026-07-05
+
+### 📐 Reglas de planes: visibilidad free vs suscrito
+Spec: `docs/superpowers/specs/2026-07-05-plan-visibility-rules-design.md`
+
+- **Aceptar invitaciones nunca se bloquea por plan**: el usuario free chatea con
+  todos sus contactos (límite de mensajes/día intacto); se retiró la intercepción
+  de "slot ocupado" (`ActiveContactSlotModal` queda sin uso).
+- **Plan free: un solo contacto en el mapa** — slot activo (`activeMapContactId`,
+  campo aditivo en el doc del usuario; fallback al primer contacto). Selector
+  "Ver en mi mapa" y badge "En mapa" en la lista de contactos.
+- **Asimetría invitador/invitado**: quien invita queda oculto por defecto para el
+  invitado (`contactVisibility` en el doc propio del invitador, solo invitaciones
+  pendientes); se abre con el toggle por contacto existente.
+- `useContactTracking` escucha el doc propio en vivo (contactos nuevos aparecen
+  en el mapa sin recargar) y filtra por tier (`useSubscription`).
+- `public/map-diag.html`: página de diagnóstico del mapa (WebGL + proxy + tiles).
+- Sin migración de datos ni cambios en Firestore rules.
+
+### 🔗 Invitaciones fase 2: enlaces, push, banner y silenciar
+Spec: `docs/superpowers/specs/2026-07-05-invitation-links-design.md`
+
+- **Enlace de invitación compartible** (WhatsApp/redes/email) con QR
+  (`qrcode.react`) desde "Agregar contacto"; canje en `/invite/:id` vía Cloud
+  Function `redeemInvitation` (un uso por enlace; sin sesión se canjea tras
+  registrarse; aplica el default de visibilidad de fase 1).
+- **Fix crítico**: el auto-resolve de invitaciones enviadas antes del registro
+  violaba las rules y fallaba en silencio desde siempre; ahora lo hace la
+  callable `claimPendingInvitations` al iniciar sesión, cubriendo también
+  invitaciones por teléfono (antes huérfanas).
+- **Push de invitaciones**: trigger `onInvitationCreated` (Eventarc → FCM).
+- **Banner de 1 tap** (`InvitationBanner`) en el shell con aceptar/rechazar.
+- **Notificaciones de chat**: beep WebAudio en primer plano + sección
+  "Notificaciones" en Ajustes con Silenciar/Activar (campo `muted` en
+  `fcm_tokens`, respetado por las functions; token se guarda con `merge: true`).
+
+#### Cloud Functions desplegadas
+`redeemInvitation`, `claimPendingInvitations`, `onInvitationCreated` (nuevas),
+`sendMessageNotification` (actualizada con check de `muted`).
+
 ## [1.4.0] - 2026-02-26
 
 ### 🛡️ Admin Portal — Phase 8
