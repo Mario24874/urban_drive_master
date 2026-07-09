@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { collection, query, where, onSnapshot, doc, setDoc, getDoc, documentId } from 'firebase/firestore';
+import { Capacitor } from '@capacitor/core';
 import { db } from '../services/firebase';
+import { backgroundLocationService } from '../services/backgroundLocation';
 import { Contact } from '../types';
 import type { SubscriptionTier } from '../features/enterprise/types/subscription';
 
@@ -91,6 +93,20 @@ export const useContactTracking = (
   }, [userId, userType, ensureUserDocument]);
 
   const startLocationTracking = useCallback(() => {
+    if (Capacitor.isNativePlatform()) {
+      backgroundLocationService.startWatching((position) => {
+        if (!position) {
+          setState(prev => ({ ...prev, error: 'Error de ubicación desconocido', isTracking: false }));
+          return;
+        }
+        const newLocation: [number, number] = [position.longitude, position.latitude];
+        setState(prev => ({ ...prev, userLocation: newLocation, isTracking: true, error: null }));
+        updateUserLocation(newLocation);
+      });
+      setState(prev => ({ ...prev, isTracking: true }));
+      return;
+    }
+
     if (!navigator.geolocation) {
       setState(prev => ({ ...prev, error: 'Geolocalización no disponible en este dispositivo' }));
       return;
@@ -119,6 +135,11 @@ export const useContactTracking = (
   }, [updateUserLocation, locationWatchId]);
 
   const stopLocationTracking = useCallback(() => {
+    if (Capacitor.isNativePlatform()) {
+      backgroundLocationService.stopWatching();
+      setState(prev => ({ ...prev, isTracking: false }));
+      return;
+    }
     if (locationWatchId !== null) {
       navigator.geolocation.clearWatch(locationWatchId);
       setLocationWatchId(null);

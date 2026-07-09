@@ -24,6 +24,7 @@
     "ios:build": "npm run build:mobile && npx cap build ios"
   },
   "dependencies": {
+    "@capacitor-community/background-geolocation": "^1.2.26",
     "@capacitor/app": "^6.0.0",
     "@capacitor/device": "^6.0.0",
     "@capacitor/filesystem": "^6.0.3",

@@ -49,6 +49,8 @@ coverage/
 .firebase/
 firebase-debug.log
 firebase-debug.*.log
+android/app/google-services.json
+GoogleService-Info.plist
 
 # Capacitor
 android/app/build/

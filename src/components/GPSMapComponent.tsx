@@ -9,22 +9,29 @@ import NavigationInterface from './NavigationInterface';
 import VoicePushToTalk from './VoicePushToTalk';
 import { useApp } from '../contexts/AppContext';
 import { MAP_STYLE } from '../lib/mapStyle';
+import { ONLINE_WINDOW_MS, formatLastSeen } from '../lib/chatLogic';
 
 function createAvatarMarkerEl(
   photoURL: string | undefined,
   displayName: string,
   markerUserType: 'user' | 'driver',
   isCurrentUser: boolean,
-  isTracking?: boolean
+  isTracking?: boolean,
+  staleLabel?: string | null
 ): HTMLElement {
+  const isStale = !isCurrentUser && !!staleLabel;
   const size = isCurrentUser ? 36 : 30;
-  const borderColor = isCurrentUser
+  const borderColor = isStale
+    ? '#9ca3af'
+    : isCurrentUser
     ? '#f59e0b'
     : markerUserType === 'driver'
     ? '#10b981'
     : '#6b7280';
   const borderWidth = isCurrentUser ? 3 : 2;
-  const bgColor = isCurrentUser
+  const bgColor = isStale
+    ? '#9ca3af'
+    : isCurrentUser
     ? '#f59e0b'
     : markerUserType === 'driver'
     ? '#10b981'
@@ -53,9 +60,27 @@ function createAvatarMarkerEl(
       "></div>`
     : '';
 
+  const staleBadge = isStale
+    ? `<div style="
+        position:absolute;
+        bottom:-22px;
+        left:50%;
+        transform:translateX(-50%);
+        white-space:nowrap;
+        background-color:rgba(55,65,81,0.9);
+        color:white;
+        font-size:9px;
+        line-height:1;
+        padding:3px 5px;
+        border-radius:4px;
+        pointer-events:none;
+      ">${staleLabel}</div>`
+    : '';
+
   const el = document.createElement('div');
   el.className = `gps-marker ${isCurrentUser ? 'user-marker' : 'contact-marker'}`;
-  el.style.cssText = 'position:relative;display:inline-block;';
+  el.style.cssText = `position:relative;display:inline-block;${isStale ? 'opacity:0.6;' : ''}`;
+  if (isStale && staleLabel) el.title = staleLabel;
   el.innerHTML = `
     <div style="
       width:${size}px;
@@ -82,6 +107,7 @@ function createAvatarMarkerEl(
       border-right:6px solid transparent;
       border-top:8px solid ${borderColor};
     "></div>
+    ${staleBadge}
   `;
   return el;
 }
@@ -380,13 +406,22 @@ const GPSMapComponent: React.FC<GPSMapComponentProps> = ({
     // Agregar marcadores de contactos
     visibleContacts.forEach(contact => {
       if (contact.location?.longitude == null || contact.location?.latitude == null) return;
-      const { longitude, latitude } = contact.location;
+      const { longitude, latitude, timestamp } = contact.location;
+
+      // Ubicación desactualizada: el contacto pudo cerrar la app o quedar
+      // sin conexión; seguimos mostrando su última posición conocida (así
+      // funciona Firestore) pero avisamos que ya no es en tiempo real.
+      const lastUpdate = timestamp ? new Date(timestamp) : null;
+      const isStale = !!lastUpdate && Date.now() - lastUpdate.getTime() > ONLINE_WINDOW_MS;
+      const staleLabel = isStale ? formatLastSeen(lastUpdate, t) : null;
 
       const contactMarkerEl = createAvatarMarkerEl(
         contact.photoURL,
         contact.displayName || '?',
         contact.userType || 'user',
-        false
+        false,
+        undefined,
+        staleLabel
       );
 
       contactMarkerEl.addEventListener('click', () => {
