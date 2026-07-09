@@ -6,8 +6,9 @@ import { Button } from '../../../components/ui/button';
 import { Badge } from '../../../components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '../../../components/ui/avatar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../../components/ui/dialog';
-import { RefreshCw, Search } from 'lucide-react';
+import { RefreshCw, Search, Download, FileText } from 'lucide-react';
 import type { AdminUserRow } from '../../hooks/useAdminData';
+import { exportToCSV, exportToPDF, type ExportColumn } from '../../utils/adminExport';
 
 const PAGE_SIZE = 20;
 
@@ -17,7 +18,7 @@ const PLAN_VARIANT: Record<string, 'default' | 'secondary' | 'outline'> = {
 
 export default function AdminUsers() {
   const { t } = useApp();
-  const { users, loading, refresh } = useAdminData();
+  const { users, loading, refresh, usersHasMore, loadingMoreUsers, loadMoreUsers } = useAdminData();
 
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState<'all' | 'user' | 'driver'>('all');
@@ -38,14 +39,32 @@ export default function AdminUsers() {
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const page_data = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
+  const exportColumns: ExportColumn<AdminUserRow>[] = [
+    { header: 'Name', accessor: (u) => u.displayName },
+    { header: 'Email', accessor: (u) => u.email },
+    { header: 'Type', accessor: (u) => u.userType },
+    { header: 'Plan', accessor: (u) => u.tier ?? 'free' },
+    { header: 'Registered', accessor: (u) => u.createdAt ? u.createdAt.toLocaleDateString() : '' },
+  ];
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <h1 className="text-2xl font-bold">{t('adminUsers')}</h1>
-        <Button variant="outline" size="sm" onClick={refresh}>
-          <RefreshCw className="h-4 w-4 mr-2" />
-          {t('adminRefresh')}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => exportToCSV('urban-drive-users', filtered, exportColumns)}>
+            <Download className="h-4 w-4 mr-2" />
+            {t('adminExportCSV')}
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => exportToPDF(t('adminUsers'), filtered, exportColumns)}>
+            <FileText className="h-4 w-4 mr-2" />
+            {t('adminExportPDF')}
+          </Button>
+          <Button variant="outline" size="sm" onClick={refresh}>
+            <RefreshCw className="h-4 w-4 mr-2" />
+            {t('adminRefresh')}
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -130,13 +149,22 @@ export default function AdminUsers() {
       </div>
 
       {/* Pagination */}
-      {totalPages > 1 && (
+      {(totalPages > 1 || usersHasMore) && (
         <div className="flex items-center justify-between text-sm text-muted-foreground">
           <span>{filtered.length} users</span>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>Previous</Button>
-            <span className="flex items-center px-2">{page + 1} / {totalPages}</span>
-            <Button variant="outline" size="sm" disabled={page >= totalPages - 1} onClick={() => setPage((p) => p + 1)}>Next</Button>
+          <div className="flex items-center gap-2">
+            {totalPages > 1 && (
+              <>
+                <Button variant="outline" size="sm" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>Previous</Button>
+                <span className="flex items-center px-2">{page + 1} / {totalPages}</span>
+                <Button variant="outline" size="sm" disabled={page >= totalPages - 1} onClick={() => setPage((p) => p + 1)}>Next</Button>
+              </>
+            )}
+            {usersHasMore && (
+              <Button variant="outline" size="sm" disabled={loadingMoreUsers} onClick={loadMoreUsers}>
+                {loadingMoreUsers ? 'Loading…' : t('adminLoadMore')}
+              </Button>
+            )}
           </div>
         </div>
       )}

@@ -14,12 +14,13 @@ import AdminFleet from './sections/AdminFleet';
 import AdminMaintenance from './sections/AdminMaintenance';
 import AdminDocuments from './sections/AdminDocuments';
 import AdminCoupons from './sections/AdminCoupons';
+import AdminAdmins from './sections/AdminAdmins';
 
 interface Props {
   adminUser: AdminUser;
 }
 
-function SectionContent({ section }: { section: AdminSection }) {
+function SectionContent({ section, adminUser }: { section: AdminSection; adminUser: AdminUser }) {
   switch (section) {
     case 'dashboard':     return <AdminDashboard />;
     case 'users':         return <AdminUsers />;
@@ -29,6 +30,7 @@ function SectionContent({ section }: { section: AdminSection }) {
     case 'maintenance':   return <AdminMaintenance />;
     case 'documents':     return <AdminDocuments />;
     case 'coupons':       return <AdminCoupons />;
+    case 'admins':        return <AdminAdmins currentUser={adminUser} />;
     default:              return <AdminDashboard />;
   }
 }
@@ -42,7 +44,7 @@ export default function AdminLayout({ adminUser }: Props) {
       {/* Header */}
       <header className="h-14 border-b flex items-center justify-between px-4 shrink-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="flex items-center gap-2">
-          <AdminMobileSidebar activeSection={activeSection} onNavigate={setActiveSection} />
+          <AdminMobileSidebar activeSection={activeSection} onNavigate={setActiveSection} adminRole={adminUser.role} />
           <span className="font-semibold text-sm hidden md:block">{t('adminPortal')}</span>
         </div>
         <span className="text-sm text-muted-foreground truncate max-w-[200px]">{adminUser.email}</span>
@@ -52,12 +54,12 @@ export default function AdminLayout({ adminUser }: Props) {
       <div className="flex flex-1 overflow-hidden">
         {/* Desktop sidebar */}
         <aside className="hidden md:flex flex-col w-64 border-r bg-background shrink-0">
-          <AdminSidebar activeSection={activeSection} onNavigate={setActiveSection} />
+          <AdminSidebar activeSection={activeSection} onNavigate={setActiveSection} adminRole={adminUser.role} />
         </aside>
 
         {/* Main content */}
         <main className="flex-1 overflow-y-auto p-6">
-          <SectionContent section={activeSection} />
+          <SectionContent section={activeSection} adminUser={adminUser} />
         </main>
       </div>
     </div>

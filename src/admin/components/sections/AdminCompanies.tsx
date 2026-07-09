@@ -5,8 +5,9 @@ import { Input } from '../../../components/ui/input';
 import { Button } from '../../../components/ui/button';
 import { Badge } from '../../../components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../../components/ui/dialog';
-import { RefreshCw, Search } from 'lucide-react';
+import { RefreshCw, Search, Download, FileText } from 'lucide-react';
 import type { AdminCompanyRow } from '../../hooks/useAdminData';
+import { exportToCSV, exportToPDF, type ExportColumn } from '../../utils/adminExport';
 
 const TIER_VARIANT: Record<string, 'default' | 'secondary' | 'outline'> = {
   oro: 'default', plata: 'secondary', bronce: 'outline', free: 'outline',
@@ -29,14 +30,33 @@ export default function AdminCompanies() {
     });
   }, [companies, search, tierFilter]);
 
+  const exportColumns: ExportColumn<AdminCompanyRow>[] = [
+    { header: 'Company', accessor: (c) => c.companyName },
+    { header: 'Tax ID', accessor: (c) => c.taxId ?? '' },
+    { header: 'Tier', accessor: (c) => c.tier ?? 'free' },
+    { header: 'Vehicles', accessor: (c) => c.vehicleCount },
+    { header: 'Drivers', accessor: (c) => c.driverCount },
+    { header: 'Created', accessor: (c) => c.createdAt ? c.createdAt.toLocaleDateString() : '' },
+  ];
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <h1 className="text-2xl font-bold">{t('adminCompanies')}</h1>
-        <Button variant="outline" size="sm" onClick={refresh}>
-          <RefreshCw className="h-4 w-4 mr-2" />
-          {t('adminRefresh')}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => exportToCSV('urban-drive-companies', filtered, exportColumns)}>
+            <Download className="h-4 w-4 mr-2" />
+            {t('adminExportCSV')}
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => exportToPDF(t('adminCompanies'), filtered, exportColumns)}>
+            <FileText className="h-4 w-4 mr-2" />
+            {t('adminExportPDF')}
+          </Button>
+          <Button variant="outline" size="sm" onClick={refresh}>
+            <RefreshCw className="h-4 w-4 mr-2" />
+            {t('adminRefresh')}
+          </Button>
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-2">

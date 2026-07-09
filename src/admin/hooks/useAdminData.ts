@@ -1,8 +1,11 @@
-import { useState, useEffect } from 'react';
-import { collection, getDocs, query, orderBy, limit } from 'firebase/firestore';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import {
+  collection, getDocs, getCountFromServer, query, orderBy, limit, startAfter,
+  type QueryDocumentSnapshot, type DocumentData,
+} from 'firebase/firestore';
 import { db } from '../../services/firebase';
 
-const ADMIN_PAGE_SIZE = 100; // Fetch at most 100 docs per collection
+const ADMIN_PAGE_SIZE = 100; // Fetch at most 100 docs per page
 
 export interface AdminUserRow {
   id: string;
@@ -86,6 +89,13 @@ interface AdminData {
   loading: boolean;
   error: string | null;
   refresh: () => void;
+  /** Exact totals from Firestore aggregation queries — accurate even though
+   *  `users`/`companies` above are capped to the loaded pages. */
+  totalUsersCount: number;
+  totalCompaniesCount: number;
+  usersHasMore: boolean;
+  loadingMoreUsers: boolean;
+  loadMoreUsers: () => Promise<void>;
 }
 
 function toDate(val: unknown): Date | undefined {
@@ -107,6 +117,26 @@ export function useAdminData(): AdminData {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [tick, setTick] = useState(0);
+  const [totalUsersCount, setTotalUsersCount] = useState(0);
+  const [totalCompaniesCount, setTotalCompaniesCount] = useState(0);
+  const [usersHasMore, setUsersHasMore] = useState(false);
+  const [loadingMoreUsers, setLoadingMoreUsers] = useState(false);
+
+  const lastUserDoc = useRef<QueryDocumentSnapshot<DocumentData> | null>(null);
+  const lastDriverDoc = useRef<QueryDocumentSnapshot<DocumentData> | null>(null);
+
+  function mapUserDoc(d: QueryDocumentSnapshot<DocumentData>, userType: 'user' | 'driver'): AdminUserRow {
+    const data = d.data();
+    return {
+      id: d.id,
+      displayName: data.displayName ?? '',
+      email: data.email ?? '',
+      userType,
+      tier: data.tier,
+      createdAt: toDate(data.createdAt),
+      photoURL: data.photoURL,
+    };
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -119,6 +149,7 @@ export function useAdminData(): AdminData {
           usersSnap, driversSnap,
           companiesSnap, subsSnap,
           vehiclesSnap, maintenanceSnap, docsSnap,
+          usersCountSnap, driversCountSnap, companiesCountSnap,
         ] = await Promise.all([
           getDocs(query(collection(db, 'users'), orderBy('createdAt', 'desc'), limit(ADMIN_PAGE_SIZE))).catch(() => null),
           getDocs(query(collection(db, 'drivers'), orderBy('createdAt', 'desc'), limit(ADMIN_PAGE_SIZE))).catch(() => null),
@@ -127,36 +158,25 @@ export function useAdminData(): AdminData {
           getDocs(query(collection(db, 'vehicles'), limit(ADMIN_PAGE_SIZE))).catch(() => null),
           getDocs(query(collection(db, 'vehicle_maintenance'), limit(ADMIN_PAGE_SIZE))).catch(() => null),
           getDocs(query(collection(db, 'company_documents'), limit(ADMIN_PAGE_SIZE))).catch(() => null),
+          getCountFromServer(collection(db, 'users')).catch(() => null),
+          getCountFromServer(collection(db, 'drivers')).catch(() => null),
+          getCountFromServer(collection(db, 'companies')).catch(() => null),
         ]);
 
         if (cancelled) return;
 
+        lastUserDoc.current = usersSnap && usersSnap.docs.length > 0 ? usersSnap.docs[usersSnap.docs.length - 1] : null;
+        lastDriverDoc.current = driversSnap && driversSnap.docs.length > 0 ? driversSnap.docs[driversSnap.docs.length - 1] : null;
+        setUsersHasMore(
+          (usersSnap?.docs.length ?? 0) === ADMIN_PAGE_SIZE || (driversSnap?.docs.length ?? 0) === ADMIN_PAGE_SIZE
+        );
+        setTotalUsersCount((usersCountSnap?.data().count ?? 0) + (driversCountSnap?.data().count ?? 0));
+        setTotalCompaniesCount(companiesCountSnap?.data().count ?? 0);
+
         // Users
         const userRows: AdminUserRow[] = [];
-        usersSnap?.forEach((d) => {
-          const data = d.data();
-          userRows.push({
-            id: d.id,
-            displayName: data.displayName ?? '',
-            email: data.email ?? '',
-            userType: 'user',
-            tier: data.tier,
-            createdAt: toDate(data.createdAt),
-            photoURL: data.photoURL,
-          });
-        });
-        driversSnap?.forEach((d) => {
-          const data = d.data();
-          userRows.push({
-            id: d.id,
-            displayName: data.displayName ?? '',
-            email: data.email ?? '',
-            userType: 'driver',
-            tier: data.tier,
-            createdAt: toDate(data.createdAt),
-            photoURL: data.photoURL,
-          });
-        });
+        usersSnap?.forEach((d) => userRows.push(mapUserDoc(d, 'user')));
+        driversSnap?.forEach((d) => userRows.push(mapUserDoc(d, 'driver')));
         setUsers(userRows);
 
         // Companies — need vehicle/driver counts
@@ -268,6 +288,39 @@ export function useAdminData(): AdminData {
     return () => { cancelled = true; };
   }, [tick]);
 
+  const loadMoreUsers = useCallback(async () => {
+    if (loadingMoreUsers || !usersHasMore) return;
+    setLoadingMoreUsers(true);
+    try {
+      const [nextUsersSnap, nextDriversSnap] = await Promise.all([
+        lastUserDoc.current
+          ? getDocs(query(collection(db, 'users'), orderBy('createdAt', 'desc'), startAfter(lastUserDoc.current), limit(ADMIN_PAGE_SIZE))).catch(() => null)
+          : Promise.resolve(null),
+        lastDriverDoc.current
+          ? getDocs(query(collection(db, 'drivers'), orderBy('createdAt', 'desc'), startAfter(lastDriverDoc.current), limit(ADMIN_PAGE_SIZE))).catch(() => null)
+          : Promise.resolve(null),
+      ]);
+
+      const newRows: AdminUserRow[] = [];
+      nextUsersSnap?.forEach((d) => newRows.push(mapUserDoc(d, 'user')));
+      nextDriversSnap?.forEach((d) => newRows.push(mapUserDoc(d, 'driver')));
+
+      if (nextUsersSnap && nextUsersSnap.docs.length > 0) {
+        lastUserDoc.current = nextUsersSnap.docs[nextUsersSnap.docs.length - 1];
+      }
+      if (nextDriversSnap && nextDriversSnap.docs.length > 0) {
+        lastDriverDoc.current = nextDriversSnap.docs[nextDriversSnap.docs.length - 1];
+      }
+
+      setUsers((prev) => [...prev, ...newRows]);
+      setUsersHasMore(
+        (nextUsersSnap?.docs.length ?? 0) === ADMIN_PAGE_SIZE || (nextDriversSnap?.docs.length ?? 0) === ADMIN_PAGE_SIZE
+      );
+    } finally {
+      setLoadingMoreUsers(false);
+    }
+  }, [loadingMoreUsers, usersHasMore]);
+
   return {
     users,
     companies,
@@ -278,5 +331,10 @@ export function useAdminData(): AdminData {
     loading,
     error,
     refresh: () => setTick((t) => t + 1),
+    totalUsersCount,
+    totalCompaniesCount,
+    usersHasMore,
+    loadingMoreUsers,
+    loadMoreUsers,
   };
 }

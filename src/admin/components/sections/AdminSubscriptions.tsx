@@ -11,11 +11,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from '../../../components/ui/dialog';
-import { RefreshCw, Search, CheckCircle, Loader2 } from 'lucide-react';
+import { RefreshCw, Search, CheckCircle, Loader2, Download, FileText } from 'lucide-react';
 import { SUBSCRIPTION_PLANS } from '../../../features/enterprise/types/subscription';
 import { doc, updateDoc, Timestamp } from 'firebase/firestore';
 import { db } from '../../../services/firebase';
 import { toast } from 'sonner';
+import { exportToCSV, exportToPDF, type ExportColumn } from '../../utils/adminExport';
+import type { AdminSubscriptionRow } from '../../hooks/useAdminData';
 
 const STATUS_STYLES: Record<string, string> = {
   active:           'bg-emerald-500/15 text-emerald-600 border-emerald-500/30',
@@ -87,19 +89,38 @@ export default function AdminSubscriptions() {
     .filter((s) => s.status === 'active' || s.status === 'trialing')
     .reduce((sum, s) => sum + (PLAN_PRICES[s.tier] ?? 0), 0);
 
+  const exportColumns: ExportColumn<AdminSubscriptionRow>[] = [
+    { header: 'Subscriber', accessor: (s) => s.ownerName },
+    { header: 'Plan', accessor: (s) => s.tier },
+    { header: 'Billing', accessor: (s) => s.billing },
+    { header: 'Status', accessor: (s) => s.status },
+    { header: 'Est. $/mo', accessor: (s) => PLAN_PRICES[s.tier] ?? 0 },
+    { header: 'Period end', accessor: (s) => s.currentPeriodEnd ? s.currentPeriodEnd.toLocaleDateString() : '' },
+  ];
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
           <h1 className="text-2xl font-bold">{t('adminSubscriptions')}</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
             {t('adminMRR')}: <span className="font-semibold text-foreground">${mrr.toLocaleString()}/mo</span>
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={refresh}>
-          <RefreshCw className="h-4 w-4 mr-2" />
-          {t('adminRefresh')}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => exportToCSV('urban-drive-subscriptions', filtered, exportColumns)}>
+            <Download className="h-4 w-4 mr-2" />
+            {t('adminExportCSV')}
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => exportToPDF(t('adminSubscriptions'), filtered, exportColumns)}>
+            <FileText className="h-4 w-4 mr-2" />
+            {t('adminExportPDF')}
+          </Button>
+          <Button variant="outline" size="sm" onClick={refresh}>
+            <RefreshCw className="h-4 w-4 mr-2" />
+            {t('adminRefresh')}
+          </Button>
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-2">

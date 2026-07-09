@@ -1,12 +1,12 @@
 import {
   LayoutDashboard, Users, Building2, CreditCard,
-  Car, Wrench, FileText, LogOut, Ticket,
+  Car, Wrench, FileText, LogOut, Ticket, ShieldCheck,
 } from 'lucide-react';
 import { signOut } from 'firebase/auth';
 import { auth } from '../../services/firebase';
 import { useApp } from '../../contexts/AppContext';
 import { cn } from '../../lib/utils';
-import type { AdminSection } from '../types';
+import type { AdminSection, AdminUser } from '../types';
 import { ADMIN_SIDEBAR_ITEMS } from '../types';
 
 const ICON_MAP: Record<string, React.ElementType> = {
@@ -18,15 +18,17 @@ const ICON_MAP: Record<string, React.ElementType> = {
   Wrench,
   FileText,
   Ticket,
+  ShieldCheck,
 };
 
 interface Props {
   activeSection: AdminSection;
   onNavigate: (section: AdminSection) => void;
   onClose?: () => void;
+  adminRole?: AdminUser['role'];
 }
 
-export default function AdminSidebar({ activeSection, onNavigate, onClose }: Props) {
+export default function AdminSidebar({ activeSection, onNavigate, onClose, adminRole }: Props) {
   const { t } = useApp();
 
   const handleNav = (section: AdminSection) => {
@@ -39,6 +41,8 @@ export default function AdminSidebar({ activeSection, onNavigate, onClose }: Pro
     window.location.href = '/';
   };
 
+  const items = ADMIN_SIDEBAR_ITEMS.filter((item) => !item.superadminOnly || adminRole === 'superadmin');
+
   return (
     <div className="flex flex-col h-full">
       {/* Logo area */}
@@ -48,7 +52,7 @@ export default function AdminSidebar({ activeSection, onNavigate, onClose }: Pro
 
       {/* Nav items */}
       <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-0.5">
-        {ADMIN_SIDEBAR_ITEMS.map((item) => {
+        {items.map((item) => {
           const Icon = ICON_MAP[item.icon] ?? LayoutDashboard;
           const isActive = activeSection === item.id;
           return (

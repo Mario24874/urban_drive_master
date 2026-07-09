@@ -20,6 +20,11 @@ service cloud.firestore {
         exists(/databases/$(database)/documents/admins/$(request.auth.uid));
     }
 
+    function isSuperAdmin() {
+      return isSignedIn() && isAdmin() &&
+        get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role == 'superadmin';
+    }
+
     // ── Users ───────────────────────────────────────────────────────────────
     match /users/{userId} {
       allow read: if isSignedIn();
@@ -116,7 +121,9 @@ service cloud.firestore {
     // ── Admins ──────────────────────────────────────────────────────────────
     match /admins/{adminId} {
       allow read: if isAdmin() || isOwner(adminId);
-      allow write: if isAdmin();
+      // Only a superadmin may invite (create) or revoke (delete/update) admins,
+      // to prevent any admin from granting themselves or others elevated access.
+      allow create, update, delete: if isSuperAdmin();
     }
 
     // ── Companies ───────────────────────────────────────────────────────────

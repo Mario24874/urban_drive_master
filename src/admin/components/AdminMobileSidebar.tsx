@@ -2,14 +2,15 @@ import { Menu } from 'lucide-react';
 import { useState } from 'react';
 import { Sheet, SheetContent, SheetTrigger } from '../../components/ui/sheet';
 import AdminSidebar from './AdminSidebar';
-import type { AdminSection } from '../types';
+import type { AdminSection, AdminUser } from '../types';
 
 interface Props {
   activeSection: AdminSection;
   onNavigate: (section: AdminSection) => void;
+  adminRole?: AdminUser['role'];
 }
 
-export default function AdminMobileSidebar({ activeSection, onNavigate }: Props) {
+export default function AdminMobileSidebar({ activeSection, onNavigate, adminRole }: Props) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -25,6 +26,7 @@ export default function AdminMobileSidebar({ activeSection, onNavigate }: Props)
           activeSection={activeSection}
           onNavigate={onNavigate}
           onClose={() => setOpen(false)}
+          adminRole={adminRole}
         />
       </SheetContent>
     </Sheet>

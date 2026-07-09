@@ -22,7 +22,7 @@ const PLAN_PRICES: Record<string, number> = {
 
 export default function AdminDashboard() {
   const { t } = useApp();
-  const { users, companies, subscriptions, loading, refresh } = useAdminData();
+  const { companies, subscriptions, loading, refresh, totalUsersCount, totalCompaniesCount } = useAdminData();
 
   const activeSubs = subscriptions.filter((s) => s.status === 'active' || s.status === 'trialing');
   const mrr = activeSubs.reduce((sum, s) => {
@@ -41,8 +41,8 @@ export default function AdminDashboard() {
     .slice(0, 5);
 
   const kpis = [
-    { label: t('adminTotalUsers'), value: users.length, icon: Users, color: 'text-blue-500' },
-    { label: t('adminTotalCompanies'), value: companies.length, icon: Building2, color: 'text-emerald-500' },
+    { label: t('adminTotalUsers'), value: totalUsersCount, icon: Users, color: 'text-blue-500' },
+    { label: t('adminTotalCompanies'), value: totalCompaniesCount, icon: Building2, color: 'text-emerald-500' },
     { label: t('adminActiveSubs'), value: activeSubs.length, icon: CreditCard, color: 'text-violet-500' },
     { label: t('adminMRR'), value: `$${mrr.toLocaleString()}`, icon: TrendingUp, color: 'text-amber-500' },
   ];

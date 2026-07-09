@@ -15,12 +15,14 @@ export type AdminSection =
   | 'fleet'
   | 'maintenance'
   | 'documents'
-  | 'coupons';
+  | 'coupons'
+  | 'admins';
 
 export interface AdminSidebarItem {
   id: AdminSection;
   labelKey: string;
   icon: string;
+  superadminOnly?: boolean;
 }
 
 export const ADMIN_SIDEBAR_ITEMS: AdminSidebarItem[] = [
@@ -32,4 +34,5 @@ export const ADMIN_SIDEBAR_ITEMS: AdminSidebarItem[] = [
   { id: 'maintenance',   labelKey: 'adminMaintenance',   icon: 'Wrench' },
   { id: 'documents',     labelKey: 'adminDocuments',     icon: 'FileText' },
   { id: 'coupons',       labelKey: 'adminCoupons',       icon: 'Ticket' },
+  { id: 'admins',        labelKey: 'adminAdmins',        icon: 'ShieldCheck', superadminOnly: true },
 ];

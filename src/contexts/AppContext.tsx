@@ -453,6 +453,25 @@ const translations: Record<Lang, Record<string, string>> = {
     adminFilterByStatus: 'Filter by status',
     adminRefresh: 'Refresh',
     adminNoData: 'No data available',
+    adminExport: 'Export',
+    adminExportCSV: 'Export CSV',
+    adminExportPDF: 'Export PDF',
+    adminLoadMore: 'Load more',
+
+    // Admin management (superadmin only)
+    adminAdmins: 'Admins',
+    adminAdminsInvite: 'Invite Admin',
+    adminAdminsInviteHint: 'The person must already have an Urban Drive account with this email.',
+    adminAdminsRole: 'Role',
+    adminAdminsSince: 'Since',
+    adminAdminsActions: 'Actions',
+    adminAdminsRevoke: 'Revoke access',
+    adminAdminsCannotRevokeSelf: "You can't revoke your own access",
+    adminAdminsInvited: 'Admin invited',
+    adminAdminsRevoked: 'Admin access revoked',
+    adminAdminsUserNotFound: 'No Urban Drive account found with that email',
+    adminAdminsAlreadyAdmin: 'This user is already an admin',
+    adminAdminsLoadError: 'Error loading admins',
 
     // Discount coupons
     couponHave: 'Have a coupon?',
@@ -990,6 +1009,25 @@ const translations: Record<Lang, Record<string, string>> = {
     adminFilterByStatus: 'Filtrar por estado',
     adminRefresh: 'Actualizar',
     adminNoData: 'Sin datos disponibles',
+    adminExport: 'Exportar',
+    adminExportCSV: 'Exportar CSV',
+    adminExportPDF: 'Exportar PDF',
+    adminLoadMore: 'Cargar más',
+
+    // Gestión de administradores (solo superadmin)
+    adminAdmins: 'Administradores',
+    adminAdminsInvite: 'Invitar admin',
+    adminAdminsInviteHint: 'La persona debe tener ya una cuenta de Urban Drive con este correo.',
+    adminAdminsRole: 'Rol',
+    adminAdminsSince: 'Desde',
+    adminAdminsActions: 'Acciones',
+    adminAdminsRevoke: 'Revocar acceso',
+    adminAdminsCannotRevokeSelf: 'No puedes revocar tu propio acceso',
+    adminAdminsInvited: 'Admin invitado',
+    adminAdminsRevoked: 'Acceso de admin revocado',
+    adminAdminsUserNotFound: 'No se encontró una cuenta de Urban Drive con ese correo',
+    adminAdminsAlreadyAdmin: 'Este usuario ya es administrador',
+    adminAdminsLoadError: 'Error al cargar administradores',
 
     // Cupones de descuento
     couponHave: '¿Tienes un cupón?',
