@@ -19,6 +19,7 @@ type PaymentMethodOption = 'stripe' | 'transfer';
 
 interface PricingPlansProps {
   userId: string;
+  userName?: string;
   currentTier?: SubscriptionTier;
   onClose: () => void;
 }
@@ -195,7 +196,7 @@ function couponDescription(discountPct: number, t: (key: string) => string): str
   return t('couponDiscApplied').replace('{pct}', String(Math.round(discountPct * 100)));
 }
 
-const PricingPlans: React.FC<PricingPlansProps> = ({ userId, currentTier = 'free', onClose }) => {
+const PricingPlans: React.FC<PricingPlansProps> = ({ userId, userName, currentTier = 'free', onClose }) => {
   const { t } = useApp();
   const [billing, setBilling] = useState<SubscriptionBilling>('monthly');
   const [loadingTier, setLoadingTier] = useState<string | null>(null);
@@ -549,6 +550,7 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ userId, currentTier = 'free
           open={!!transferTier}
           onClose={() => setTransferTier(null)}
           userId={userId}
+          userName={userName}
           tier={transferTier}
           billing={billing}
         />

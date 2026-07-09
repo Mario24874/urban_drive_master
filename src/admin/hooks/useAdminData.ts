@@ -124,6 +124,10 @@ export function useAdminData(): AdminData {
 
   const lastUserDoc = useRef<QueryDocumentSnapshot<DocumentData> | null>(null);
   const lastDriverDoc = useRef<QueryDocumentSnapshot<DocumentData> | null>(null);
+  // Tier real por uid, tomado de `subscriptions` (el doc de users/drivers no
+  // tiene campo `tier` propio) — poblado en la carga inicial y reusado en
+  // loadMoreUsers.
+  const subTierByUid = useRef<Record<string, string>>({});
 
   function mapUserDoc(d: QueryDocumentSnapshot<DocumentData>, userType: 'user' | 'driver'): AdminUserRow {
     const data = d.data();
@@ -132,7 +136,7 @@ export function useAdminData(): AdminData {
       displayName: data.displayName ?? '',
       email: data.email ?? '',
       userType,
-      tier: data.tier,
+      tier: subTierByUid.current[d.id] ?? data.tier,
       createdAt: toDate(data.createdAt),
       photoURL: data.photoURL,
     };
@@ -172,6 +176,17 @@ export function useAdminData(): AdminData {
         );
         setTotalUsersCount((usersCountSnap?.data().count ?? 0) + (driversCountSnap?.data().count ?? 0));
         setTotalCompaniesCount(companiesCountSnap?.data().count ?? 0);
+
+        // Tier real por uid — solo cuenta si la suscripción está vigente.
+        const tierMap: Record<string, string> = {};
+        subsSnap?.forEach((d) => {
+          const data = d.data();
+          const status = data.status ?? 'active';
+          if (status === 'active' || status === 'trialing') {
+            tierMap[d.id] = data.tier ?? 'free';
+          }
+        });
+        subTierByUid.current = tierMap;
 
         // Users
         const userRows: AdminUserRow[] = [];

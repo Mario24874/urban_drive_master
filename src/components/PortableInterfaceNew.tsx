@@ -522,6 +522,7 @@ const PortableInterface: React.FC<PortableInterfaceProps> = ({
         >
           <PricingPlans
             userId={user.id}
+            userName={user.displayName}
             currentTier={subscriptionTier}
             onClose={() => setShowPricing(false)}
           />

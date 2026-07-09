@@ -142,6 +142,11 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   const priceId = stripeSub.items.data[0]?.price.id ?? '';
   const tier = tierFromPriceId(priceId);
   const billing = (stripeSub.metadata?.billing ?? 'monthly') as 'monthly' | 'yearly';
+  const ownerName = await admin
+    .auth()
+    .getUser(uid)
+    .then((u) => u.displayName ?? '')
+    .catch(() => '');
 
   await db()
     .collection('subscriptions')
@@ -149,6 +154,8 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     .set(
       {
         userId: uid,
+        ownerId: uid,
+        ownerName,
         tier,
         billing,
         status: stripeSub.status,

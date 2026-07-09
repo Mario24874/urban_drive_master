@@ -4,7 +4,7 @@ import {
   signInWithPopup,
   type UserCredential,
 } from 'firebase/auth';
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, setDoc, serverTimestamp, collection, query, where, getDocs } from 'firebase/firestore';
 import { auth, db } from '../firebase';
 import type { User } from '../hooks/useAuth';
 
@@ -43,6 +43,24 @@ export async function signInWithProvider(providerName: SocialProvider): Promise<
     userType = 'driver';
     data = driverSnap.data();
   } else if (!userSnap.exists()) {
+    // UID nuevo (sin perfil): antes de crear uno, verifica que este email no
+    // pertenezca ya a otra cuenta (evita duplicados cuando alguien se registró
+    // por email/password y luego entra por primera vez con Google/Apple).
+    if (fbUser.email) {
+      const [existingUsers, existingDrivers] = await Promise.all([
+        getDocs(query(collection(db, 'users'), where('email', '==', fbUser.email))),
+        getDocs(query(collection(db, 'drivers'), where('email', '==', fbUser.email))),
+      ]);
+      const hasOtherAccount =
+        existingUsers.docs.some((d) => d.id !== fbUser.uid) ||
+        existingDrivers.docs.some((d) => d.id !== fbUser.uid);
+      if (hasOtherAccount) {
+        await auth.signOut();
+        throw new Error(
+          'Ya existe una cuenta registrada con este correo. Inicia sesión con tu método original (email y contraseña).'
+        );
+      }
+    }
     // Primer ingreso social: crea un perfil de pasajero por defecto.
     data = {
       displayName: fbUser.displayName || '',

@@ -39,6 +39,7 @@ interface BankTransferDialogProps {
   open: boolean;
   onClose: () => void;
   userId: string;
+  userName?: string;
   tier: Exclude<SubscriptionTier, 'free'>;
   billing: SubscriptionBilling;
 }
@@ -73,6 +74,7 @@ const BankTransferDialog: React.FC<BankTransferDialogProps> = ({
   open,
   onClose,
   userId,
+  userName,
   tier,
   billing,
 }) => {
@@ -99,7 +101,7 @@ const BankTransferDialog: React.FC<BankTransferDialogProps> = ({
       await setDoc(doc(db, 'subscriptions', userId), {
         userId,
         ownerId: userId,
-        ownerName: '',
+        ownerName: userName ?? '',
         adminIds: [userId],
         tier,
         billing,
