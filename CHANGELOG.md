@@ -5,6 +5,36 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/),
 y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.1] - 2026-07-10
+
+### 🩹 Portal Admin: datos reales de Usuarios y Suscripciones
+
+- **Fix root cause — usuarios "invisibles" en la tabla Usuarios**: `useAdminData`
+  ordena por `orderBy('createdAt')`; Firestore excluye del resultado cualquier
+  doc sin ese campo. 7 de 13 cuentas reales (incl. el superadmin) no tenían
+  `createdAt` y no aparecían en el portal. Backfill puntual con la fecha real
+  de creación de Firebase Auth (no la fecha actual).
+- **Fix — columna "Plan" siempre en "—"**: el tier real vive en
+  `subscriptions/{uid}`, nunca en el doc de `users`/`drivers`. `useAdminData`
+  ahora hace join con `subscriptions` (solo `status` `active`/`trialing`).
+- **Fix — columna "Subscriber" siempre en "—"**: `BankTransferDialog.tsx`
+  escribía `ownerName: ''` hardcodeado; el webhook de Stripe
+  (`functions/src/stripe.ts`) no escribía `ownerId`/`ownerName`. Corregido en
+  ambos flujos + backfill de las suscripciones existentes.
+- **Fix — cuentas duplicadas por login social**: `signInWithProvider`
+  (`src/lib/socialAuth.ts`) podía crear un segundo perfil (UID nuevo) para un
+  email que ya tenía cuenta por password. Ahora verifica contra `users`/`drivers`
+  antes de crear el perfil y bloquea con un error claro si el email ya existe
+  bajo otro UID. Regla de negocio: una persona puede tener 1–3 cuentas con
+  emails distintos (válido); lo que no puede pasar es el mismo email con dos
+  cuentas.
+- **Limpieza de datos de producción** (un solo uso, vía Cloud Function
+  temporal + Admin SDK, borrada tras su ejecución): eliminado un doc
+  duplicado histórico (`users/{uid}` residual de una cuenta ya presente en
+  `drivers/{uid}`), 2 docs huérfanos sin cuenta de Auth asociada, y
+  reactivada manualmente una suscripción bronce que había quedado
+  `canceled` con período vencido.
+
 ## [1.8.0] - 2026-07-05
 
 ### 📐 Reglas de planes: visibilidad free vs suscrito
